@@ -113,7 +113,9 @@ class modEasyCRM extends DolibarrModules
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => [],
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
-			'hooks' => [],
+			'hooks' => [
+                'thirdpartycomm'
+            ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
         ];
