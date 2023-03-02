@@ -180,7 +180,7 @@ if (empty($reshook)) {
             }
             if (!$error && !empty($project->id) > 0) {
                 // Category association
-                $categories = GETPOST('categories', 'array');
+                $categories = GETPOST('categories_project', 'array');
                 $result = $project->setCategories($categories);
                 if ($result < 0) {
                     $langs->load('errors');
@@ -223,8 +223,10 @@ if (empty($reshook)) {
         if (!$error) {
             $db->begin();
 
-            $thirdparty->name  = GETPOST('name');
-            $thirdparty->email = trim(GETPOST('email', 'custom', 0, FILTER_SANITIZE_EMAIL));
+            $thirdparty->code_client = -1;
+            $thirdparty->client      = 2;
+            $thirdparty->name        = GETPOST('name');
+            $thirdparty->email       = trim(GETPOST('email', 'custom', 0, FILTER_SANITIZE_EMAIL));
 
             $result = $thirdparty->create($user);
             if (!$error && $result > 0) {
@@ -232,6 +234,16 @@ if (empty($reshook)) {
                     $langs->load('errors');
                     setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
                     $error++;
+                }
+                if (!$error && !empty($thirdparty->id) > 0) {
+                    // Category association
+                    $categories = GETPOST('categories_customer', 'array');
+                    $result = $thirdparty->setCategories($categories, 'customer');
+                    if ($result < 0) {
+                        $langs->load('errors');
+                        setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
+                        $error++;
+                    }
                 }
             } else {
                 $langs->load('errors');
@@ -346,7 +358,7 @@ if ($permissiontoaddproject) {
     if (isModEnabled('categorie')) {
         print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
         $cate_arbo = $form->select_all_categories(Categorie::TYPE_PROJECT, '', 'parent', 64, 0, 1);
-        print img_picto('', 'category') . $form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
+        print img_picto('', 'category') . $form->multiselectarray('categories_project', $cate_arbo, GETPOST('categories_project', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
         print '</td></tr>';
     }
 
@@ -384,6 +396,14 @@ if ($permissiontoaddthirdparty) {
     // Email
     print '<tr><td>' . $form->editfieldkey('EMail', 'email', '', $object, 0, 'string', '', empty($conf->global->SOCIETE_EMAIL_MANDATORY) ? '' : $conf->global->SOCIETE_EMAIL_MANDATORY) . '</td>';
     print '<td' . (($conf->browser->layout == 'phone') || empty($conf->mailing->enabled) ? ' colspan="3"' : '') . '>' . img_picto('', 'object_email', 'class="pictofixedwidth"') . ' <input type="text" class="maxwidth200 widthcentpercentminusx" name="email" id="email" value="' . $object->email . '"></td>';
+
+    // Categories
+    if (isModEnabled('categorie')) {
+        print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
+        $cate_arbo = $form->select_all_categories(Categorie::TYPE_CUSTOMER, '', 'parent', 64, 0, 1);
+        print img_picto('', 'category') . $form->multiselectarray('categories_customer', $cate_arbo, GETPOST('categories_customer', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
+        print '</td></tr>';
+    }
 
     print '</table>';
 
