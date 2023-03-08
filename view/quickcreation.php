@@ -43,7 +43,7 @@ if (isModEnabled('categorie')) {
 global $conf, $db, $hookmanager, $langs, $user;
 
 // Load translation files required by the page
-saturne_load_langs();
+saturne_load_langs(['categories']);
 
 // Get parameters
 $action      = GETPOST('action', 'aZ09');
@@ -61,6 +61,7 @@ if (isModEnabled('categorie')) {
 }
 if (isModEnabled('societe')) {
     $thirdparty = new Societe($db);
+    $contact    = new Contact($db);
 }
 
 // Initialize view objects
@@ -77,6 +78,7 @@ $date_start = dol_mktime(0, 0, 0, GETPOST('projectstartmonth', 'int'), GETPOST('
 $permissiontoread          = $user->rights->easycrm->read;
 $permissiontoaddproject    = $user->rights->projet->creer;
 $permissiontoaddthirdparty = $user->rights->societe->creer;
+$permissiontoaddcontact    = $user->rights->societe->contact->creer;
 saturne_check_access($permissiontoread);
 
 /*
@@ -106,35 +108,100 @@ if (empty($reshook)) {
 
     if ($cancel) {
         if (!empty($backtopageforcancel)) {
-            header('Location: ' .$backtopageforcancel);
+            header('Location: ' . $backtopageforcancel);
             exit;
         } elseif (!empty($backtopage)) {
-            header('Location: ' .$backtopage);
+            header('Location: ' . $backtopage);
             exit;
         }
         $action = '';
     }
 
-    if ($action == 'add' && $permissiontoaddproject) {
+    if ($action == 'add') {
+        // Check thirdparty parameters
+        if (!GETPOST('name')) {
+            setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('ThirdPartyName')), [], 'errors');
+            $error++;
+        }
+
+        if (!empty($thirdparty->email) && !isValidEMail($thirdparty->email)) {
+            setEventMessages($langs->trans('ErrorBadEMail', $thirdparty->email), [], 'errors');
+            $error++;
+        }
+
+        // Check project parameters
         if (!GETPOST('title')) {
-            setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentities('ProjectLabel')), null, 'errors');
+            setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentities('ProjectLabel')), [], 'errors');
             $error++;
         }
 
         if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
             if (GETPOST('opp_amount') != '' && !(GETPOST('opp_status') > 0)) {
+                setEventMessages($langs->trans('ErrorOppStatusRequiredIfAmount'), [], 'errors');
                 $error++;
-                setEventMessages($langs->trans('ErrorOppStatusRequiredIfAmount'), null, 'errors');
             }
         }
 
         if (!$error) {
-
             $db->begin();
 
-            $project->ref               = GETPOST('ref');
-            $project->title             = GETPOST('title');
-            $project->opp_status        = GETPOST('opp_status', 'int');
+            $thirdparty->code_client = -1;
+            $thirdparty->client      = $conf->global->EASYCRM_THIRDPARTY_CLIENT_VALUE;
+            $thirdparty->name        = GETPOST('name');
+            $thirdparty->email       = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
+
+            $thirdpartyID = $thirdparty->create($user);
+            if ($thirdpartyID > 0) {
+                // Category association
+                $categories = GETPOST('categories_customer', 'array');
+                if (count($categories) > 0) {
+                    $result = $thirdparty->setCategories($categories, 'customer');
+                    if ($result < 0) {
+                        setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
+                        $error++;
+                    }
+                }
+
+                $contact->socid     = $thirdpartyID;
+                $contact->lastname  = GETPOST('lastname', 'alpha');
+                $contact->firstname = GETPOST('firstname', 'alpha');
+                $contact->poste     = GETPOST('job', 'alpha');
+                $contact->email     = trim(GETPOST('email_contact', 'custom', 0, FILTER_SANITIZE_EMAIL));
+                $contact->phone_pro = GETPOST('phone_pro', 'alpha');
+
+                $contactID = $contact->create($user);
+                if ($contactID < 0) {
+                    setEventMessages($contact->error, $contact->errors, 'errors');
+                    $error++;
+                }
+            } else {
+                setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
+                $error++;
+            }
+
+            $project->socid      = $thirdpartyID;
+            $project->ref        = GETPOST('ref');
+            $project->title      = GETPOST('title');
+            $project->opp_status = GETPOST('opp_status', 'int');
+
+            switch ($project->opp_status) {
+                case 2:
+                    $project->opp_percent = 20;
+                    break;
+                case 3:
+                    $project->opp_percent = 40;
+                    break;
+                case 4:
+                    $project->opp_percent = 60;
+                    break;
+                case 5:
+                    $project->opp_percent = 100;
+                    break;
+                default:
+                    $project->opp_percent = 0;
+                    break;
+            }
+
             $project->opp_amount        = price2num(GETPOST('opp_amount'));
             $project->date_c            = dol_now();
             $project->date_start        = $date_start;
@@ -142,8 +209,18 @@ if (empty($reshook)) {
             $project->usage_opportunity = 1;
             $project->usage_task        = 1;
 
-            $result = $project->create($user);
-            if (!$error && $result > 0) {
+            $projectID = $project->create($user);
+            if (!$error && $projectID > 0) {
+                // Category association
+                $categories = GETPOST('categories_project', 'array');
+                if (count($categories) > 0) {
+                    $result = $project->setCategories($categories);
+                    if ($result < 0) {
+                        setEventMessages($project->error, $project->errors, 'errors');
+                        $error++;
+                    }
+                }
+
                 $project->add_contact($user->id, 'PROJECTLEADER', 'internal');
 
                 $defaultref = '';
@@ -151,26 +228,20 @@ if (empty($reshook)) {
 
                 if (!empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php')) {
                     require_once DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php';
-                    $modTask = new $obj();
-                    $defaultref = $modTask->getNextValue('', null);
+                    $modTask    = new $obj();
+                    $defaultref = $modTask->getNextValue($thirdparty, $task);
                 }
 
-                $task->fk_project = $result;
+                $task->fk_project = $projectID;
                 $task->ref        = $defaultref;
                 $task->label      = $langs->trans('CommercialFollowUp') . ' - ' . $project->title;
                 $task->date_c     = dol_now();
 
-                $task->create($user);
-                $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
-
-
-                // -3 means type not found (PROJECTLEADER renamed, de-activated or deleted), so don't prevent creation if it has been the case
-                if ($result == -3) {
-                    setEventMessage('ErrorPROJECTLEADERRoleMissingRestoreIt', 'errors');
-                    $error++;
-                } elseif ($result < 0) {
-                    $langs->load('errors');
-                    setEventMessages($project->error, $project->errors, 'errors');
+                $taskID = $task->create($user);
+                if ($taskID > 0) {
+                    $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
+                } else {
+                    setEventMessages($task->error, $task->errors, 'errors');
                     $error++;
                 }
             } else {
@@ -178,90 +249,19 @@ if (empty($reshook)) {
                 setEventMessages($project->error, $project->errors, 'errors');
                 $error++;
             }
-            if (!$error && !empty($project->id) > 0) {
-                // Category association
-                $categories = GETPOST('categories_project', 'array');
-                $result = $project->setCategories($categories);
-                if ($result < 0) {
-                    $langs->load('errors');
-                    setEventMessages($project->error, $project->errors, 'errors');
-                    $error++;
-                }
-            }
 
             if (!$error) {
                 $db->commit();
-
                 if (!empty($backtopage)) {
-                    $backtopage = preg_replace('/--IDFORBACKTOPAGE--|__ID__/', $project->id, $backtopage); // New method to autoselect project after a New on another form object creation
+                    $backtopage = preg_replace('/--IDFORBACKTOPAGE--|__ID__/', $projectID, $backtopage); // New method to autoselect project after a New on another form object creation
                     header('Location: ' . $backtopage);
-                    exit;
                 } else {
-                    header('Location:card.php?id=' . $project->id);
-                    exit;
+                    header('Location:card.php?id=' . $projectID);
                 }
+                exit;
             } else {
                 $db->rollback();
                 unset($_POST['ref']);
-                $action = 'create';
-            }
-        } else {
-            $action = 'create';
-        }
-    }
-
-    if ($action == 'add_thirdparty' && $permissiontoaddthirdparty) {
-        if (!GETPOST('name')) {
-            setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('ThirdPartyName')), null, 'errors');
-            $error++;
-        }
-        if (!empty($thirdparty->email) && !isValidEMail($thirdparty->email)) {
-            $langs->load("errors");
-            $error++;
-            setEventMessages('', $langs->trans("ErrorBadEMail", $thirdparty->email), 'errors');
-        }
-        if (!$error) {
-            $db->begin();
-
-            $thirdparty->code_client = -1;
-            $thirdparty->client      = 2;
-            $thirdparty->name        = GETPOST('name');
-            $thirdparty->email       = trim(GETPOST('email', 'custom', 0, FILTER_SANITIZE_EMAIL));
-
-            $result = $thirdparty->create($user);
-            if (!$error && $result > 0) {
-                if ($result < 0) {
-                    $langs->load('errors');
-                    setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
-                    $error++;
-                }
-                if (!$error && !empty($thirdparty->id) > 0) {
-                    // Category association
-                    $categories = GETPOST('categories_customer', 'array');
-                    $result = $thirdparty->setCategories($categories, 'customer');
-                    if ($result < 0) {
-                        $langs->load('errors');
-                        setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
-                        $error++;
-                    }
-                }
-            } else {
-                $langs->load('errors');
-                setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
-                $error++;
-            }
-            if (!$error) {
-                $db->commit();
-                if (!empty($backtopage)) {
-                    $backtopage = preg_replace('/--IDFORBACKTOPAGE--|__ID__/', $thirdparty->id, $backtopage); // New method to autoselect project after a New on another form object creation
-                    header('Location: ' . $backtopage);
-                    exit;
-                } else {
-                    header('Location:card.php?id=' . $thirdparty->id);
-                    exit;
-                }
-            } else {
-                $db->rollback();
                 $action = '';
             }
         } else {
@@ -274,26 +274,108 @@ if (empty($reshook)) {
  * View
  */
 
-$title    = $langs->trans('QuickProjectCreation');
+$title    = $langs->trans('QuickCreation');
 $help_url = 'FR:Module_EasyCRM';
 
 saturne_header(0, '', $title, $help_url);
 
-if (empty($permissiontoaddproject) && empty($permissiontoaddthirdparty)) {
+if (empty($permissiontoaddthirdparty) && empty($permissiontoaddcontact) && empty($permissiontoaddproject)) {
     accessforbidden($langs->trans('NotEnoughPermissions'), 0);
     exit;
+}
+
+print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '">';
+print '<input type="hidden" name="token" value="' . newToken() . '">';
+print '<input type="hidden" name="action" value="add">';
+if ($backtopage) {
+    print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
+}
+
+// Quick add thirdparty
+if ($permissiontoaddthirdparty) {
+    print load_fiche_titre($langs->trans('QuickThirdPartyCreation'), '', 'company');
+
+    print dol_get_fiche_head();
+
+    print '<table class="border centpercent tableforfieldcreate">';
+
+    // Name, firstname
+    if ($conf->global->EASYCRM_THIRDPARTY_NAME_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate fieldrequired"><label for="name">' . $langs->trans('ThirdPartyName') . '</label></td>';
+        print '<td><input type="text" name="name" id="name" class="maxwidth200 widthcentpercentminusx" maxlength="128" value="' . (GETPOSTISSET('name') ? GETPOST('name', 'alpha') : '') . '" autofocus="autofocus"></td>';
+        print '</tr>';
+    }
+
+    // Email
+    if ($conf->global->EASYCRM_THIRDPARTY_EMAIL_VISIBLE > 0) {
+        print '<tr><td><label for="email_thirdparty">' . $langs->trans('Email') . '</label></td>';
+        print '<td>' . img_picto('', 'object_email', 'class="pictofixedwidth"') . ' <input type="text" name="email_thirdparty" id="email_thirdparty" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('email_thirdparty') ? GETPOST('email_thirdparty', 'alpha') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    // Categories
+    if (isModEnabled('categorie') && $conf->global->EASYCRM_THIRDPARTY_CATEGORIES_VISIBLE > 0 ) {
+        print '<tr><td>' . $langs->trans('CustomersProspectsCategoriesShort') . '</td><td>';
+        $cate_arbo = $form->select_all_categories(Categorie::TYPE_CUSTOMER, '', 'parent', 64, 0, 1);
+        print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories_customer', $cate_arbo, GETPOST('categories_customer', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
+        print '</td></tr>';
+    }
+
+    print '</table>';
+
+    print dol_get_fiche_end();
+}
+
+// Quick add contact
+if ($permissiontoaddcontact) {
+    print load_fiche_titre($langs->trans('QuickContactCreation'), '', 'contact');
+
+    print dol_get_fiche_head();
+
+    print '<table class="border centpercent tableforfieldcreate">';
+
+    // Name, firstname
+    if ($conf->global->EASYCRM_CONTACT_LASTNAME_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate fieldrequired"><label for="lastname">' . $langs->trans('Lastname') . ' / ' . $langs->trans('Label') . '</label></td>';
+        print '<td><input type="text" name="lastname" id="lastname" class="maxwidth200 widthcentpercentminusx" maxlength="80" value="' . dol_escape_htmltag(GETPOSTISSET('lastname') ? GETPOST('lastname', 'alpha') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    if ($conf->global->EASYCRM_CONTACT_FIRSTNAME_VISIBLE > 0) {
+        print '<tr><td><label for="firstname">' . $langs->trans('Firstname') . '</label></td>';
+        print '<td><input type="text" name="firstname" id="firstname" class="maxwidth200 widthcentpercentminusx" maxlength="80" value="' . dol_escape_htmltag(GETPOSTISSET('firstname') ? GETPOST('firstname', 'alpha') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    // Job position
+    if ($conf->global->EASYCRM_CONTACT_JOB_VISIBLE > 0) {
+        print '<tr><td><label for="job">' . $langs->trans('PostOrFunction') . '</label></td>';
+        print '<td><input type="text" name="job" id="job" class="maxwidth200 widthcentpercentminusx" maxlength="255" value="' . dol_escape_htmltag(GETPOSTISSET('job') ? GETPOST('job') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    // Phone
+    if ($conf->global->EASYCRM_CONTACT_PHONEPRO_VISIBLE > 0) {
+        print '<tr><td><label for="phone_pro">' . $langs->trans('PhonePro') . '</label></td>';
+        print '<td>' . img_picto('', 'object_phoning', 'class="pictofixedwidth"') . ' <input type="text" name="phone_pro" id="phone_pro" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('phone_pro') ? GETPOST('phone_pro', 'alpha') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    // Email
+    if ($conf->global->EASYCRM_CONTACT_EMAIL_VISIBLE > 0) {
+        print '<tr><td><label for="email_contact">' . $langs->trans('Email') . '</label></td>';
+        print '<td>' . img_picto('', 'object_email', 'class="pictofixedwidth"') . ' <input type="text" name="email_contact" id="email_contact" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('email_contact') ? GETPOST('email_contact', 'alpha') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    print '</table>';
+
+    print dol_get_fiche_end();
 }
 
 // Quick add project/task
 if ($permissiontoaddproject) {
     print load_fiche_titre($langs->trans('QuickProjectCreation'), '', 'project');
-
-    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '">';
-    print '<input type="hidden" name="token" value="' . newToken() . '">';
-    print '<input type="hidden" name="action" value="add">';
-    if ($backtopage) {
-        print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
-    }
 
     print dol_get_fiche_head();
 
@@ -306,9 +388,9 @@ if ($permissiontoaddproject) {
     $file = '';
     $classname = '';
     $filefound = 0;
-    $dirmodels = array_merge(array('/'), (array)$conf->modules_parts['models']);
+    $dirmodels = array_merge(['/'], $conf->modules_parts['models']);
     foreach ($dirmodels as $reldir) {
-        $file = dol_buildpath($reldir . 'core/modules/project/' . $modele . '.php', 0);
+        $file = dol_buildpath($reldir . 'core/modules/project/' . $modele . '.php');
         if (file_exists($file)) {
             $filefound = 1;
             $classname = $modele;
@@ -320,7 +402,7 @@ if ($permissiontoaddproject) {
         $result = dol_include_once($reldir . 'core/modules/project/' . $modele . '.php');
         $modProject = new $classname();
 
-        $defaultref = $modProject->getNextValue($thirdparty, $object);
+        $defaultref = $modProject->getNextValue($thirdparty, $project);
     }
 
     if (is_numeric($defaultref) && $defaultref <= 0) {
@@ -329,90 +411,54 @@ if ($permissiontoaddproject) {
 
     // Ref
     $suggestedref = (GETPOST('ref') ? GETPOST('ref') : $defaultref);
-    print '<tr><td class="titlefieldcreate"><span class="fieldrequired">' . $langs->trans('Ref') . '</span></td><td class><input class="maxwidth150onsmartphone" type="text" name="ref" value="' . dol_escape_htmltag($suggestedref) . '">';
-    print ' ' . $form->textwithpicto('', $langs->trans('YouCanCompleteRef', $suggestedref));
-    print '</td></tr>';
+    print '<input type="hidden" name="ref" value="' . dol_escape_htmltag($suggestedref) . '">';
 
     // Label
-    print '<tr><td><span class="fieldrequired">' . $langs->trans('ProjectLabel') . '</span></td><td><input class="width500 maxwidth150onsmartphone" type="text" name="title" value="' . dol_escape_htmltag(GETPOST('title', 'alphanohtml')) . '" autofocus></td></tr>';
+    if ($conf->global->EASYCRM_PROJECT_LABEL_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate fieldrequired"><label for="title">' . $langs->trans('ProjectLabel') . '</label></td>';
+        print '<td><input type="text" name="title" id="title" class="maxwidth500 widthcentpercentminusx" maxlength="255" value="' . dol_escape_htmltag((GETPOSTISSET('title') ? GETPOST('title') : '')) . '"></td>';
+        print '</tr>';
+    }
 
     if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
         // Opportunity status
-        print '<tr class="classuseopportunity"><td>' . $langs->trans('OpportunityStatus') . '</td>';
-        print '<td class="maxwidthonsmartphone">';
-        print $formproject->selectOpportunityStatus('opp_status', GETPOSTISSET('opp_status') ? GETPOST('opp_status') : $project->opp_status, 1, 0, 0, 0, '', 0, 1);
-        print '</tr>';
+        if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VISIBLE > 0) {
+            print '<tr><td><label for="opp_status">' . $langs->trans('OpportunityStatus') . '</label></td>';
+            print '<td>' . $formproject->selectOpportunityStatus('opp_status', GETPOSTISSET('opp_status') ? GETPOST('opp_status') : $conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE, 1, 0, 0, 0, '', 0, 1) . '</td>';
+            print '</tr>';
+        }
 
         // Opportunity amount
-        print '<tr class="classuseopportunity"><td>' . $langs->trans('OpportunityAmount') . '</td>';
-        print '<td><input size="5" type="text" name="opp_amount" value="' . dol_escape_htmltag(GETPOSTISSET('opp_amount') ? GETPOST('opp_amount') : '') . '"></td>';
-        print '</tr>';
+        if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE > 0) {
+            print '<tr><td><label for="opp_amount">' . $langs->trans('OpportunityAmount') . '</label></td>';
+            print '<td><input type="text" name="opp_amount" id="opp_amount" size="5" value="' . dol_escape_htmltag(GETPOSTISSET('opp_amount') ? GETPOST('opp_amount') : $conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE) . '"></td>';
+            print '</tr>';
+        }
     }
 
     // Date start
-    print '<tr><td>' . $langs->trans('DateStart') . '</td><td>';
-    print $form->selectDate(($date_start ?: ''), 'projectstart');
-    print '</td></tr>';
+    if ($conf->global->EASYCRM_PROJECT_DATE_START_VISIBLE > 0) {
+        print '<tr><td><label for="projectstart">' . $langs->trans('DateStart') . '</label></td>';
+        print '<td>' . $form->selectDate(($date_start ?: ''), 'projectstart') . '</td>';
+        print '</tr>';
+    }
 
     // Categories
-    if (isModEnabled('categorie')) {
+    if (isModEnabled('categorie') && $conf->global->EASYCRM_PROJECT_CATEGORIES_VISIBLE > 0) {
         print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
         $cate_arbo = $form->select_all_categories(Categorie::TYPE_PROJECT, '', 'parent', 64, 0, 1);
-        print img_picto('', 'category') . $form->multiselectarray('categories_project', $cate_arbo, GETPOST('categories_project', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
+        print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories_project', $cate_arbo, GETPOST('categories_project', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
         print '</td></tr>';
     }
 
     print '</table>';
 
     print dol_get_fiche_end();
-
-    print $form->buttonsSaveCancel('Create');
-
-    print '</form>';
 }
 
-// Quick add thirdparty
-if ($permissiontoaddthirdparty) {
-    print load_fiche_titre($langs->trans('QuickProjectCreation'), '', 'company');
+print $form->buttonsSaveCancel('Create');
 
-    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '">';
-    print '<input type="hidden" name="token" value="' . newToken() . '">';
-    print '<input type="hidden" name="action" value="add_thirdparty">';
-    if ($backtopage) {
-        print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
-    }
-
-    print dol_get_fiche_head();
-
-    print '<table class="border centpercent tableforfieldcreate">';
-
-    // Name, firstname
-    print '<tr class="tr-field-thirdparty-name"><td class="titlefieldcreate">';
-    print '<span id="TypeName" class="fieldrequired">' . $form->editfieldkey('ThirdPartyName', 'name', '', $object, 0) . '</span>';
-    print '</td><td' . (empty($conf->global->SOCIETE_USEPREFIX) ? ' colspan="3"' : '') . '>';
-    print '<input type="text" class="minwidth300" maxlength="128" name="name" id="name" value="' . dol_escape_htmltag($object->name) . '" autofocus="autofocus">';
-    print $form->widgetForTranslation('name', $object, $permissiontoadd, 'string', 'alpahnohtml', 'minwidth300');
-
-    // Email
-    print '<tr><td>' . $form->editfieldkey('EMail', 'email', '', $object, 0, 'string', '', empty($conf->global->SOCIETE_EMAIL_MANDATORY) ? '' : $conf->global->SOCIETE_EMAIL_MANDATORY) . '</td>';
-    print '<td' . (($conf->browser->layout == 'phone') || empty($conf->mailing->enabled) ? ' colspan="3"' : '') . '>' . img_picto('', 'object_email', 'class="pictofixedwidth"') . ' <input type="text" class="maxwidth200 widthcentpercentminusx" name="email" id="email" value="' . $object->email . '"></td>';
-
-    // Categories
-    if (isModEnabled('categorie')) {
-        print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
-        $cate_arbo = $form->select_all_categories(Categorie::TYPE_CUSTOMER, '', 'parent', 64, 0, 1);
-        print img_picto('', 'category') . $form->multiselectarray('categories_customer', $cate_arbo, GETPOST('categories_customer', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
-        print '</td></tr>';
-    }
-
-    print '</table>';
-
-    print dol_get_fiche_end();
-
-    print $form->buttonsSaveCancel('Create');
-
-    print '</form>';
-}
+print '</form>';
 
 // End of page
 llxFooter();

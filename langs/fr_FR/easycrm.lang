@@ -21,3 +21,31 @@ ModuleEasyCRMName      = EasyCRM
 ModuleEasyCRMDesc      = Simplification de la CRM
 EasyCRMDescription     = Simplification de la CRM
 EasyCRMDescriptionLong = Simplification de la CRM
+
+#
+# Quick Creation - Ajout rapide
+#
+QuickCreation            = Ajout rapide
+QuickCreations           = ajouts rapide
+QuickThirdPartyCreation  = Ajout rapide de tiers
+QuickThirdPartyCreations = ajouts rapide de tiers
+QuickProjectCreation     = Ajout rapide de projet
+QuickProjectCreations    = ajouts rapide de projet
+QuickContactCreation     = Ajout rapide de contact/adresse
+QuickContactCreations    = ajouts rapide de contact/adresse
+
+#
+# Config page - Page d'administration
+#
+
+# Data - Donnée
+OpportunityStatusDescription = Selection du statut d'opportunité <br> Valeur par défaut : <b> Prospection </b>
+OpportunityAmountDescription = Selection du montant d'opportunité <br> Valeur par défaut : <b> 3000 € </b>
+ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par défaut : <b> Prospect </b>
+
+#
+# Other - Autre
+#
+
+# Data - Donnée
+LastProjects = Les %s derniers projets

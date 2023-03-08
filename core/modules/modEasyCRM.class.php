@@ -41,9 +41,13 @@ class modEasyCRM extends DolibarrModules
 		global $langs, $conf;
 		$this->db = $db;
 
-        require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
-
-        saturne_load_langs(['easycrm@easycrm']);
+        if (isModEnabled('saturne')) {
+            require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
+            saturne_load_langs(['easycrm@easycrm']);
+        } else {
+            $this->error++;
+            $this->errors[] = $langs->trans('activateModuleDependNotSatisfied', 'EasyCRM', 'Saturne');
+        }
 
         // ID for module (must be unique).
         // Use here a free id (See in Home -> System information -> Dolibarr for list of used module id).
@@ -155,6 +159,30 @@ class modEasyCRM extends DolibarrModules
 		// );
         $i = 0;
 		$this->const = [
+            // CONST CONFIGURATION
+            // CONST THIRDPARTY
+            $i++ => ['EASYCRM_THIRDPARTY_CLIENT_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_THIRDPARTY_CLIENT_VALUE', 'integer', 2, '', 0, 'current'],
+            $i++ => ['EASYCRM_THIRDPARTY_NAME_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_THIRDPARTY_EMAIL_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_THIRDPARTY_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
+
+            // CONST CONTACT
+            $i++ => ['EASYCRM_CONTACT_LASTNAME_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_CONTACT_FIRSTNAME_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_CONTACT_JOB_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_CONTACT_PHONEPRO_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_CONTACT_EMAIL_VISIBLE', 'integer', 1, '', 0, 'current'],
+
+            // CONST PROJECT
+            $i++ => ['EASYCRM_PROJECT_LABEL_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_PROJECT_OPPORTUNITY_STATUS_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE', 'integer', 3000, '', 0, 'current'],
+            $i++ => ['EASYCRM_PROJECT_DATE_START_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_PROJECT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
+
             // CONST MODULE
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],
 			$i   => ['EASYCRM_DB_VERSION', 'chaine', $this->version, '', 0, 'current'],
@@ -232,7 +260,7 @@ class modEasyCRM extends DolibarrModules
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=easycrm', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
             'type'     => 'left', // This is a Top menu entry
-            'titre'    => $langs->transnoentities('QuickProjectCreation'),
+            'titre'    => $langs->transnoentities('QuickCreation'),
             'prefix'   => '<i class="fas fa-plus-circle pictofixedwidth"></i>',
             'mainmenu' => 'easycrm',
             'leftmenu' => 'quickcreation',
@@ -314,6 +342,11 @@ class modEasyCRM extends DolibarrModules
 
         dolibarr_set_const($this->db, 'EASYCRM_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
         dolibarr_set_const($this->db, 'EASYCRM_DB_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
+
+        if ($this->error > 0) {
+            setEventMessages('', $this->errors, 'errors');
+            return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
+        }
 
 		// Permissions
 		$this->remove($options);
