@@ -143,7 +143,7 @@ class modEasyCRM extends DolibarrModules
 		$this->langfiles = ['easycrm@easycrm'];
 
 		// Prerequisites
-		$this->phpmin = [7, 0]; // Minimum version of PHP required by module
+		$this->phpmin = [7, 4]; // Minimum version of PHP required by module
 		$this->need_dolibarr_version = [15, 0]; // Minimum version of Dolibarr required by module
 
 		// Messages at activation

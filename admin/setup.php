@@ -44,7 +44,7 @@ require_once __DIR__ . '/../lib/easycrm.lib.php';
 global $conf, $db, $langs, $user;
 
 // Load translation files required by the page
-saturne_load_langs(['categories']);
+saturne_load_langs(['admin', 'categories']);
 
 // Get parameters
 $action     = GETPOST('action', 'alpha');
