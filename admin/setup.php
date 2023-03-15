@@ -111,7 +111,7 @@ print '<table class="noborder centpercent">';
 print '<tr class="liste_titre">';
 print '<td>' . $langs->trans('Name') . '</td>';
 print '<td>' . $langs->trans('Description') . '</td>';
-print '<td class="center">' . $langs->trans('Status') . '</td>';
+print '<td class="center">' . $langs->trans('Visible') . '</td>';
 print '<td>' . $langs->trans('Value') . '</td>';
 print '</tr>';
 
@@ -126,7 +126,7 @@ print $langs->trans('ObjectVisibleDescription', $langs->trans('ProspectCustomer'
 print '</td>';
 
 print '<td class="center">';
-print ajax_constantonoff('EASYCRM_THIRDPARTY_CLIENT_VISIBLE');
+//print ajax_constantonoff('EASYCRM_THIRDPARTY_CLIENT_VISIBLE');
 print '</td>';
 
 if ($conf->global->EASYCRM_THIRDPARTY_CLIENT_VISIBLE > 0 && isModEnabled('societe')) {
@@ -144,7 +144,7 @@ print $langs->trans('ObjectVisibleDescription', $langs->trans('ThirdPartyName'))
 print '</td>';
 
 print '<td class="center">';
-print ajax_constantonoff('EASYCRM_THIRDPARTY_NAME_VISIBLE');
+//print ajax_constantonoff('EASYCRM_THIRDPARTY_NAME_VISIBLE');
 print '</td></td><td></tr>';
 
 // Email
@@ -180,7 +180,7 @@ print $langs->trans('ObjectVisibleDescription', $langs->trans('Lastname'));
 print '</td>';
 
 print '<td class="center">';
-print ajax_constantonoff('EASYCRM_CONTACT_LASTNAME_VISIBLE');
+//print ajax_constantonoff('EASYCRM_CONTACT_LASTNAME_VISIBLE');
 print '</td></td><td></tr>';
 
 // Firstname
@@ -228,7 +228,7 @@ print ajax_constantonoff('EASYCRM_CONTACT_EMAIL_VISIBLE');
 print '</td></td><td></tr>';
 
 // PROJECT
-print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->trans('QuickProjectCreations')) . '</div></td><tr>';
+print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->transnoentities('QuickProjectCreations')) . '</div></td><tr>';
 
 // ProjectLabel
 print '<tr class="oddeven"><td>';
@@ -238,7 +238,7 @@ print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Project
 print '</td>';
 
 print '<td class="center">';
-print ajax_constantonoff('EASYCRM_PROJECT_LABEL_VISIBLE');
+//print ajax_constantonoff('EASYCRM_PROJECT_LABEL_VISIBLE');
 print '</td></td><td></tr>';
 
 // OpportunityStatus

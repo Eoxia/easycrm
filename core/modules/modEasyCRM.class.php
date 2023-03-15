@@ -41,7 +41,7 @@ class modEasyCRM extends DolibarrModules
 		global $langs, $conf;
 		$this->db = $db;
 
-        if (isModEnabled('saturne')) {
+        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php')) {
             require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
             saturne_load_langs(['easycrm@easycrm']);
         } else {
@@ -185,7 +185,8 @@ class modEasyCRM extends DolibarrModules
 
             // CONST MODULE
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],
-			$i   => ['EASYCRM_DB_VERSION', 'chaine', $this->version, '', 0, 'current'],
+			$i++ => ['EASYCRM_DB_VERSION', 'chaine', $this->version, '', 0, 'current'],
+            $i   => ['EASYCRM_SHOW_PATCH_NOTE', 'integer', 1, '', 0, 'current'],
         ];
 
 		// Some keys to add into the overwriting translation tables
@@ -338,15 +339,15 @@ class modEasyCRM extends DolibarrModules
     {
 		global $conf;
 
-        $sql = [];
-
-        dolibarr_set_const($this->db, 'EASYCRM_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
-        dolibarr_set_const($this->db, 'EASYCRM_DB_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
-
         if ($this->error > 0) {
             setEventMessages('', $this->errors, 'errors');
             return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
         }
+
+        $sql = [];
+
+        dolibarr_set_const($this->db, 'EASYCRM_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
+        dolibarr_set_const($this->db, 'EASYCRM_DB_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
 
 		// Permissions
 		$this->remove($options);

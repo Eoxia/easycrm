@@ -28,34 +28,4 @@ if (file_exists('easycrm.main.inc.php')) {
     die('Include of easycrm main fails');
 }
 
-// Global variables definitions
-global $conf, $db, $langs, $moduleName, $moduleNameLowerCase, $user;
-
-// Libraries
-require_once __DIR__ . '/core/modules/mod' . $moduleName . '.class.php';
-
-// Load translation files required by the page
-saturne_load_langs();
-
-// Initialize technical objects
-$classname = 'mod' . $moduleName;
-$modModule = new $classname($db);
-
-// Security check
-$permissiontoread = $user->rights->$moduleNameLowerCase->read;
-saturne_check_access($permissiontoread);
-
-/*
- * View
- */
-
-$title   = $langs->trans('ModuleArea', $moduleName);
-$helpUrl = 'FR:Module_' . $moduleName;
-
-saturne_header(0, '', $title . ' ' . $modModule->version, $helpUrl);
-
-print load_fiche_titre($title . ' ' . $modModule->version, '', $moduleNameLowerCase . '_color.png@' . $moduleNameLowerCase);
-
-// End of page
-llxFooter();
-$db->close();
+require_once __DIR__ . '/../saturne/core/tpl/index/index_view.tpl.php';

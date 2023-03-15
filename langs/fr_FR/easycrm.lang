@@ -29,10 +29,11 @@ QuickCreation            = Ajout rapide
 QuickCreations           = ajouts rapide
 QuickThirdPartyCreation  = Ajout rapide de tiers
 QuickThirdPartyCreations = ajouts rapide de tiers
-QuickProjectCreation     = Ajout rapide de projet
-QuickProjectCreations    = ajouts rapide de projet
+QuickProjectCreation     = Ajout rapide d'opportunité ou de projet
+QuickProjectCreations    = ajouts rapide d'opportunité ou de projet
 QuickContactCreation     = Ajout rapide de contact/adresse
 QuickContactCreations    = ajouts rapide de contact/adresse
+CommercialFollowUp       = Suivi commercial
 
 #
 # Config page - Page d'administration

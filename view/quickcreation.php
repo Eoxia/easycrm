@@ -35,6 +35,9 @@ if (isModEnabled('project')) {
     require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
     require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
 }
+if (isModEnabled('societe')) {
+    require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
+}
 if (isModEnabled('categorie')) {
     require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 }
@@ -69,6 +72,9 @@ $form = new Form($db);
 if (isModEnabled('project')) {
     $formproject = new FormProjets($db);
 }
+if (isModEnabled('societe')) {
+    $formcompany = new FormCompany($db);
+}
 
 $hookmanager->initHooks(['quickcration']); // Note that conf->hooks_modules contains array
 
@@ -94,47 +100,19 @@ if ($reshook < 0) {
 if (empty($reshook)) {
     $error = 0;
 
-    $backurlforlist = dol_buildpath('/projet/list.php', 1);
-
-    if (empty($backtopage) || ($cancel && empty($id))) {
-        if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
-            if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
-                $backtopage = $backurlforlist;
-            } else {
-                $backtopage = dol_buildpath('/projet/card.php', 1) . '?id=' . ((!empty($id) && $id > 0) ? $id : '__ID__');
-            }
-        }
-    }
-
     if ($cancel) {
-        if (!empty($backtopageforcancel)) {
-            header('Location: ' . $backtopageforcancel);
-            exit;
-        } elseif (!empty($backtopage)) {
-            header('Location: ' . $backtopage);
-            exit;
-        }
-        $action = '';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
     }
 
     if ($action == 'add') {
         // Check thirdparty parameters
-        if (!GETPOST('name')) {
-            setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('ThirdPartyName')), [], 'errors');
-            $error++;
-        }
-
         if (!empty($thirdparty->email) && !isValidEMail($thirdparty->email)) {
             setEventMessages($langs->trans('ErrorBadEMail', $thirdparty->email), [], 'errors');
             $error++;
         }
 
         // Check project parameters
-        if (!GETPOST('title')) {
-            setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentities('ProjectLabel')), [], 'errors');
-            $error++;
-        }
-
         if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
             if (GETPOST('opp_amount') != '' && !(GETPOST('opp_status') > 0)) {
                 setEventMessages($langs->trans('ErrorOppStatusRequiredIfAmount'), [], 'errors');
@@ -145,118 +123,124 @@ if (empty($reshook)) {
         if (!$error) {
             $db->begin();
 
-            $thirdparty->code_client = -1;
-            $thirdparty->client      = $conf->global->EASYCRM_THIRDPARTY_CLIENT_VALUE;
-            $thirdparty->name        = GETPOST('name');
-            $thirdparty->email       = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
+            if (!empty(GETPOST('name'))) {
+                $thirdparty->code_client = -1;
+                $thirdparty->client      = GETPOST('client');
+                $thirdparty->name        = GETPOST('name');
+                $thirdparty->email       = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
 
-            $thirdpartyID = $thirdparty->create($user);
-            if ($thirdpartyID > 0) {
-                // Category association
-                $categories = GETPOST('categories_customer', 'array');
-                if (count($categories) > 0) {
-                    $result = $thirdparty->setCategories($categories, 'customer');
-                    if ($result < 0) {
-                        setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
-                        $error++;
+                $thirdpartyID = $thirdparty->create($user);
+                if ($thirdpartyID > 0) {
+                    $backtopage = dol_buildpath('/societe/card.php', 1) . '?id=' . $thirdpartyID;
+
+                    // Category association
+                    $categories = GETPOST('categories_customer', 'array');
+                    if (count($categories) > 0) {
+                        $result = $thirdparty->setCategories($categories, 'customer');
+                        if ($result < 0) {
+                            setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
+                            $error++;
+                        }
                     }
-                }
+                    if (!empty(GETPOST('lastname', 'alpha'))) {
+                        $contact->socid     = !empty($thirdpartyID) ? $thirdpartyID : '';
+                        $contact->lastname  = GETPOST('lastname', 'alpha');
+                        $contact->firstname = GETPOST('firstname', 'alpha');
+                        $contact->poste     = GETPOST('job', 'alpha');
+                        $contact->email     = trim(GETPOST('email_contact', 'custom', 0, FILTER_SANITIZE_EMAIL));
+                        $contact->phone_pro = GETPOST('phone_pro', 'alpha');
 
-                $contact->socid     = $thirdpartyID;
-                $contact->lastname  = GETPOST('lastname', 'alpha');
-                $contact->firstname = GETPOST('firstname', 'alpha');
-                $contact->poste     = GETPOST('job', 'alpha');
-                $contact->email     = trim(GETPOST('email_contact', 'custom', 0, FILTER_SANITIZE_EMAIL));
-                $contact->phone_pro = GETPOST('phone_pro', 'alpha');
-
-                $contactID = $contact->create($user);
-                if ($contactID < 0) {
-                    setEventMessages($contact->error, $contact->errors, 'errors');
-                    $error++;
-                }
-            } else {
-                setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
-                $error++;
-            }
-
-            $project->socid      = $thirdpartyID;
-            $project->ref        = GETPOST('ref');
-            $project->title      = GETPOST('title');
-            $project->opp_status = GETPOST('opp_status', 'int');
-
-            switch ($project->opp_status) {
-                case 2:
-                    $project->opp_percent = 20;
-                    break;
-                case 3:
-                    $project->opp_percent = 40;
-                    break;
-                case 4:
-                    $project->opp_percent = 60;
-                    break;
-                case 5:
-                    $project->opp_percent = 100;
-                    break;
-                default:
-                    $project->opp_percent = 0;
-                    break;
-            }
-
-            $project->opp_amount        = price2num(GETPOST('opp_amount'));
-            $project->date_c            = dol_now();
-            $project->date_start        = $date_start;
-            $project->statut            = 1;
-            $project->usage_opportunity = 1;
-            $project->usage_task        = 1;
-
-            $projectID = $project->create($user);
-            if (!$error && $projectID > 0) {
-                // Category association
-                $categories = GETPOST('categories_project', 'array');
-                if (count($categories) > 0) {
-                    $result = $project->setCategories($categories);
-                    if ($result < 0) {
-                        setEventMessages($project->error, $project->errors, 'errors');
-                        $error++;
+                        $contactID = $contact->create($user);
+                        if ($contactID < 0) {
+                            setEventMessages($contact->error, $contact->errors, 'errors');
+                            $error++;
+                        }
                     }
-                }
-
-                $project->add_contact($user->id, 'PROJECTLEADER', 'internal');
-
-                $defaultref = '';
-                $obj        = empty($conf->global->PROJECT_TASK_ADDON) ? 'mod_task_simple' : $conf->global->PROJECT_TASK_ADDON;
-
-                if (!empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php')) {
-                    require_once DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php';
-                    $modTask    = new $obj();
-                    $defaultref = $modTask->getNextValue($thirdparty, $task);
-                }
-
-                $task->fk_project = $projectID;
-                $task->ref        = $defaultref;
-                $task->label      = $langs->trans('CommercialFollowUp') . ' - ' . $project->title;
-                $task->date_c     = dol_now();
-
-                $taskID = $task->create($user);
-                if ($taskID > 0) {
-                    $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
                 } else {
-                    setEventMessages($task->error, $task->errors, 'errors');
+                    setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
                     $error++;
                 }
-            } else {
-                $langs->load('errors');
-                setEventMessages($project->error, $project->errors, 'errors');
-                $error++;
+            }
+
+            if (!empty(GETPOST('title'))) {
+                $project->socid      = !empty($thirdpartyID) ? $thirdpartyID : '';
+                $project->ref        = GETPOST('ref');
+                $project->title      = GETPOST('title');
+                $project->opp_status = GETPOST('opp_status', 'int');
+
+                switch ($project->opp_status) {
+                    case 2:
+                        $project->opp_percent = 20;
+                        break;
+                    case 3:
+                        $project->opp_percent = 40;
+                        break;
+                    case 4:
+                        $project->opp_percent = 60;
+                        break;
+                    case 5:
+                        $project->opp_percent = 100;
+                        break;
+                    default:
+                        $project->opp_percent = 0;
+                        break;
+                }
+
+                $project->opp_amount        = price2num(GETPOST('opp_amount'));
+                $project->date_c            = dol_now();
+                $project->date_start        = $date_start;
+                $project->statut            = 1;
+                $project->usage_opportunity = 1;
+                $project->usage_task        = 1;
+
+                $projectID = $project->create($user);
+                if (!$error && $projectID > 0) {
+                    $backtopage = dol_buildpath('/projet/card.php', 1) . '?id=' . $projectID;
+
+                    // Category association
+                    $categories = GETPOST('categories_project', 'array');
+                    if (count($categories) > 0) {
+                        $result = $project->setCategories($categories);
+                        if ($result < 0) {
+                            setEventMessages($project->error, $project->errors, 'errors');
+                            $error++;
+                        }
+                    }
+
+                    $project->add_contact($user->id, 'PROJECTLEADER', 'internal');
+
+                    $defaultref = '';
+                    $obj        = empty($conf->global->PROJECT_TASK_ADDON) ? 'mod_task_simple' : $conf->global->PROJECT_TASK_ADDON;
+
+                    if (!empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php')) {
+                        require_once DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php';
+                        $modTask    = new $obj();
+                        $defaultref = $modTask->getNextValue($thirdparty, $task);
+                    }
+
+                    $task->fk_project = $projectID;
+                    $task->ref        = $defaultref;
+                    $task->label      = $langs->trans('CommercialFollowUp') . ' - ' . $project->title;
+                    $task->date_c     = dol_now();
+
+                    $taskID = $task->create($user);
+                    if ($taskID > 0) {
+                        $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
+                    } else {
+                        setEventMessages($task->error, $task->errors, 'errors');
+                        $error++;
+                    }
+                } else {
+                    $langs->load('errors');
+                    setEventMessages($project->error, $project->errors, 'errors');
+                    $error++;
+                }
             }
 
             if (!$error) {
                 $db->commit();
                 if (!empty($backtopage)) {
-                    $backtopage = preg_replace('/--IDFORBACKTOPAGE--|__ID__/', $projectID, $backtopage); // New method to autoselect project after a New on another form object creation
                     header('Location: ' . $backtopage);
-                } else {
-                    header('Location:card.php?id=' . $projectID);
                 }
                 exit;
             } else {
@@ -304,6 +288,11 @@ if ($permissiontoaddthirdparty) {
         print '<tr><td class="titlefieldcreate fieldrequired"><label for="name">' . $langs->trans('ThirdPartyName') . '</label></td>';
         print '<td><input type="text" name="name" id="name" class="maxwidth200 widthcentpercentminusx" maxlength="128" value="' . (GETPOSTISSET('name') ? GETPOST('name', 'alpha') : '') . '" autofocus="autofocus"></td>';
         print '</tr>';
+    }
+
+    if ($conf->global->EASYCRM_THIRDPARTY_CLIENT_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate fieldrequired"><label for="name">' . $langs->trans('ProspectCustomer') . '</label></td>';
+        print '<td>' . $formcompany->selectProspectCustomerType(GETPOSTISSET('client') ? GETPOST('client') : $conf->global->EASYCRM_THIRDPARTY_CLIENT_VALUE, 'client', 'customerprospect', 'form', 'maxwidth200 widthcentpercentminusx') . '</td>';
     }
 
     // Email
