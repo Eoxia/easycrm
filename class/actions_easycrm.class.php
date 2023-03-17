@@ -202,4 +202,25 @@ class ActionsEasycrm
 
         return 0; // or return 1 to replace standard code
     }
+
+    /**
+     *  Overloading the addMoreActionsButtons function : replacing the parent's function with the one below
+     *
+     * @param  array        $parameters Hook metadatas (context, etc...)
+     * @param  CommonObject $object     The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
+     * @param  string       $action     Current action (if set). Generally create or edit or null
+     * @return int                      0 < on error, 0 on success, 1 to replace standard code
+     * @throws Exception
+     */
+    public function addMoreActionsButtons(array $parameters, CommonObject $object, string $action): int
+    {
+        global $conf, $db, $langs, $user;
+
+        // Do something only for the current context
+        if ($parameters['currentcontext'] == 'thirdpartycomm') {
+            print dolGetButtonAction('', $langs->trans('QuickEventCreation'), 'default', dol_buildpath('/easycrm/view/quickevent.php', 1) . '?socid='.$object->id . '&action=create&token='.newToken(), '', 1);
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
 }
