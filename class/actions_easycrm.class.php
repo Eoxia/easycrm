@@ -136,8 +136,9 @@ class ActionsEasycrm
 
                 $projects = saturne_fetch_all_object_type('Project', 'DESC', 'datec', 0, 0, ['customsql' => 't.fk_soc = ' . $object->id]);
                 if (is_array($projects) && !empty($projects)) {
-                    $nbProjects = count($projects);
-                    $maxList    = $conf->global->MAIN_SIZE_SHORTLIST_LIMIT;
+                    $countProjects = 0;
+                    $nbProjects    = count($projects);
+                    $maxList       = $conf->global->MAIN_SIZE_SHORTLIST_LIMIT;
 
                     $out = '<div class="div-table-responsive-no-min">';
                     $out .= '<table class="noborder centpercent lastrecordtable">';
@@ -151,6 +152,11 @@ class ActionsEasycrm
                     $out .= '</tr>';
 
                     foreach ($projects as $project) {
+                        if ($countProjects == $maxList) {
+                            break;
+                        } else {
+                            $countProjects++;
+                        }
                         $out .= '<tr class="oddeven">';
                         $out .= '<td class="nowraponall">';
                         $out .= $project->getNomUrl(1);
