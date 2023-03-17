@@ -147,6 +147,17 @@ print '<td class="center">';
 //print ajax_constantonoff('EASYCRM_THIRDPARTY_NAME_VISIBLE');
 print '</td></td><td></tr>';
 
+// Phone
+print '<tr class="oddeven"><td>';
+print $langs->trans('Phone');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Phone'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_THIRDPARTY_PHONE_VISIBLE');
+print '</td></td><td></tr>';
+
 // Email
 print '<tr class="oddeven"><td>';
 print $langs->trans('Email');

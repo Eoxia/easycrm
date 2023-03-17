@@ -130,6 +130,7 @@ if (empty($reshook)) {
                 $thirdparty->code_client  = -1;
                 $thirdparty->client       = GETPOST('client');
                 $thirdparty->name         = GETPOST('name');
+                $thirdparty->phone        = GETPOST('phone', 'alpha');
                 $thirdparty->email        = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
                 $thirdparty->url          = trim(GETPOST('url', 'custom', 0, FILTER_SANITIZE_URL));
                 $thirdparty->note_private = GETPOST('note_private');
@@ -298,6 +299,13 @@ if ($permissiontoaddthirdparty) {
     if ($conf->global->EASYCRM_THIRDPARTY_CLIENT_VISIBLE > 0) {
         print '<tr><td class="titlefieldcreate fieldrequired"><label for="name">' . $langs->trans('ProspectCustomer') . '</label></td>';
         print '<td>' . $formcompany->selectProspectCustomerType(GETPOSTISSET('client') ? GETPOST('client') : $conf->global->EASYCRM_THIRDPARTY_CLIENT_VALUE, 'client', 'customerprospect', 'form', 'maxwidth200 widthcentpercentminusx') . '</td>';
+    }
+
+    // Phone
+    if ($conf->global->EASYCRM_THIRDPARTY_PHONE_VISIBLE > 0) {
+        print '<tr><td><label for="phone">' . $langs->trans('Phone') . '</label></td>';
+        print '<td>' . img_picto('', 'phone', 'class="pictofixedwidth"') . ' <input type="text" name="phone" id="phone" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('phone') ? GETPOST('phone', 'alpha') : '') . '"></td>';
+        print '</tr>';
     }
 
     // Email
