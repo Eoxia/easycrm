@@ -158,6 +158,28 @@ print '<td class="center">';
 print ajax_constantonoff('EASYCRM_THIRDPARTY_EMAIL_VISIBLE');
 print '</td></td><td></tr>';
 
+// Web
+print '<tr class="oddeven"><td>';
+print $langs->trans('Web');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->trans('Web'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_THIRDPARTY_WEB_VISIBLE');
+print '</td></td><td></tr>';
+
+// Private note
+print '<tr class="oddeven"><td>';
+print $langs->trans('NotePrivate');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('NotePrivate'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_THIRDPARTY_PRIVATE_NOTE_VISIBLE');
+print '</td></td><td></tr>';
+
 // CustomersProspectsCategoriesShort
 print '<tr class="oddeven"><td>';
 print $langs->trans('CustomersProspectsCategoriesShort');
@@ -271,7 +293,7 @@ print ajax_constantonoff('EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE');
 print '</td>';
 
 if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE > 0) {
-    print '<td><input type="number" name="project_opportunity_amount minwidth200" value="' . $conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE . '"></td>';
+    print '<td><input type="number" name="project_opportunity_amount" class="minwidth200" value="' . $conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE . '"></td>';
 } else {
     print '<td></td>';
 }

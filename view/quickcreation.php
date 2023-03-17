@@ -38,6 +38,9 @@ if (isModEnabled('project')) {
 if (isModEnabled('societe')) {
     require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
 }
+if (isModEnabled('fckeditor')) {
+    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+}
 if (isModEnabled('categorie')) {
     require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 }
@@ -124,10 +127,12 @@ if (empty($reshook)) {
             $db->begin();
 
             if (!empty(GETPOST('name'))) {
-                $thirdparty->code_client = -1;
-                $thirdparty->client      = GETPOST('client');
-                $thirdparty->name        = GETPOST('name');
-                $thirdparty->email       = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
+                $thirdparty->code_client  = -1;
+                $thirdparty->client       = GETPOST('client');
+                $thirdparty->name         = GETPOST('name');
+                $thirdparty->email        = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
+                $thirdparty->url          = trim(GETPOST('url', 'custom', 0, FILTER_SANITIZE_URL));
+                $thirdparty->note_private = GETPOST('note_private');
 
                 $thirdpartyID = $thirdparty->create($user);
                 if ($thirdpartyID > 0) {
@@ -299,6 +304,21 @@ if ($permissiontoaddthirdparty) {
     if ($conf->global->EASYCRM_THIRDPARTY_EMAIL_VISIBLE > 0) {
         print '<tr><td><label for="email_thirdparty">' . $langs->trans('Email') . '</label></td>';
         print '<td>' . img_picto('', 'object_email', 'class="pictofixedwidth"') . ' <input type="text" name="email_thirdparty" id="email_thirdparty" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('email_thirdparty') ? GETPOST('email_thirdparty', 'alpha') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    // Web
+    if ($conf->global->EASYCRM_THIRDPARTY_WEB_VISIBLE > 0) {
+        print '<tr><td><label for="url">' . $langs->trans('Web') . '</label></td>';
+        print '<td>' . img_picto('', 'globe', 'class="pictofixedwidth"') . ' <input type="text" name="url" id="url" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('url') ? GETPOST('url', 'alpha') : '') . '"></td>';
+        print '</tr>';
+    }
+
+    // Private note
+    if ($conf->global->EASYCRM_THIRDPARTY_PRIVATE_NOTE_VISIBLE > 0 && isModEnabled('fckeditor')) {
+        print '<tr><td><label for="note_private">' . $langs->trans('NotePrivate') . '</label></td>';
+        $doleditor = new DolEditor('note_private', (GETPOSTISSET('note_private') ? GETPOST('note_private', 'alpha') : ''), '', 80, 'dolibarr_notes', 'In', 0, false, ((empty($conf->global->FCKEDITOR_ENABLE_NOTE_PRIVATE) || $conf->browser->layout == 'phone') ? 0 : 1), ROWS_3, '90%');
+        print '<td>' . $doleditor->Create(1) . '</td>';
         print '</tr>';
     }
 
