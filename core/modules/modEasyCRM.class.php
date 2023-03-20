@@ -119,7 +119,8 @@ class modEasyCRM extends DolibarrModules
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => [
                 'thirdpartycomm',
-                'projectcard'
+                'projectcard',
+                'projectlist',
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -348,7 +349,7 @@ class modEasyCRM extends DolibarrModules
      */
 	public function init($options = ''): int
     {
-		global $conf;
+		global $conf, $langs;
 
         if ($this->error > 0) {
             setEventMessages('', $this->errors, 'errors');
@@ -359,6 +360,12 @@ class modEasyCRM extends DolibarrModules
 
         dolibarr_set_const($this->db, 'EASYCRM_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
         dolibarr_set_const($this->db, 'EASYCRM_DB_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
+
+        // Create extrafields during init
+        include_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
+        $extra_fields = new ExtraFields($this->db);
+
+        $extra_fields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', '', '', 2);
 
 		// Permissions
 		$this->remove($options);

@@ -241,7 +241,7 @@ class ActionsEasycrm
      */
     public function printCommonFooter(array $parameters): int
     {
-        global $db, $langs;
+        global $db, $langs, $user;
 
         // Do something only for the current context
         if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
@@ -249,7 +249,7 @@ class ActionsEasycrm
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
 
                 $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
-                $picto = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+                $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 
                 $actiomcomm = new ActionComm($db);
 
@@ -274,6 +274,56 @@ class ActionsEasycrm
                     jQuery('.tableforfield').last().append(<?php echo json_encode($out); ?>)
                 </script>
                 <?php
+            }
+        }
+
+        if ($parameters['currentcontext'] == 'projectlist') {
+            if (isModEnabled('agenda') && isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
+                require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+                require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+
+                require_once __DIR__ . '/../../saturne/lib/object.lib.php';
+
+                $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
+                $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+
+                $actiomcomm = new ActionComm($db);
+
+                $projects = saturne_fetch_all_object_type('Project');
+                if (is_array($projects) && !empty($projects)) {
+                    foreach ($projects as $project) {
+                        if (!empty($project->id)) {
+                            $actiomcomms = $actiomcomm->getActions($project->fk_soc, $project->id, 'project', ' AND a.note = "' . $langs->trans('CommercialRelaunching') . '"');
+                            if (is_array($actiomcomms) && !empty($actiomcomms)) {
+                                $nbActiomcomms  = count($actiomcomms);
+                                $lastActiomcomm = array_pop($actiomcomms);
+                            } else {
+                                $nbActiomcomms = 0;
+                            }
+
+                            $out = $picto . $langs->trans('CommercialsRelaunching');
+                            $out .= ' <span class="badge badge-info">' . $nbActiomcomms . '</span>';
+                            if ($nbActiomcomms > 0) {
+                                $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
+                                $out .= ' ' . $lastActiomcomm->getNomUrl(1);
+                            }
+                            $url = '?socid=' . $project->fk_soc . '&fromtype=project' . '&project_id=' . $project->id . '&action=create&token=' . newToken();
+                            if ($user->hasRight('agenda', 'myactions', 'create')) {
+                                $out .= '<a href="' . dol_buildpath('/easycrm/view/quickevent.php', 1) . $url . '" target="_blank"><span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span></a>';
+                            }
+                            $outArray[] = $out;
+                        }
+                    } ?>
+                    <script>
+                        var outArrayJS = <?php echo json_encode($outArray); ?>;
+                        $('.liste > tbody > tr.oddeven').each(function(index) {
+                            var commRelauchCell = $(this).find('td[data-key="projet.commrelaunch"]');
+                            commRelauchCell.addClass('minwidth300');
+                            commRelauchCell.append(outArrayJS[index]);
+                        });
+                    </script>
+                    <?php
+                }
             }
         }
 
