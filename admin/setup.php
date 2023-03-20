@@ -75,7 +75,7 @@ if ($action == 'set_config') {
         dolibarr_set_const($db, 'EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE', $projectOpportunityStatus, 'integer', 0, '', $conf->entity);
     }
     if (!empty($projectOpportunityAmount)) {
-        dolibarr_set_const($db, 'EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE', $projectOpportunityAmount, 'integer', 0, '', $conf->entity);
+    dolibarr_set_const($db, 'EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE', $projectOpportunityAmount, 'integer', 0, '', $conf->entity);
     }
     if (!empty($client)) {
         dolibarr_set_const($db, 'EASYCRM_THIRDPARTY_CLIENT_VALUE', $client, 'integer', 0, '', $conf->entity);
