@@ -214,13 +214,70 @@ class ActionsEasycrm
      */
     public function addMoreActionsButtons(array $parameters, CommonObject $object, string $action): int
     {
-        global $conf, $db, $langs, $user;
+        global $langs, $user;
 
         // Do something only for the current context
-        if ($parameters['currentcontext'] == 'thirdpartycomm') {
-            print dolGetButtonAction('', $langs->trans('QuickEventCreation'), 'default', dol_buildpath('/easycrm/view/quickevent.php', 1) . '?socid='.$object->id . '&action=create&token='.newToken(), '', 1);
+        if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
+            if ($parameters['currentcontext'] == 'thirdpartycomm') {
+                $socid     = $object->id;
+                $moreparam = '';
+            } else {
+                $socid     = $object->socid;
+                $moreparam = '&project_id=' . $object->id;
+            }
+            $url = '?socid=' . $socid . '&fromtype=' . $object->element . $moreparam . '&action=create&token=' . newToken();
+            print dolGetButtonAction('', $langs->trans('QuickEventCreation'), 'default', dol_buildpath('/easycrm/view/quickevent.php', 1) . $url, '', $user->rights->agenda->myactions->create);
         }
 
         return 0; // or return 1 to replace standard code
     }
+
+    /**
+     * Overloading the printCommonFooter function : replacing the parent's function with the one below
+     *
+     * @param  array $parameters Hook metadatas (context, etc...)
+     * @return int               0 < on error, 0 on success, 1 to replace standard code
+     * @throws Exception
+     */
+    public function printCommonFooter(array $parameters): int
+    {
+        global $db, $langs;
+
+        // Do something only for the current context
+        if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
+            if (isModEnabled('agenda')) {
+                require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+
+                $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
+                $picto = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+
+                $actiomcomm = new ActionComm($db);
+
+                $actiomcomms = $actiomcomm->getActions(GETPOST('socid'), ($parameters['currentcontext'] != 'thirdpartycomm' ? GETPOST('id') : ''), ($parameters['currentcontext'] != 'thirdpartycomm' ? 'project' : ''), ' AND a.note = "' . $langs->trans('CommercialRelaunching') . '"');
+                if (is_array($actiomcomms) && !empty($actiomcomms)) {
+                    $nbActiomcomms  = count($actiomcomms);
+                    $lastActiomcomm = array_pop($actiomcomms);
+                } else {
+                    $nbActiomcomms = 0;
+                }
+
+                $out = '<tr><td class="titlefield">' . $picto . $langs->trans('CommercialsRelaunching') . '</td>';
+                $out .= '<td>' .'<span class="badge badge-info">' . $nbActiomcomms . '</span>';
+                if ($nbActiomcomms > 0) {
+                    $out .= ' - ' . '<span>' . $langs->trans('LastCommercialReminderDate') . ' : ' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
+                    $out .= ' ' . $lastActiomcomm->getNomUrl(1);
+                }
+                $out .= '</td></tr>';
+
+                ?>
+                <script>
+                    jQuery('.tableforfield').last().append(<?php echo json_encode($out); ?>)
+                </script>
+                <?php
+            }
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
+
 }
