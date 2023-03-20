@@ -33,13 +33,11 @@ if (isModEnabled('project')) {
     require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
 
     require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
-    require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
 }
-if (isModEnabled('societe')) {
-    require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
-}
-if (isModEnabled('fckeditor')) {
-    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+if (isModEnabled('agenda')) {
+    require_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
+
+    require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
 }
 if (isModEnabled('categorie')) {
     require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
@@ -53,21 +51,24 @@ saturne_load_langs(['categories']);
 
 // Get parameters
 $action      = GETPOST('action', 'aZ09');
-$contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : 'quickcretion'; // To manage different context of search
+$contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : 'quickeventcretion'; // To manage different context of search
+$socid       = GETPOST('socid', 'int');
+$fromtype    = GETPOST('fromtype', 'aZ09');
 $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
+if (isModEnabled('agenda')) {
+    $actioncomm = new ActionComm($db);
+}
 if (isModEnabled('project')) {
     $project = new Project($db);
-    $task = new Task($db);
 }
 if (isModEnabled('categorie')) {
     $category = new Categorie($db);
 }
 if (isModEnabled('societe')) {
     $thirdparty = new Societe($db);
-    $contact    = new Contact($db);
 }
 
 // Initialize view objects
@@ -75,13 +76,11 @@ $form = new Form($db);
 if (isModEnabled('project')) {
     $formproject = new FormProjets($db);
 }
-if (isModEnabled('societe')) {
-    $formcompany = new FormCompany($db);
+if (isModEnabled('agenda')) {
+    $formactions = new FormActions($db);
 }
 
-$hookmanager->initHooks(['quickcration']); // Note that conf->hooks_modules contains array
-
-$date_start = dol_mktime(0, 0, 0, GETPOST('projectstartmonth', 'int'), GETPOST('projectstartday', 'int'), GETPOST('projectstartyear', 'int'));
+$hookmanager->initHooks(['quickeventcreation']); // Note that conf->hooks_modules contains array
 
 // Security check - Protection if external user
 $permissiontoread     = $user->rights->easycrm->read;
@@ -101,157 +100,75 @@ if ($reshook < 0) {
 if (empty($reshook)) {
     $error = 0;
 
+    if ($fromtype == 'project') {
+        $backtopage = dol_buildpath('/projet/card.php', 1) . '?id=' . GETPOST('project_id');
+    } else {
+        $backtopage = dol_buildpath('/comm/card.php', 1) . '?socid=' . $socid;
+    }
+
     if ($cancel) {
-        header('Location: ' . $_SERVER['PHP_SELF']);
+        header('Location: ' . $backtopage);
         exit;
     }
 
     if ($action == 'add') {
-        // Check thirdparty parameters
-        if (!empty($thirdparty->email) && !isValidEMail($thirdparty->email)) {
-            setEventMessages($langs->trans('ErrorBadEMail', $thirdparty->email), [], 'errors');
-            $error++;
-        }
+        if (!$error) {
+            $db->begin();
 
-        // Check project parameters
-        if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
-            if (GETPOST('opp_amount') != '' && !(GETPOST('opp_status') > 0)) {
-                setEventMessages($langs->trans('ErrorOppStatusRequiredIfAmount'), [], 'errors');
+            // Check parameters
+            if (empty($conf->global->AGENDA_USE_EVENT_TYPE) && !GETPOST('label')) {
+                $error++;
+                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('Label')), [], 'errors');
+            }
+
+            // Initialisation objet cactioncomm
+            if (GETPOSTISSET('actioncode') && !GETPOST('actioncode', 'aZ09')) { // actioncode is '0'
+                $error++;
+                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('Type')), [], 'errors');
+            } else {
+                $actioncomm->type_code = GETPOST('actioncode', 'aZ09');
+            }
+
+            $dateStart = dol_mktime(GETPOST('datestarthour', 'int'), GETPOST('datestartmin', 'int'), GETPOST('datestartsec', 'int'), GETPOST('datestartmonth', 'int'), GETPOST('datestartday', 'int'), GETPOST('datestartyear', 'int'), 'tzuser');
+            $dateEnd   = dol_mktime(GETPOST('dateendhour', 'int'), GETPOST('dateendmin', 'int'), GETPOST('dateendsec', 'int'), GETPOST('dateendmonth', 'int'), GETPOST('dateendday', 'int'), GETPOST('dateendyear', 'int'), 'tzuser');
+
+            $actioncomm->label        = GETPOST('label');
+            $actioncomm->datep        = $dateStart;
+            $actioncomm->datef        = $dateEnd;
+            $actioncomm->note_private = $langs->transnoentities('CommercialRelaunching');
+            $actioncomm->socid        = $socid;
+            $actioncomm->userownerid  = $user->id;
+            $actioncomm->percentage   = -1;
+            if ($fromtype == 'project') {
+                $actioncomm->fk_project = GETPOST('project_id');
+            }
+
+            $actioncommID = $actioncomm->create($user);
+            if (!$error && $actioncommID > 0) {
+                // Category association
+                $categories = GETPOST('categories', 'array');
+                if (count($categories) > 0) {
+                    $result = $actioncomm->setCategories($categories);
+                    if ($result < 0) {
+                        setEventMessages($actioncomm->error, $actioncomm->errors, 'errors');
+                        $error++;
+                    }
+                }
+            } else {
+                $langs->load('errors');
+                setEventMessages($actioncomm->error, $actioncomm->errors, 'errors');
                 $error++;
             }
         }
 
         if (!$error) {
-            $db->begin();
-
-            if (!empty(GETPOST('name'))) {
-                $thirdparty->code_client  = -1;
-                $thirdparty->client       = GETPOST('client');
-                $thirdparty->name         = GETPOST('name');
-                $thirdparty->email        = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
-                $thirdparty->url          = trim(GETPOST('url', 'custom', 0, FILTER_SANITIZE_URL));
-                $thirdparty->note_private = GETPOST('note_private');
-
-                $thirdpartyID = $thirdparty->create($user);
-                if ($thirdpartyID > 0) {
-                    $backtopage = dol_buildpath('/societe/card.php', 1) . '?id=' . $thirdpartyID;
-
-                    // Category association
-                    $categories = GETPOST('categories_customer', 'array');
-                    if (count($categories) > 0) {
-                        $result = $thirdparty->setCategories($categories, 'customer');
-                        if ($result < 0) {
-                            setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
-                            $error++;
-                        }
-                    }
-                    if (!empty(GETPOST('lastname', 'alpha'))) {
-                        $contact->socid     = !empty($thirdpartyID) ? $thirdpartyID : '';
-                        $contact->lastname  = GETPOST('lastname', 'alpha');
-                        $contact->firstname = GETPOST('firstname', 'alpha');
-                        $contact->poste     = GETPOST('job', 'alpha');
-                        $contact->email     = trim(GETPOST('email_contact', 'custom', 0, FILTER_SANITIZE_EMAIL));
-                        $contact->phone_pro = GETPOST('phone_pro', 'alpha');
-
-                        $contactID = $contact->create($user);
-                        if ($contactID < 0) {
-                            setEventMessages($contact->error, $contact->errors, 'errors');
-                            $error++;
-                        }
-                    }
-                } else {
-                    setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
-                    $error++;
-                }
+            $db->commit();
+            if (!empty($backtopage)) {
+                header('Location: ' . $backtopage);
             }
-
-            if (!empty(GETPOST('title'))) {
-                $project->socid      = !empty($thirdpartyID) ? $thirdpartyID : '';
-                $project->ref        = GETPOST('ref');
-                $project->title      = GETPOST('title');
-                $project->opp_status = GETPOST('opp_status', 'int');
-
-                switch ($project->opp_status) {
-                    case 2:
-                        $project->opp_percent = 20;
-                        break;
-                    case 3:
-                        $project->opp_percent = 40;
-                        break;
-                    case 4:
-                        $project->opp_percent = 60;
-                        break;
-                    case 5:
-                        $project->opp_percent = 100;
-                        break;
-                    default:
-                        $project->opp_percent = 0;
-                        break;
-                }
-
-                $project->opp_amount        = price2num(GETPOST('opp_amount'));
-                $project->date_c            = dol_now();
-                $project->date_start        = $date_start;
-                $project->statut            = 1;
-                $project->usage_opportunity = 1;
-                $project->usage_task        = 1;
-
-                $projectID = $project->create($user);
-                if (!$error && $projectID > 0) {
-                    $backtopage = dol_buildpath('/projet/card.php', 1) . '?id=' . $projectID;
-
-                    // Category association
-                    $categories = GETPOST('categories_project', 'array');
-                    if (count($categories) > 0) {
-                        $result = $project->setCategories($categories);
-                        if ($result < 0) {
-                            setEventMessages($project->error, $project->errors, 'errors');
-                            $error++;
-                        }
-                    }
-
-                    $project->add_contact($user->id, 'PROJECTLEADER', 'internal');
-
-                    $defaultref = '';
-                    $obj        = empty($conf->global->PROJECT_TASK_ADDON) ? 'mod_task_simple' : $conf->global->PROJECT_TASK_ADDON;
-
-                    if (!empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php')) {
-                        require_once DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php';
-                        $modTask    = new $obj();
-                        $defaultref = $modTask->getNextValue($thirdparty, $task);
-                    }
-
-                    $task->fk_project = $projectID;
-                    $task->ref        = $defaultref;
-                    $task->label      = $langs->trans('CommercialFollowUp') . ' - ' . $project->title;
-                    $task->date_c     = dol_now();
-
-                    $taskID = $task->create($user);
-                    if ($taskID > 0) {
-                        $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
-                    } else {
-                        setEventMessages($task->error, $task->errors, 'errors');
-                        $error++;
-                    }
-                } else {
-                    $langs->load('errors');
-                    setEventMessages($project->error, $project->errors, 'errors');
-                    $error++;
-                }
-            }
-
-            if (!$error) {
-                $db->commit();
-                if (!empty($backtopage)) {
-                    header('Location: ' . $backtopage);
-                }
-                exit;
-            } else {
-                $db->rollback();
-                unset($_POST['ref']);
-                $action = '';
-            }
+            exit;
         } else {
+            $db->rollback();
             $action = '';
         }
     }
@@ -271,7 +188,7 @@ if (empty($permissiontoaddevent)) {
     exit;
 }
 
-print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '">';
+print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?socid=' . $socid . '&fromtype=' . $fromtype . (GETPOSTISSET('project_id') ? '&project_id=' . GETPOST('project_id') : '') . '">';
 print '<input type="hidden" name="token" value="' . newToken() . '">';
 print '<input type="hidden" name="action" value="add">';
 if ($backtopage) {
@@ -286,45 +203,67 @@ if ($permissiontoaddevent) {
 
     print '<table class="border centpercent tableforfieldcreate">';
 
-    // Name, firstname
-    if ($conf->global->EASYCRM_THIRDPARTY_NAME_VISIBLE > 0) {
-        print '<tr><td class="titlefieldcreate fieldrequired"><label for="name">' . $langs->trans('ThirdPartyName') . '</label></td>';
-        print '<td><input type="text" name="name" id="name" class="maxwidth200 widthcentpercentminusx" maxlength="128" value="' . (GETPOSTISSET('name') ? GETPOST('name', 'alpha') : '') . '" autofocus="autofocus"></td>';
+    // Type of event
+    if ($conf->global->EASYCRM_EVENT_TYPE_CODE_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate fieldrequired"><label for="actioncode">' . $langs->trans('Type') . '</label></td>';
+        $default = (empty($conf->global->AGENDA_USE_EVENT_TYPE_DEFAULT) ? 'AC_RDV' : $conf->global->AGENDA_USE_EVENT_TYPE_DEFAULT);
+        print '<td>' . $formactions->select_type_actions(GETPOSTISSET('actioncode') ? GETPOST('actioncode', 'aZ09') : ($actioncomm->type_code ?: $default), 'actioncode', 'systemauto', 0, -1, 0, 1) . '</td>';
         print '</tr>';
     }
 
-    if ($conf->global->EASYCRM_THIRDPARTY_CLIENT_VISIBLE > 0) {
-        print '<tr><td class="titlefieldcreate fieldrequired"><label for="name">' . $langs->trans('ProspectCustomer') . '</label></td>';
-        print '<td>' . $formcompany->selectProspectCustomerType(GETPOSTISSET('client') ? GETPOST('client') : $conf->global->EASYCRM_THIRDPARTY_CLIENT_VALUE, 'client', 'customerprospect', 'form', 'maxwidth200 widthcentpercentminusx') . '</td>';
-    }
-
-    // Email
-    if ($conf->global->EASYCRM_THIRDPARTY_EMAIL_VISIBLE > 0) {
-        print '<tr><td><label for="email_thirdparty">' . $langs->trans('Email') . '</label></td>';
-        print '<td>' . img_picto('', 'object_email', 'class="pictofixedwidth"') . ' <input type="text" name="email_thirdparty" id="email_thirdparty" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('email_thirdparty') ? GETPOST('email_thirdparty', 'alpha') : '') . '"></td>';
+    // Label
+    if ($conf->global->EASYCRM_EVENT_LABEL_VISIBLE > 0) {
+        print '<tr><td' . (empty($conf->global->AGENDA_USE_EVENT_TYPE) ? ' class="titlefieldcreate fieldrequired"' : '') . '><label for="label">' . $langs->trans('Label') . '</label></td>';
+        print '<td><input type="text" id="label" name="label" class="maxwidth500 widthcentpercentminusx" maxlength="255" value="' . dol_escape_htmltag((GETPOSTISSET('label') ? GETPOST('label') : '')) . '"></td>';
         print '</tr>';
     }
 
-    // Web
-    if ($conf->global->EASYCRM_THIRDPARTY_WEB_VISIBLE > 0) {
-        print '<tr><td><label for="url">' . $langs->trans('Web') . '</label></td>';
-        print '<td>' . img_picto('', 'globe', 'class="pictofixedwidth"') . ' <input type="text" name="url" id="url" class="maxwidth200 widthcentpercentminusx" value="' . (GETPOSTISSET('url') ? GETPOST('url', 'alpha') : '') . '"></td>';
+    // Date start
+    if ($conf->global->EASYCRM_EVENT_DATE_START_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate fieldrequired">' . $langs->trans('DateStart') . '</td>';
+        $dateStart = dol_stringtotime(GETPOST('datestart', 'int', 1), 'tzuser');
+        print '<td>' . $form->selectDate($dateStart, 'datestart', 1, 1, 1, 'action', 1, 2, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
         print '</tr>';
     }
 
-    // Private note
-    if ($conf->global->EASYCRM_THIRDPARTY_PRIVATE_NOTE_VISIBLE > 0 && isModEnabled('fckeditor')) {
-        print '<tr><td><label for="note_private">' . $langs->trans('NotePrivate') . '</label></td>';
-        $doleditor = new DolEditor('note_private', (GETPOSTISSET('note_private') ? GETPOST('note_private', 'alpha') : ''), '', 80, 'dolibarr_notes', 'In', 0, false, ((empty($conf->global->FCKEDITOR_ENABLE_NOTE_PRIVATE) || $conf->browser->layout == 'phone') ? 0 : 1), ROWS_3, '90%');
-        print '<td>' . $doleditor->Create(1) . '</td>';
+    // Date end
+    if ($conf->global->EASYCRM_EVENT_DATE_END_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate">' . $langs->trans('DateEnd') . '</td>';
+        $dateEnd = dol_stringtotime(GETPOST('dateend', 'int', 1), 'tzuser');
+        print '<td>' . $form->selectDate($dateEnd, 'dateend', 1, 1, 1, 'action', 1, 0, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
         print '</tr>';
+    }
+
+    // ThirdParty
+    if (isModEnabled('societe') && $socid > 0) {
+        print '<tr><td class="titlefieldcreate">' . $langs->trans('ActionOnCompany') . '</td>';
+        $thirdparty->fetch($socid);
+        print '<td>' . $thirdparty->getNomUrl(1) . '</td>';
+        print '</tr>';
+    }
+
+    // Project
+    if (isModEnabled('project') && $fromtype == 'project') {
+        print '<tr><td class="titlefieldcreate">' . $langs->trans('Project'). '</td>';
+        $project->fetch(GETPOST('project_id'));
+        print '<td>' . $project->getNomUrl(1) . '</td>';
+        print '</tr>';
+
+        if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
+            // Opportunity status
+            if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VISIBLE > 0) {
+                print '<tr><td>' . $langs->trans('OpportunityStatus') . '</td>';
+                print '<td>' . $formproject->selectOpportunityStatus('opp_status', $project->opp_status, 0, 0, 0, '', 0, 1) . '</td>';
+                print '</tr>';
+            }
+        }
     }
 
     // Categories
-    if (isModEnabled('categorie') && $conf->global->EASYCRM_THIRDPARTY_CATEGORIES_VISIBLE > 0 ) {
-        print '<tr><td>' . $langs->trans('CustomersProspectsCategoriesShort') . '</td><td>';
-        $cate_arbo = $form->select_all_categories(Categorie::TYPE_CUSTOMER, '', 'parent', 64, 0, 1);
-        print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories_customer', $cate_arbo, GETPOST('categories_customer', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
+    if (isModEnabled('categorie') && $conf->global->EASYCRM_EVENT_CATEGORIES_VISIBLE > 0) {
+        print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
+        $cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 1);
+        print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
         print '</td></tr>';
     }
 

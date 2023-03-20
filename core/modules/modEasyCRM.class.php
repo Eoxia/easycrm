@@ -118,7 +118,8 @@ class modEasyCRM extends DolibarrModules
 			'js' => [],
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => [
-                'thirdpartycomm'
+                'thirdpartycomm',
+                'projectcard'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -185,6 +186,13 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE', 'integer', 3000, '', 0, 'current'],
             $i++ => ['EASYCRM_PROJECT_DATE_START_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_PROJECT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
+
+            // CONST EVENT
+            $i++ => ['EASYCRM_EVENT_TYPE_CODE_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_EVENT_LABEL_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_EVENT_DATE_START_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_EVENT_DATE_END_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_EVENT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
 
             // CONST MODULE
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],

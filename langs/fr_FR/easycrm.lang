@@ -34,6 +34,7 @@ QuickProjectCreations    = ajouts rapide d'opportunité ou de projet
 QuickContactCreation     = Ajout rapide de contact/adresse
 QuickContactCreations    = ajouts rapide de contact/adresse
 QuickEventCreation       = Ajout rapide d'événement
+QuickEventCreations      = ajouts rapide d'événements
 CommercialFollowUp       = Suivi commercial
 
 #
@@ -50,4 +51,7 @@ ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par 
 #
 
 # Data - Donnée
-LastProjects = Les %s derniers projets
+LastProjects               = Les %s derniers projets
+CommercialRelaunching      = Relance commerciale
+CommercialsRelaunching     = Relances commerciales
+LastCommercialReminderDate = Date dernière relance commerciale

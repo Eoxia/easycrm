@@ -116,7 +116,7 @@ print '<td>' . $langs->trans('Value') . '</td>';
 print '</tr>';
 
 // THIRDPARTY
-print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->trans('QuickThirdPartyCreations')) . '</div></td><tr>';
+print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->trans('QuickThirdPartyCreations')) . '</div></td></tr>';
 
 // ProspectCustomer
 print '<tr class="oddeven"><td>';
@@ -145,7 +145,7 @@ print '</td>';
 
 print '<td class="center">';
 //print ajax_constantonoff('EASYCRM_THIRDPARTY_NAME_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Phone
 print '<tr class="oddeven"><td>';
@@ -156,7 +156,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_THIRDPARTY_PHONE_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Email
 print '<tr class="oddeven"><td>';
@@ -167,7 +167,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_THIRDPARTY_EMAIL_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Web
 print '<tr class="oddeven"><td>';
@@ -178,7 +178,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_THIRDPARTY_WEB_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Private note
 print '<tr class="oddeven"><td>';
@@ -189,7 +189,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_THIRDPARTY_PRIVATE_NOTE_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // CustomersProspectsCategoriesShort
 print '<tr class="oddeven"><td>';
@@ -200,10 +200,10 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_THIRDPARTY_CATEGORIES_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // CONTACT
-print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->trans('QuickContactCreations')) . '</div></td><tr>';
+print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->trans('QuickContactCreations')) . '</div></td></tr>';
 
 // Lastname
 print '<tr class="oddeven"><td>';
@@ -214,7 +214,7 @@ print '</td>';
 
 print '<td class="center">';
 //print ajax_constantonoff('EASYCRM_CONTACT_LASTNAME_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Firstname
 print '<tr class="oddeven"><td>';
@@ -225,7 +225,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_CONTACT_FIRSTNAME_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Job
 print '<tr class="oddeven"><td>';
@@ -236,7 +236,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_CONTACT_JOB_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Phone pro
 print '<tr class="oddeven"><td>';
@@ -247,7 +247,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_CONTACT_PHONEPRO_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Email
 print '<tr class="oddeven"><td>';
@@ -258,10 +258,10 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_CONTACT_EMAIL_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // PROJECT
-print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->transnoentities('QuickProjectCreations')) . '</div></td><tr>';
+print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->transnoentities('QuickProjectCreations')) . '</div></td></tr>';
 
 // ProjectLabel
 print '<tr class="oddeven"><td>';
@@ -272,7 +272,7 @@ print '</td>';
 
 print '<td class="center">';
 //print ajax_constantonoff('EASYCRM_PROJECT_LABEL_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // OpportunityStatus
 print '<tr class="oddeven"><td>';
@@ -319,7 +319,7 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_PROJECT_DATE_START_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
 
 // Categories
 print '<tr class="oddeven"><td>';
@@ -330,7 +330,65 @@ print '</td>';
 
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_PROJECT_CATEGORIES_VISIBLE');
-print '</td></td><td></tr>';
+print '</td></td><td></td></tr>';
+
+// EVENT
+print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->transnoentities('QuickEventCreations')) . '</div></td></tr>';
+
+// Type
+print '<tr class="oddeven"><td>';
+print $langs->trans('Type');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->trans('Type'));
+print '</td>';
+
+print '<td class="center">';
+//print ajax_constantonoff('EASYCRM_EVENT_TYPE_CODE_VISIBLE');
+print '</td></td><td></td></tr>';
+
+// Label
+print '<tr class="oddeven"><td>';
+print $langs->trans('Label');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Label'));
+print '</td>';
+
+print '<td class="center">';
+//print ajax_constantonoff('EASYCRM_EVENT_LABEL_VISIBLE');
+print '</td></td><td></td></tr>';
+
+// Date start
+print '<tr class="oddeven"><td>';
+print $langs->trans('DateStart');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('DateStart'));
+print '</td>';
+
+print '<td class="center">';
+//print ajax_constantonoff('EASYCRM_EVENT_DATE_START_VISIBLE');
+print '</td></td><td></td></tr>';
+
+// Date end
+print '<tr class="oddeven"><td>';
+print $langs->trans('DateEnd');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->trans('DateEnd'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_EVENT_DATE_END_VISIBLE');
+print '</td></td><td></td></tr>';
+
+// Categories
+print '<tr class="oddeven"><td>';
+print $langs->trans('Categories');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Categories'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_EVENT_CATEGORIES_VISIBLE');
+print '</td></td><td></td></tr>';
 
 print '</table>';
 print '<div class="tabsAction"><input type="submit" class="butAction" name="save" value="' . $langs->trans('Save') . '"></div>';
