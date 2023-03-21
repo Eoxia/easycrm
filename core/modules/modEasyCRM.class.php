@@ -366,6 +366,7 @@ class modEasyCRM extends DolibarrModules
         $extra_fields = new ExtraFields($this->db);
 
         $extra_fields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', '', '', 2);
+        $extra_fields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, 2000, 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 1);
 
 		// Permissions
 		$this->remove($options);

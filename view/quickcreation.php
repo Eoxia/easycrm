@@ -232,6 +232,8 @@ if (empty($reshook)) {
                     $taskID = $task->create($user);
                     if ($taskID > 0) {
                         $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
+                        $project->array_options['commtask'] = $taskID;
+                        $project->update($user);
                     } else {
                         setEventMessages($task->error, $task->errors, 'errors');
                         $error++;
