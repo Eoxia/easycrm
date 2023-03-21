@@ -35,6 +35,7 @@ if (isModEnabled('project')) {
     require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
 
     require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+    require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
 }
 if (isModEnabled('agenda')) {
     require_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
@@ -67,6 +68,7 @@ if (isModEnabled('agenda')) {
 }
 if (isModEnabled('project')) {
     $project = new Project($db);
+    $task    = new Task($db);
 }
 if (isModEnabled('categorie')) {
     $category = new Categorie($db);
@@ -159,6 +161,43 @@ if (empty($reshook)) {
                 }
 
                 $mesg = '';
+
+                if ($fromtype == 'project') {
+                    $result = $project->fetch(GETPOST('project_id'));
+                    if ($result > 0) {
+                        $project->fetch_optionals();
+                        $commTaskID = $project->array_options['commtask'];
+                        if (empty($commTaskID)) {
+                            $defaultref = '';
+                            $obj        = empty($conf->global->PROJECT_TASK_ADDON) ? 'mod_task_simple' : $conf->global->PROJECT_TASK_ADDON;
+
+                            if (!empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php')) {
+                                require_once DOL_DOCUMENT_ROOT . '/core/modules/project/task/' . $conf->global->PROJECT_TASK_ADDON . '.php';
+                                $modTask    = new $obj();
+                                $defaultref = $modTask->getNextValue($thirdparty, $task);
+                            }
+
+                            $task->fk_project = $project->id;
+                            $task->ref        = $defaultref;
+                            $task->label      = (!empty($conf->global->EASYCRM_TASK_LABEL_VALUE) ? $conf->global->EASYCRM_TASK_LABEL_VALUE : $langs->trans('CommercialFollowUp')) . ' - ' . $project->title;
+                            $task->date_c     = dol_now();
+
+                            $taskID = $task->create($user);
+                            if ($taskID > 0) {
+                                $userArray = $project->liste_contact(-1, 'internal', 1);
+                                if (!in_array($user->id, $userArray)) {
+                                    $project->add_contact($user->id, 'PROJECTLEADER', 'internal');
+                                }
+                                $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
+                                $project->array_options['commtask'] = $taskID;
+                                $project->update($user);
+                            } else {
+                                setEventMessages($task->error, $task->errors, 'errors');
+                                $error++;
+                            }
+                        }
+                    }
+                }
 
                 // Create reminders
                 if (getDolGlobalString('AGENDA_REMINDER_BROWSER') && $dateEnd > dol_now()) {
