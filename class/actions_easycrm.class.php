@@ -241,22 +241,27 @@ class ActionsEasycrm
      */
     public function printCommonFooter(array $parameters): int
     {
-        global $db, $langs, $user;
+        global $conf, $db, $langs, $user;
 
         // Do something only for the current context
         if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
             if (isModEnabled('agenda')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+                require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
                 $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
                 $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 
                 $actiomcomm = new ActionComm($db);
+                $category   = new Categorie($db);
 
-                $actiomcomms = $actiomcomm->getActions(GETPOST('socid'), ($parameters['currentcontext'] != 'thirdpartycomm' ? GETPOST('id') : ''), ($parameters['currentcontext'] != 'thirdpartycomm' ? 'project' : ''), ' AND a.note = "' . $langs->trans('CommercialRelaunching') . '"');
+                $category->fetch('', $langs->trans('CommercialRelaunching'));
+
+                $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $category->id . ')';
+                $actiomcomms = $actiomcomm->getActions(GETPOST('socid'), ($parameters['currentcontext'] != 'thirdpartycomm' ? GETPOST('id') : ''), ($parameters['currentcontext'] != 'thirdpartycomm' ? 'project' : ''), $filter, 'a.datec');
                 if (is_array($actiomcomms) && !empty($actiomcomms)) {
                     $nbActiomcomms  = count($actiomcomms);
-                    $lastActiomcomm = array_pop($actiomcomms);
+                    $lastActiomcomm = array_shift($actiomcomms);
                 } else {
                     $nbActiomcomms = 0;
                 }
@@ -281,22 +286,36 @@ class ActionsEasycrm
             if (isModEnabled('agenda') && isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+                require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
                 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
                 $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
                 $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 
-                $actiomcomm = new ActionComm($db);
+                $limit = GETPOST('limit', 'int') ?GETPOST('limit', 'int') : $conf->liste_limit;
+                $page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
+                if (empty($page) || $page < 0 || GETPOST('button_search', 'alpha') || GETPOST('button_removefilter', 'alpha')) {
+                    // If $page is not defined, or '' or -1 or if we click on clear filters
+                    $page = 0;
+                }
 
-                $projects = saturne_fetch_all_object_type('Project');
+                $offset = $limit * $page;
+                
+                $actiomcomm = new ActionComm($db);
+                $category   = new Categorie($db);
+
+                $category->fetch('', $langs->trans('CommercialRelaunching'));
+
+                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $category->id . ')';
+                $projects = saturne_fetch_all_object_type('Project', '', '', $limit, $offset);
                 if (is_array($projects) && !empty($projects)) {
                     foreach ($projects as $project) {
                         if (!empty($project->id)) {
-                            $actiomcomms = $actiomcomm->getActions($project->fk_soc, $project->id, 'project', ' AND a.note = "' . $langs->trans('CommercialRelaunching') . '"');
+                            $actiomcomms = $actiomcomm->getActions($project->fk_soc, $project->id, 'project', $filter, 'a.datec');
                             if (is_array($actiomcomms) && !empty($actiomcomms)) {
                                 $nbActiomcomms  = count($actiomcomms);
-                                $lastActiomcomm = array_pop($actiomcomms);
+                                $lastActiomcomm = array_shift($actiomcomms);
                             } else {
                                 $nbActiomcomms = 0;
                             }

@@ -135,7 +135,6 @@ if (empty($reshook)) {
             $actioncomm->label        = GETPOST('label');
             $actioncomm->datep        = $dateStart;
             $actioncomm->datef        = $dateEnd;
-            $actioncomm->note_private = $langs->transnoentities('CommercialRelaunching');
             $actioncomm->socid        = $socid;
             $actioncomm->userownerid  = $user->id;
             $actioncomm->percentage   = -1;
@@ -263,7 +262,9 @@ if ($permissiontoaddevent) {
     if (isModEnabled('categorie') && $conf->global->EASYCRM_EVENT_CATEGORIES_VISIBLE > 0) {
         print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
         $cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 1);
-        print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx');
+        $category->fetch('', $langs->trans('CommercialRelaunching'));
+        $categoriesArray = [$category->id, $category->label];
+        print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories', $cate_arbo, GETPOSTISSET('categories') ? GETPOST('categories', 'array') : $categoriesArray, '', 0, 'quatrevingtpercent widthcentpercentminusx');
         print '</td></tr>';
     }
 
