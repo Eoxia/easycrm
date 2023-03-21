@@ -226,7 +226,7 @@ if (empty($reshook)) {
 
                     $task->fk_project = $projectID;
                     $task->ref        = $defaultref;
-                    $task->label      = $langs->trans('CommercialFollowUp') . ' - ' . $project->title;
+                    $task->label      = (!empty($conf->global->EASYCRM_TASK_LABEL_VALUE) ? $conf->global->EASYCRM_TASK_LABEL_VALUE : $langs->trans('CommercialFollowUp')) . ' - ' . $project->title;
                     $task->date_c     = dol_now();
 
                     $taskID = $task->create($user);

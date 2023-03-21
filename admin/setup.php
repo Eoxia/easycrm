@@ -70,6 +70,7 @@ if ($action == 'set_config') {
     $projectOpportunityStatus = GETPOST('project_opportunity_status');
     $projectOpportunityAmount = GETPOST('project_opportunity_amount');
     $client                   = GETPOST('client');
+    $taskLabel                = GETPOST('task_label');
 
     if (!empty($projectOpportunityStatus)) {
         dolibarr_set_const($db, 'EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE', $projectOpportunityStatus, 'integer', 0, '', $conf->entity);
@@ -80,8 +81,13 @@ if ($action == 'set_config') {
     if (!empty($client)) {
         dolibarr_set_const($db, 'EASYCRM_THIRDPARTY_CLIENT_VALUE', $client, 'integer', 0, '', $conf->entity);
     }
+    if (!empty($taskLabel)) {
+        dolibarr_set_const($db, 'EASYCRM_TASK_LABEL_VALUE', $taskLabel, 'chaine', 0, '', $conf->entity);
+    }
 
-    setEventMessage('');
+    setEventMessage('SavedConfig');
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
 }
 
 
@@ -331,6 +337,27 @@ print '</td>';
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_PROJECT_CATEGORIES_VISIBLE');
 print '</td></td><td></td></tr>';
+
+// TASK
+print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->transnoentities('QuickTaskCreations')) . '</div></td></tr>';
+
+// TaskLabel
+print '<tr class="oddeven"><td>';
+print $langs->trans('Label');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Label'));
+print '</td>';
+
+print '<td class="center">';
+//print ajax_constantonoff('EASYCRM_TASK_LABEL_VISIBLE');
+print '</td>';
+
+if ($conf->global->EASYCRM_TASK_LABEL_VISIBLE > 0 && isModEnabled('project')) {
+    print '<td><input type="text" id="task_label" name="task_label" value="' . $conf->global->EASYCRM_TASK_LABEL_VALUE . '"></td>';
+} else {
+    print '<td></td>';
+}
+print '</tr>';
 
 // EVENT
 print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->transnoentities('QuickEventCreations')) . '</div></td></tr>';
