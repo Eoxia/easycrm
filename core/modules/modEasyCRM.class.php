@@ -191,6 +191,8 @@ class modEasyCRM extends DolibarrModules
             // CONST TASK
             $i++ => ['EASYCRM_TASK_LABEL_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_TASK_LABEL_VALUE', 'chaine', $langs->trans('CommercialFollowUp'), '', 0, 'current'],
+            $i++ => ['EASYCRM_TASK_TIMESPENT_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_TASK_TIMESPENT_VALUE', 'integer', 15, '', 0, 'current'],
 
             // CONST EVENT
             $i++ => ['EASYCRM_EVENT_TYPE_CODE_VISIBLE', 'integer', 1, '', 0, 'current'],

@@ -166,7 +166,7 @@ if (empty($reshook)) {
                     $result = $project->fetch(GETPOST('project_id'));
                     if ($result > 0) {
                         $project->fetch_optionals();
-                        $commTaskID = $project->array_options['commtask'];
+                        $commTaskID = $project->array_options['options_commtask'];
                         if (empty($commTaskID)) {
                             $defaultref = '';
                             $obj        = empty($conf->global->PROJECT_TASK_ADDON) ? 'mod_task_simple' : $conf->global->PROJECT_TASK_ADDON;
@@ -182,19 +182,29 @@ if (empty($reshook)) {
                             $task->label      = (!empty($conf->global->EASYCRM_TASK_LABEL_VALUE) ? $conf->global->EASYCRM_TASK_LABEL_VALUE : $langs->trans('CommercialFollowUp')) . ' - ' . $project->title;
                             $task->date_c     = dol_now();
 
-                            $taskID = $task->create($user);
-                            if ($taskID > 0) {
+                            $commTaskID = $task->create($user);
+                            if ($commTaskID > 0) {
                                 $userArray = $project->liste_contact(-1, 'internal', 1);
                                 if (!in_array($user->id, $userArray)) {
                                     $project->add_contact($user->id, 'PROJECTLEADER', 'internal');
                                 }
                                 $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
-                                $project->array_options['commtask'] = $taskID;
+                                $project->array_options['commtask'] = $commTaskID;
                                 $project->update($user);
                             } else {
                                 setEventMessages($task->error, $task->errors, 'errors');
                                 $error++;
                             }
+                        }
+
+                        $task->fetch($commTaskID);
+
+                        $task->timespent_date     = dol_now();
+                        $task->timespent_duration = GETPOST('timespent', 'int') * 60;
+                        $task->timespent_fk_user  = $user->id;
+
+                        if ($task->timespent_duration > 0) {
+                            $task->addTimeSpent($user);
                         }
                     }
                 }
@@ -336,6 +346,13 @@ if ($permissiontoaddevent) {
                 print '<td>' . $formproject->selectOpportunityStatus('opp_status', $project->opp_status, 0, 0, 0, '', 0, 1) . '</td>';
                 print '</tr>';
             }
+        }
+
+        // TimeSpent
+        if ($conf->global->EASYCRM_TASK_TIMESPENT_VISIBLE > 0) {
+            print '<tr><td class="titlefieldcreate"><label for="timespent">' . $langs->trans('TimeSpent') . '</label></td>';
+            print '<td><input type="number" id="timespent" name="timespent" class="maxwidth100 widthcentpercentminusx" value="' . (GETPOSTISSET('timespent') ? GETPOST('timespent') : $conf->global->EASYCRM_TASK_TIMESPENT_VALUE) . '"></td>';
+            print '</tr>';
         }
     }
 

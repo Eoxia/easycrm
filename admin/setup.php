@@ -75,6 +75,7 @@ if ($action == 'set_config') {
     $projectOpportunityAmount = GETPOST('project_opportunity_amount');
     $client                   = GETPOST('client');
     $taskLabel                = GETPOST('task_label');
+    $timespent                = GETPOST('timespent');
     $statusEvent              = (GETPOST('status') == 'NA' ? -1 : GETPOST('status'));
 
     if (!empty($projectOpportunityStatus)) {
@@ -88,6 +89,9 @@ if ($action == 'set_config') {
     }
     if (!empty($taskLabel)) {
         dolibarr_set_const($db, 'EASYCRM_TASK_LABEL_VALUE', $taskLabel, 'chaine', 0, '', $conf->entity);
+    }
+    if ($timespent >= 0) {
+        dolibarr_set_const($db, 'EASYCRM_TASK_TIMESPENT_VALUE', $timespent, 'chaine', 0, '', $conf->entity);
     }
     dolibarr_set_const($db, 'EASYCRM_EVENT_STATUS_VALUE', $statusEvent, 'integer', 0, '', $conf->entity);
 
@@ -360,6 +364,24 @@ print '</td>';
 
 if ($conf->global->EASYCRM_TASK_LABEL_VISIBLE > 0 && isModEnabled('project')) {
     print '<td><input type="text" id="task_label" name="task_label" value="' . $conf->global->EASYCRM_TASK_LABEL_VALUE . '"></td>';
+} else {
+    print '<td></td>';
+}
+print '</tr>';
+
+// TimeSpent
+print '<tr class="oddeven"><td>';
+print $langs->trans('TimeSpent');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('TimeSpent'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_TASK_TIMESPENT_VISIBLE');
+print '</td>';
+
+if ($conf->global->EASYCRM_TASK_TIMESPENT_VISIBLE > 0) {
+    print '<td><input type="number" id="timespent" name="timespent" value="' . $conf->global->EASYCRM_TASK_TIMESPENT_VALUE . '"></td>';
 } else {
     print '<td></td>';
 }
