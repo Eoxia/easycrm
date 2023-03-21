@@ -104,7 +104,7 @@ if (empty($reshook)) {
     $error = 0;
 
     if ($cancel) {
-        header('Location: ' . $_SERVER['PHP_SELF']);
+        header('Location: ' . dol_buildpath('/easycrm/easycrmindex.php', 1));
         exit;
     }
 
