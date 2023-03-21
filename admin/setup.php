@@ -37,6 +37,9 @@ if (isModEnabled('project')) {
 if (isModEnabled('societe')) {
     require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
 }
+if (isModEnabled('agenda')) {
+    require_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
+}
 
 require_once __DIR__ . '/../lib/easycrm.lib.php';
 
@@ -51,6 +54,7 @@ $action     = GETPOST('action', 'alpha');
 $backtopage = GETPOST('backtopage', 'alpha');
 
 // Initialize view objects
+$form = new Form($db);
 if (isModEnabled('project')) {
     $formproject = new FormProjets($db);
 }
@@ -71,6 +75,7 @@ if ($action == 'set_config') {
     $projectOpportunityAmount = GETPOST('project_opportunity_amount');
     $client                   = GETPOST('client');
     $taskLabel                = GETPOST('task_label');
+    $statusEvent              = (GETPOST('status') == 'NA' ? -1 : GETPOST('status'));
 
     if (!empty($projectOpportunityStatus)) {
         dolibarr_set_const($db, 'EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE', $projectOpportunityStatus, 'integer', 0, '', $conf->entity);
@@ -84,6 +89,7 @@ if ($action == 'set_config') {
     if (!empty($taskLabel)) {
         dolibarr_set_const($db, 'EASYCRM_TASK_LABEL_VALUE', $taskLabel, 'chaine', 0, '', $conf->entity);
     }
+    dolibarr_set_const($db, 'EASYCRM_EVENT_STATUS_VALUE', $statusEvent, 'integer', 0, '', $conf->entity);
 
     setEventMessage('SavedConfig');
     header('Location: ' . $_SERVER['PHP_SELF']);
@@ -405,6 +411,30 @@ print '</td>';
 print '<td class="center">';
 print ajax_constantonoff('EASYCRM_EVENT_DATE_END_VISIBLE');
 print '</td></td><td></td></tr>';
+
+// Status
+print '<tr class="oddeven"><td>';
+print $langs->trans('Status');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Status'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_EVENT_STATUS_VISIBLE');
+print '</td>';
+
+if ($conf->global->EASYCRM_EVENT_STATUS_VISIBLE > 0) {
+    $listofstatus = [
+        'NA' => $langs->trans('ActionNotApplicable'),
+        0    => $langs->trans('ActionsToDoShort'),
+        50   => $langs->trans('ActionRunningShort'),
+        100  => $langs->trans('ActionDoneShort')
+    ];
+    print '<td>' . $form->selectarray('status', $listofstatus, (GETPOSTISSET('status') ? GETPOST('status') : $conf->global->EASYCRM_EVENT_STATUS_VALUE), 0, 0, 0, '', 0, 0, 0, '', 'maxwidth200 widthcentpercentminusx') . '</td>';
+} else {
+    print '<td></td>';
+}
+print '</tr>';
 
 // Categories
 print '<tr class="oddeven"><td>';

@@ -197,6 +197,8 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_EVENT_LABEL_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_DATE_START_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_DATE_END_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_EVENT_STATUS_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_EVENT_STATUS_VALUE', 'integer', -1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
 
             // CONST MODULE

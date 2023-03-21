@@ -29,6 +29,8 @@ if (file_exists('../easycrm.main.inc.php')) {
 }
 
 // Libraries
+require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+
 if (isModEnabled('project')) {
     require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
 
@@ -38,6 +40,7 @@ if (isModEnabled('agenda')) {
     require_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
 
     require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+    require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncommreminder.class.php';
 }
 if (isModEnabled('categorie')) {
     require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
@@ -59,7 +62,8 @@ $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
 if (isModEnabled('agenda')) {
-    $actioncomm = new ActionComm($db);
+    $actioncomm         = new ActionComm($db);
+    $actionCommReminder = new ActionCommReminder($db);
 }
 if (isModEnabled('project')) {
     $project = new Project($db);
@@ -137,7 +141,7 @@ if (empty($reshook)) {
             $actioncomm->datef        = $dateEnd;
             $actioncomm->socid        = $socid;
             $actioncomm->userownerid  = $user->id;
-            $actioncomm->percentage   = -1;
+            $actioncomm->percentage   = (GETPOST('status') == 'NA' ? -1 : GETPOST('status'));
             if ($fromtype == 'project') {
                 $actioncomm->fk_project = GETPOST('project_id');
             }
@@ -153,6 +157,29 @@ if (empty($reshook)) {
                         $error++;
                     }
                 }
+
+                $mesg = '';
+
+                // Create reminders
+                if (getDolGlobalString('AGENDA_REMINDER_BROWSER') && $dateEnd > dol_now()) {
+                    $dateremind = dol_time_plus_duree($dateEnd, -30, 'i');
+
+                    $actionCommReminder->dateremind    = $dateremind;
+                    $actionCommReminder->typeremind    = 'browser';
+                    $actionCommReminder->offsetvalue   = 30;
+                    $actionCommReminder->offsetunit    = 'i';
+                    $actionCommReminder->status        = $actionCommReminder::STATUS_TODO;
+                    $actionCommReminder->fk_actioncomm = $actioncommID;
+                    $actionCommReminder->fk_user       = $user->id;
+
+                    $result = $actionCommReminder->create($user);
+                    if ($result <= 0) {
+                        setEventMessages($langs->trans('ErrorReminderActionCommCreation'), $actioncomm->errors, 'errors');
+                        $error++;
+                    } else {
+                        $mesg .= $langs->trans('ReminderActionCommCreation', dol_print_date($dateremind, 'dayhourtext')) . '<br>';
+                    }
+                }
             } else {
                 $langs->load('errors');
                 setEventMessages($actioncomm->error, $actioncomm->errors, 'errors');
@@ -163,6 +190,8 @@ if (empty($reshook)) {
         if (!$error) {
             $db->commit();
             if (!empty($backtopage)) {
+                $mesg .= $langs->trans('ActionCommCreation');
+                setEventMessages('', $mesg);
                 header('Location: ' . $backtopage);
             }
             exit;
@@ -230,6 +259,19 @@ if ($permissiontoaddevent) {
         print '<tr><td class="titlefieldcreate">' . $langs->trans('DateEnd') . '</td>';
         $dateEnd = dol_stringtotime(GETPOST('dateend', 'int', 1), 'tzuser');
         print '<td>' . $form->selectDate($dateEnd, 'dateend', 1, 1, 1, 'action', 1, 0, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
+        print '</tr>';
+    }
+
+    // Status
+    if ($conf->global->EASYCRM_EVENT_STATUS_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate"><label for="status">' . $langs->trans('Status') . '</label></td>';
+        $listofstatus = [
+            'NA' => $langs->trans('ActionNotApplicable'),
+            0    => $langs->trans('ActionsToDoShort'),
+            50   => $langs->trans('ActionRunningShort'),
+            100  => $langs->trans('ActionDoneShort')
+        ];
+        print '<td>' . $form->selectarray('status', $listofstatus, (GETPOSTISSET('status') ? GETPOST('status') : $conf->global->EASYCRM_EVENT_STATUS_VALUE), 0, 0, 0, '', 0, 0, 0, '', 'maxwidth200 widthcentpercentminusx') . '</td>';
         print '</tr>';
     }
 
