@@ -218,7 +218,7 @@ class ActionsEasycrm
 
         // Do something only for the current context
         if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
-            if (empty($action)) {
+            if (empty(GETPOST('action')) || GETPOST('action') == 'update') {
                 if ($parameters['currentcontext'] == 'thirdpartycomm') {
                     $socid = $object->id;
                     $moreparam = '';
@@ -342,7 +342,7 @@ class ActionsEasycrm
 
         // Do something only for the current context
         if ($parameters['currentcontext'] == 'projectcard') {
-            if (empty(GETPOST('action'))) {
+            if (empty(GETPOST('action')) || GETPOST('action') == 'update') {
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
 
@@ -354,11 +354,11 @@ class ActionsEasycrm
 
                 if (!empty($project->array_options['options_commtask'])) {
                     $task->fetch($project->array_options['options_commtask']);
-                    $out = $task->getNomUrl(1);
+                    $out2 = $task->getNomUrl(1);
                 } ?>
 
                 <script>
-                    jQuery('.project_extras_commtask').html(<?php echo json_encode($out); ?>)
+                    jQuery('.project_extras_commtask').html(<?php echo json_encode($out2); ?>)
                 </script>
                 <?php
             }
