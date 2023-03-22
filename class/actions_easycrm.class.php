@@ -338,6 +338,28 @@ class ActionsEasycrm
             }
         }
 
+        // Do something only for the current context
+        if ($parameters['currentcontext'] == 'projectcard') {
+            require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+            require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
+
+            $project = new Project($db);
+            $task    = new Task($db);
+
+            $project->fetch(GETPOST('id'));
+            $project->fetch_optionals();
+
+            if (!empty($project->array_options['options_commtask'])) {
+                $task->fetch($project->array_options['options_commtask']);
+                $out = $task->getNomUrl(1);
+            } ?>
+
+            <script>
+                jQuery('.project_extras_commtask').html(<?php echo json_encode($out); ?>)
+            </script>
+            <?php
+        }
+
         return 0; // or return 1 to replace standard code
     }
 
