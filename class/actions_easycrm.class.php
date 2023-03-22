@@ -253,7 +253,7 @@ class ActionsEasycrm
 
                 $actiomcomm = new ActionComm($db);
 
-                $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_TAGS_SET . ')';
+                $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
                 $actiomcomms = $actiomcomm->getActions(GETPOST('socid'), ($parameters['currentcontext'] != 'thirdpartycomm' ? GETPOST('id') : ''), ($parameters['currentcontext'] != 'thirdpartycomm' ? 'project' : ''), $filter, 'a.datec');
                 if (is_array($actiomcomms) && !empty($actiomcomms)) {
                     $nbActiomcomms  = count($actiomcomms);
@@ -299,7 +299,7 @@ class ActionsEasycrm
                 
                 $actiomcomm = new ActionComm($db);
 
-                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_TAGS_SET . ')';
+                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
                 $projects = saturne_fetch_all_object_type('Project', '', '', $limit, $offset);
                 if (is_array($projects) && !empty($projects)) {
                     foreach ($projects as $project) {

@@ -207,7 +207,7 @@ class modEasyCRM extends DolibarrModules
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],
 			$i++ => ['EASYCRM_DB_VERSION', 'chaine', $this->version, '', 0, 'current'],
             $i++ => ['EASYCRM_SHOW_PATCH_NOTE', 'integer', 1, '', 0, 'current'],
-            $i   => ['EASYCRM_TAGS_SET', 'integer', 0, '', 0, 'current'],
+            $i   => ['EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG', 'integer', 0, '', 0, 'current'],
         ];
 
 		// Some keys to add into the overwriting translation tables
@@ -377,7 +377,7 @@ class modEasyCRM extends DolibarrModules
         $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', '', '', 2);
         $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, 2000, 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 1);
 
-        if (empty($conf->global->EASYCRM_TAGS_SET)) {
+        if (empty($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG)) {
             require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
             $category = new Categorie($this->db);
@@ -386,7 +386,7 @@ class modEasyCRM extends DolibarrModules
             $category->type  = 'actioncomm';
             $categoryID      = $category->create($user);
 
-            dolibarr_set_const($this->db, 'EASYCRM_TAGS_SET', $categoryID, 'integer', 0, '', $conf->entity);
+            dolibarr_set_const($this->db, 'EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG', $categoryID, 'integer', 0, '', $conf->entity);
         }
 
 		// Permissions
