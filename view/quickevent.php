@@ -360,7 +360,7 @@ if ($permissiontoaddevent) {
     if (isModEnabled('categorie') && $conf->global->EASYCRM_EVENT_CATEGORIES_VISIBLE > 0) {
         print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
         $cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 1);
-        $category->fetch('', $langs->trans('CommercialRelaunching'));
+        $category->fetch($conf->global->EASYCRM_TAGS_SET);
         $categoriesArray = [$category->id, $category->label];
         print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories', $cate_arbo, GETPOSTISSET('categories') ? GETPOST('categories', 'array') : $categoriesArray, '', 0, 'quatrevingtpercent widthcentpercentminusx');
         print '</td></tr>';

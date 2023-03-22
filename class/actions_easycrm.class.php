@@ -247,17 +247,13 @@ class ActionsEasycrm
         if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
             if (isModEnabled('agenda')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
-                require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
                 $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
                 $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 
                 $actiomcomm = new ActionComm($db);
-                $category   = new Categorie($db);
 
-                $category->fetch('', $langs->trans('CommercialRelaunching'));
-
-                $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $category->id . ')';
+                $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_TAGS_SET . ')';
                 $actiomcomms = $actiomcomm->getActions(GETPOST('socid'), ($parameters['currentcontext'] != 'thirdpartycomm' ? GETPOST('id') : ''), ($parameters['currentcontext'] != 'thirdpartycomm' ? 'project' : ''), $filter, 'a.datec');
                 if (is_array($actiomcomms) && !empty($actiomcomms)) {
                     $nbActiomcomms  = count($actiomcomms);
@@ -286,7 +282,6 @@ class ActionsEasycrm
             if (isModEnabled('agenda') && isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
-                require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
                 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
@@ -303,11 +298,8 @@ class ActionsEasycrm
                 $offset = $limit * $page;
                 
                 $actiomcomm = new ActionComm($db);
-                $category   = new Categorie($db);
 
-                $category->fetch('', $langs->trans('CommercialRelaunching'));
-
-                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $category->id . ')';
+                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_TAGS_SET . ')';
                 $projects = saturne_fetch_all_object_type('Project', '', '', $limit, $offset);
                 if (is_array($projects) && !empty($projects)) {
                     foreach ($projects as $project) {
