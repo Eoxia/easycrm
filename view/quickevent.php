@@ -121,12 +121,6 @@ if (empty($reshook)) {
         if (!$error) {
             $db->begin();
 
-            // Check parameters
-            if (empty($conf->global->AGENDA_USE_EVENT_TYPE) && !GETPOST('label')) {
-                $error++;
-                setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('Label')), [], 'errors');
-            }
-
             // Initialisation objet cactioncomm
             if (GETPOSTISSET('actioncode') && !GETPOST('actioncode', 'aZ09')) { // actioncode is '0'
                 $error++;
@@ -283,14 +277,13 @@ if ($permissiontoaddevent) {
     // Type of event
     if ($conf->global->EASYCRM_EVENT_TYPE_CODE_VISIBLE > 0) {
         print '<tr><td class="titlefieldcreate fieldrequired"><label for="actioncode">' . $langs->trans('Type') . '</label></td>';
-        $default = (empty($conf->global->AGENDA_USE_EVENT_TYPE_DEFAULT) ? 'AC_RDV' : $conf->global->AGENDA_USE_EVENT_TYPE_DEFAULT);
-        print '<td>' . $formactions->select_type_actions(GETPOSTISSET('actioncode') ? GETPOST('actioncode', 'aZ09') : ($actioncomm->type_code ?: $default), 'actioncode', 'systemauto', 0, -1, 0, 1) . '</td>';
+        print '<td>' . $formactions->select_type_actions(GETPOSTISSET('actioncode') ? GETPOST('actioncode', 'aZ09') : $conf->global->EASYCRM_EVENT_TYPE_CODE_VALUE, 'actioncode', 'systemauto', 0, -1, 0, 1) . '</td>';
         print '</tr>';
     }
 
     // Label
     if ($conf->global->EASYCRM_EVENT_LABEL_VISIBLE > 0) {
-        print '<tr><td' . (empty($conf->global->AGENDA_USE_EVENT_TYPE) ? ' class="titlefieldcreate fieldrequired"' : '') . '><label for="label">' . $langs->trans('Label') . '</label></td>';
+        print '<tr><td><label for="label">' . $langs->trans('Label') . '</label></td>';
         print '<td><input type="text" id="label" name="label" class="maxwidth500 widthcentpercentminusx" maxlength="255" value="' . dol_escape_htmltag((GETPOSTISSET('label') ? GETPOST('label') : '')) . '"></td>';
         print '</tr>';
     }

@@ -61,6 +61,9 @@ if (isModEnabled('project')) {
 if (isModEnabled('societe')) {
     $formcompany = new FormCompany($db);
 }
+if (isModEnabled('agenda')) {
+    $formactions = new FormActions($db);
+}
 
 // Security check - Protection if external user
 $permissiontoread = $user->rights->easycrm->adminpage->read;
@@ -76,6 +79,7 @@ if ($action == 'set_config') {
     $client                   = GETPOST('client');
     $taskLabel                = GETPOST('task_label');
     $timespent                = GETPOST('timespent');
+    $typeEvent                = GETPOST('actioncode');
     $statusEvent              = (GETPOST('status') == 'NA' ? -1 : GETPOST('status'));
 
     if (!empty($projectOpportunityStatus)) {
@@ -92,6 +96,9 @@ if ($action == 'set_config') {
     }
     if ($timespent >= 0) {
         dolibarr_set_const($db, 'EASYCRM_TASK_TIMESPENT_VALUE', $timespent, 'chaine', 0, '', $conf->entity);
+    }
+    if (!empty($typeEvent)) {
+        dolibarr_set_const($db, 'EASYCRM_EVENT_TYPE_CODE_VALUE', $typeEvent, 'chaine', 0, '', $conf->entity);
     }
     dolibarr_set_const($db, 'EASYCRM_EVENT_STATUS_VALUE', $statusEvent, 'integer', 0, '', $conf->entity);
 
@@ -399,7 +406,14 @@ print '</td>';
 
 print '<td class="center">';
 //print ajax_constantonoff('EASYCRM_EVENT_TYPE_CODE_VISIBLE');
-print '</td></td><td></td></tr>';
+print '</td>';
+
+if ($conf->global->EASYCRM_EVENT_TYPE_CODE_VISIBLE > 0) {
+    print '<td>';
+    print $formactions->select_type_actions($conf->global->EASYCRM_EVENT_TYPE_CODE_VALUE, 'actioncode', 'systemauto', 0, -1, 0, 1);
+    print '</td>';
+}
+print '</td></tr>';
 
 // Label
 print '<tr class="oddeven"><td>';
