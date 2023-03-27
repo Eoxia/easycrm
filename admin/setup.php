@@ -472,6 +472,17 @@ if ($conf->global->EASYCRM_EVENT_STATUS_VISIBLE > 0) {
 }
 print '</tr>';
 
+// Description
+print '<tr class="oddeven"><td>';
+print $langs->trans('Description');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->trans('Description'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_EVENT_DESCRIPTION_VISIBLE');
+print '</td></td><td></td></tr>';
+
 // Categories
 print '<tr class="oddeven"><td>';
 print $langs->trans('Categories');

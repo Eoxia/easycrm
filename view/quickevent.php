@@ -61,29 +61,51 @@ $fromtype    = GETPOST('fromtype', 'aZ09');
 $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
+$error = 0;
+
 // Initialize technical objects
 if (isModEnabled('agenda')) {
     $actioncomm         = new ActionComm($db);
     $actionCommReminder = new ActionCommReminder($db);
+} else {
+    $actioncomm = '';
+    $actionCommReminder = '';
+    $error++;
 }
 if (isModEnabled('project')) {
     $project = new Project($db);
     $task    = new Task($db);
+} else {
+    $project = '';
+    $task = '';
+    $error++;
 }
 if (isModEnabled('categorie')) {
     $category = new Categorie($db);
+} else {
+    $category = '';
+    $error++;
 }
 if (isModEnabled('societe')) {
     $thirdparty = new Societe($db);
+} else {
+    $thirdparty = '';
+    $error++;
 }
 
 // Initialize view objects
 $form = new Form($db);
 if (isModEnabled('project')) {
     $formproject = new FormProjets($db);
+} else {
+    $formproject = '';
+    $error++;
 }
 if (isModEnabled('agenda')) {
     $formactions = new FormActions($db);
+} else {
+    $formactions = '';
+    $error++;
 }
 
 $hookmanager->initHooks(['quickeventcreation']); // Note that conf->hooks_modules contains array
@@ -104,8 +126,6 @@ if ($reshook < 0) {
 }
 
 if (empty($reshook)) {
-    $error = 0;
-
     if ($fromtype == 'project') {
         $backtopage = dol_buildpath('/projet/card.php', 1) . '?id=' . GETPOST('project_id');
     } else {
@@ -129,12 +149,15 @@ if (empty($reshook)) {
                 $actioncomm->type_code = GETPOST('actioncode', 'aZ09');
             }
 
+            $mesg = '';
+
             $dateStart = dol_mktime(GETPOST('datestarthour', 'int'), GETPOST('datestartmin', 'int'), GETPOST('datestartsec', 'int'), GETPOST('datestartmonth', 'int'), GETPOST('datestartday', 'int'), GETPOST('datestartyear', 'int'), 'tzuser');
             $dateEnd   = dol_mktime(GETPOST('dateendhour', 'int'), GETPOST('dateendmin', 'int'), GETPOST('dateendsec', 'int'), GETPOST('dateendmonth', 'int'), GETPOST('dateendday', 'int'), GETPOST('dateendyear', 'int'), 'tzuser');
 
             $actioncomm->label        = GETPOST('label');
             $actioncomm->datep        = $dateStart;
             $actioncomm->datef        = $dateEnd;
+            $actioncomm->note_private = trim(GETPOST('note', 'restricthtml'));
             $actioncomm->socid        = $socid;
             $actioncomm->userownerid  = $user->id;
             $actioncomm->percentage   = (GETPOST('status') == 'NA' ? -1 : GETPOST('status'));
@@ -147,14 +170,8 @@ if (empty($reshook)) {
                 // Category association
                 $categories = GETPOST('categories', 'array');
                 if (count($categories) > 0) {
-                    $result = $actioncomm->setCategories($categories);
-                    if ($result < 0) {
-                        setEventMessages($actioncomm->error, $actioncomm->errors, 'errors');
-                        $error++;
-                    }
+                    $actioncomm->setCategories($categories);
                 }
-
-                $mesg = '';
 
                 if ($fromtype == 'project') {
                     $result = $project->fetch(GETPOST('project_id'));
@@ -234,7 +251,7 @@ if (empty($reshook)) {
             $db->commit();
             if (!empty($backtopage)) {
                 $mesg .= $langs->trans('ActionCommCreation');
-                setEventMessages('', $mesg);
+                setEventMessage($mesg);
                 header('Location: ' . $backtopage);
             }
             exit;
@@ -267,102 +284,109 @@ if ($backtopage) {
 }
 
 // Quick add event
-if ($permissiontoaddevent) {
-    print load_fiche_titre($langs->trans('QuickEventCreation'), '', 'calendar');
+print load_fiche_titre($langs->trans('QuickEventCreation'), '', 'calendar');
 
-    print dol_get_fiche_head();
+print dol_get_fiche_head();
 
-    print '<table class="border centpercent tableforfieldcreate">';
+print '<table class="border centpercent tableforfieldcreate">';
 
-    // Type of event
-    if ($conf->global->EASYCRM_EVENT_TYPE_CODE_VISIBLE > 0) {
-        print '<tr><td class="titlefieldcreate fieldrequired"><label for="actioncode">' . $langs->trans('Type') . '</label></td>';
-        print '<td>' . $formactions->select_type_actions(GETPOSTISSET('actioncode') ? GETPOST('actioncode', 'aZ09') : $conf->global->EASYCRM_EVENT_TYPE_CODE_VALUE, 'actioncode', 'systemauto', 0, -1, 0, 1) . '</td>';
-        print '</tr>';
-    }
+// Type of event
+if ($conf->global->EASYCRM_EVENT_TYPE_CODE_VISIBLE > 0) {
+    print '<tr><td class="titlefieldcreate fieldrequired"><label for="actioncode">' . $langs->trans('Type') . '</label></td>';
+    print '<td>' . $formactions->select_type_actions(GETPOSTISSET('actioncode') ? GETPOST('actioncode', 'aZ09') : $conf->global->EASYCRM_EVENT_TYPE_CODE_VALUE, 'actioncode', 'systemauto', 0, -1, 0, 1) . '</td>';
+    print '</tr>';
+}
 
-    // Label
-    if ($conf->global->EASYCRM_EVENT_LABEL_VISIBLE > 0) {
-        print '<tr><td><label for="label">' . $langs->trans('Label') . '</label></td>';
-        print '<td><input type="text" id="label" name="label" class="maxwidth500 widthcentpercentminusx" maxlength="255" value="' . dol_escape_htmltag((GETPOSTISSET('label') ? GETPOST('label') : '')) . '"></td>';
-        print '</tr>';
-    }
+// Label
+if ($conf->global->EASYCRM_EVENT_LABEL_VISIBLE > 0) {
+    print '<tr><td><label for="label">' . $langs->trans('Label') . '</label></td>';
+    print '<td><input type="text" id="label" name="label" class="maxwidth500 widthcentpercentminusx" maxlength="255" value="' . dol_escape_htmltag((GETPOSTISSET('label') ? GETPOST('label') : '')) . '"></td>';
+    print '</tr>';
+}
 
-    // Date start
-    if ($conf->global->EASYCRM_EVENT_DATE_START_VISIBLE > 0) {
-        print '<tr><td class="titlefieldcreate fieldrequired">' . $langs->trans('DateStart') . '</td>';
-        $dateStart = dol_mktime(GETPOST('datestarthour', 'int'), GETPOST('datestartmin', 'int'), GETPOST('datestartsec', 'int'), GETPOST('datestartmonth', 'int'), GETPOST('datestartday', 'int'), GETPOST('datestartyear', 'int'), 'tzuser');
-        print '<td>' . $form->selectDate((!empty($dateStart) ? $dateStart : dol_now()), 'datestart', 1, 1, 1, 'action', 1, 2, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
-        print '</tr>';
-    }
+// Date start
+if ($conf->global->EASYCRM_EVENT_DATE_START_VISIBLE > 0) {
+    print '<tr><td class="titlefieldcreate fieldrequired">' . $langs->trans('DateStart') . '</td>';
+    $dateStart = dol_mktime(GETPOST('datestarthour', 'int'), GETPOST('datestartmin', 'int'), GETPOST('datestartsec', 'int'), GETPOST('datestartmonth', 'int'), GETPOST('datestartday', 'int'), GETPOST('datestartyear', 'int'), 'tzuser');
+    print '<td>' . $form->selectDate((!empty($dateStart) ? $dateStart : dol_now()), 'datestart', 1, 1, 1, 'action', 1, 2, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
+    print '</tr>';
+}
 
-    // Date end
-    if ($conf->global->EASYCRM_EVENT_DATE_END_VISIBLE > 0) {
-        print '<tr><td class="titlefieldcreate">' . $langs->trans('DateEnd') . '</td>';
-        $dateEnd = dol_mktime(GETPOST('dateendhour', 'int'), GETPOST('dateendmin', 'int'), GETPOST('dateendsec', 'int'), GETPOST('dateendmonth', 'int'), GETPOST('dateendday', 'int'), GETPOST('dateendyear', 'int'), 'tzuser');
-        print '<td>' . $form->selectDate($dateEnd, 'dateend', 1, 1, 1, 'action', 1, 0, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
-        print '</tr>';
-    }
+// Date end
+if ($conf->global->EASYCRM_EVENT_DATE_END_VISIBLE > 0) {
+    print '<tr><td class="titlefieldcreate">' . $langs->trans('DateEnd') . '</td>';
+    $dateEnd = dol_mktime(GETPOST('dateendhour', 'int'), GETPOST('dateendmin', 'int'), GETPOST('dateendsec', 'int'), GETPOST('dateendmonth', 'int'), GETPOST('dateendday', 'int'), GETPOST('dateendyear', 'int'), 'tzuser');
+    print '<td>' . $form->selectDate($dateEnd, 'dateend', 1, 1, 1, 'action', 1, 0, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
+    print '</tr>';
+}
 
-    // Status
-    if ($conf->global->EASYCRM_EVENT_STATUS_VISIBLE > 0) {
-        print '<tr><td class="titlefieldcreate"><label for="status">' . $langs->trans('Status') . '</label></td>';
-        $listofstatus = [
-            'NA' => $langs->trans('ActionNotApplicable'),
-            0    => $langs->trans('ActionsToDoShort'),
-            50   => $langs->trans('ActionRunningShort'),
-            100  => $langs->trans('ActionDoneShort')
-        ];
-        print '<td>' . $form->selectarray('status', $listofstatus, (GETPOSTISSET('status') ? GETPOST('status') : $conf->global->EASYCRM_EVENT_STATUS_VALUE), 0, 0, 0, '', 0, 0, 0, '', 'maxwidth200 widthcentpercentminusx') . '</td>';
-        print '</tr>';
-    }
+// Status
+if ($conf->global->EASYCRM_EVENT_STATUS_VISIBLE > 0) {
+    print '<tr><td class="titlefieldcreate"><label for="status">' . $langs->trans('Status') . '</label></td>';
+    $listofstatus = [
+        'NA' => $langs->trans('ActionNotApplicable'),
+        0    => $langs->trans('ActionsToDoShort'),
+        50   => $langs->trans('ActionRunningShort'),
+        100  => $langs->trans('ActionDoneShort')
+    ];
+    print '<td>' . $form->selectarray('status', $listofstatus, (GETPOSTISSET('status') ? GETPOST('status') : $conf->global->EASYCRM_EVENT_STATUS_VALUE), 0, 0, 0, '', 0, 0, 0, '', 'maxwidth200 widthcentpercentminusx') . '</td>';
+    print '</tr>';
+}
 
-    // ThirdParty
-    if (isModEnabled('societe') && $socid > 0) {
-        print '<tr><td class="titlefieldcreate">' . $langs->trans('ActionOnCompany') . '</td>';
-        $thirdparty->fetch($socid);
-        print '<td>' . $thirdparty->getNomUrl(1) . '</td>';
-        print '</tr>';
-    }
+// ThirdParty
+if (isModEnabled('societe') && $socid > 0) {
+    print '<tr><td class="titlefieldcreate">' . $langs->trans('ActionOnCompany') . '</td>';
+    $thirdparty->fetch($socid);
+    print '<td>' . $thirdparty->getNomUrl(1) . '</td>';
+    print '</tr>';
+}
 
-    // Project
-    if (isModEnabled('project') && $fromtype == 'project') {
-        print '<tr><td class="titlefieldcreate">' . $langs->trans('Project'). '</td>';
-        $project->fetch(GETPOST('project_id'));
-        print '<td>' . $project->getNomUrl(1) . '</td>';
-        print '</tr>';
+// Project
+if (isModEnabled('project') && $fromtype == 'project') {
+    print '<tr><td class="titlefieldcreate">' . $langs->trans('Project'). '</td>';
+    $project->fetch(GETPOST('project_id'));
+    print '<td>' . $project->getNomUrl(1) . '</td>';
+    print '</tr>';
 
-        if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
-            // Opportunity status
-            if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VISIBLE > 0) {
-                print '<tr><td>' . $langs->trans('OpportunityStatus') . '</td>';
-                print '<td>' . $formproject->selectOpportunityStatus('opp_status', $project->opp_status, 0, 0, 0, '', 0, 1) . '</td>';
-                print '</tr>';
-            }
-        }
-
-        // TimeSpent
-        if ($conf->global->EASYCRM_TASK_TIMESPENT_VISIBLE > 0) {
-            print '<tr><td class="titlefieldcreate"><label for="timespent">' . $langs->trans('TimeSpent') . '</label></td>';
-            print '<td><input type="number" id="timespent" name="timespent" class="maxwidth100 widthcentpercentminusx" value="' . (GETPOSTISSET('timespent') ? GETPOST('timespent') : $conf->global->EASYCRM_TASK_TIMESPENT_VALUE) . '"></td>';
+    if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
+        // Opportunity status
+        if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VISIBLE > 0) {
+            print '<tr><td>' . $langs->trans('OpportunityStatus') . '</td>';
+            print '<td>' . $formproject->selectOpportunityStatus('opp_status', $project->opp_status, 0, 0, 0, '', 0, 1) . '</td>';
             print '</tr>';
         }
     }
 
-    // Categories
-    if (isModEnabled('categorie') && $conf->global->EASYCRM_EVENT_CATEGORIES_VISIBLE > 0) {
-        print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
-        $cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 1);
-        $category->fetch($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG);
-        $categoriesArray = [$category->id, $category->label];
-        print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories', $cate_arbo, GETPOSTISSET('categories') ? GETPOST('categories', 'array') : $categoriesArray, '', 0, 'quatrevingtpercent widthcentpercentminusx');
-        print '</td></tr>';
+    // TimeSpent
+    if ($conf->global->EASYCRM_TASK_TIMESPENT_VISIBLE > 0) {
+        print '<tr><td class="titlefieldcreate"><label for="timespent">' . $langs->trans('TimeSpent') . '</label></td>';
+        print '<td><input type="number" id="timespent" name="timespent" class="maxwidth100 widthcentpercentminusx" value="' . (GETPOSTISSET('timespent') ? GETPOST('timespent') : $conf->global->EASYCRM_TASK_TIMESPENT_VALUE) . '"></td>';
+        print '</tr>';
     }
-
-    print '</table>';
-
-    print dol_get_fiche_end();
 }
+
+// Description
+if ($conf->global->EASYCRM_EVENT_DESCRIPTION_VISIBLE > 0) {
+    print '<tr><td class="titlefieldcreate"><label for="description">' . $langs->trans('Description') . '</label></td><td>';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+    $doleditor = new DolEditor('note', (GETPOSTISSET('note') ? GETPOST('note', 'restricthtml') : ''), '', 120, 'dolibarr_notes', 'In', true, true, isModEnabled('fckeditor'), ROWS_4, '90%');
+    $doleditor->Create();
+    print '</td></tr>';
+}
+
+// Categories
+if (isModEnabled('categorie') && $conf->global->EASYCRM_EVENT_CATEGORIES_VISIBLE > 0) {
+    print '<tr><td>' . $langs->trans('Categories') . '</td><td>';
+    $cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 1);
+    $category->fetch($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG);
+    $categoriesArray = [$category->id, $category->label];
+    print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories', $cate_arbo, GETPOSTISSET('categories') ? GETPOST('categories', 'array') : $categoriesArray, '', 0, 'quatrevingtpercent widthcentpercentminusx');
+    print '</td></tr>';
+}
+
+print '</table>';
+
+print dol_get_fiche_end();
 
 print $form->buttonsSaveCancel('Create');
 
