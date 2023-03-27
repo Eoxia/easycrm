@@ -298,15 +298,15 @@ if ($permissiontoaddevent) {
     // Date start
     if ($conf->global->EASYCRM_EVENT_DATE_START_VISIBLE > 0) {
         print '<tr><td class="titlefieldcreate fieldrequired">' . $langs->trans('DateStart') . '</td>';
-        $dateStart = dol_stringtotime(GETPOST('datestart', 'int', 1), 'tzuser');
-        print '<td>' . $form->selectDate($dateStart, 'datestart', 1, 1, 1, 'action', 1, 2, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
+        $dateStart = dol_mktime(GETPOST('datestarthour', 'int'), GETPOST('datestartmin', 'int'), GETPOST('datestartsec', 'int'), GETPOST('datestartmonth', 'int'), GETPOST('datestartday', 'int'), GETPOST('datestartyear', 'int'), 'tzuser');
+        print '<td>' . $form->selectDate((!empty($dateStart) ? $dateStart : dol_now()), 'datestart', 1, 1, 1, 'action', 1, 2, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
         print '</tr>';
     }
 
     // Date end
     if ($conf->global->EASYCRM_EVENT_DATE_END_VISIBLE > 0) {
         print '<tr><td class="titlefieldcreate">' . $langs->trans('DateEnd') . '</td>';
-        $dateEnd = dol_stringtotime(GETPOST('dateend', 'int', 1), 'tzuser');
+        $dateEnd = dol_mktime(GETPOST('dateendhour', 'int'), GETPOST('dateendmin', 'int'), GETPOST('dateendsec', 'int'), GETPOST('dateendmonth', 'int'), GETPOST('dateendday', 'int'), GETPOST('dateendyear', 'int'), 'tzuser');
         print '<td>' . $form->selectDate($dateEnd, 'dateend', 1, 1, 1, 'action', 1, 0, 0, 'fulldaystart', '', '', '', 1, '', '', 'tzuserrel') . '</td>';
         print '</tr>';
     }
