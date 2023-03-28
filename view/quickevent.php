@@ -211,11 +211,12 @@ if (empty($reshook)) {
                         $task->fetch($commTaskID);
 
                         $task->timespent_date     = dol_now();
+                        $task->timespent_note     = $actioncomm->label;
                         $task->timespent_duration = GETPOST('timespent', 'int') * 60;
                         $task->timespent_fk_user  = $user->id;
 
                         if ($task->timespent_duration > 0) {
-                            $task->addTimeSpent($user);
+                            $task->addTimeSpent($user, 1);
                         }
                     }
                 }
