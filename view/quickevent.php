@@ -221,8 +221,8 @@ if (empty($reshook)) {
                 }
 
                 // Create reminders
-                if (getDolGlobalString('AGENDA_REMINDER_BROWSER') && $dateEnd > dol_now()) {
-                    $dateremind = dol_time_plus_duree($dateEnd, -30, 'i');
+                if (getDolGlobalString('AGENDA_REMINDER_BROWSER') && $dateStart > dol_now()) {
+                    $dateremind = dol_time_plus_duree($dateStart, -30, 'i');
 
                     $actionCommReminder->dateremind    = $dateremind;
                     $actionCommReminder->typeremind    = 'browser';
@@ -237,7 +237,7 @@ if (empty($reshook)) {
                         setEventMessages($langs->trans('ErrorReminderActionCommCreation'), $actioncomm->errors, 'errors');
                         $error++;
                     } else {
-                        $mesg .= $langs->trans('ReminderActionCommCreation', dol_print_date($dateremind, 'dayhourtext')) . '<br>';
+                        $mesg .= $langs->trans('ReminderActionCommCreation', dol_print_date($dateremind, 'dayhourtext', 'tzuser')) . '<br>';
                     }
                 }
             } else {
