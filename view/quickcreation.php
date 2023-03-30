@@ -79,7 +79,7 @@ if (isModEnabled('societe')) {
     $formcompany = new FormCompany($db);
 }
 
-$hookmanager->initHooks(['quickcration']); // Note that conf->hooks_modules contains array
+$hookmanager->initHooks(['quickcreation']); // Note that conf->hooks_modules contains array
 
 $date_start = dol_mktime(0, 0, 0, GETPOST('projectstartmonth', 'int'), GETPOST('projectstartday', 'int'), GETPOST('projectstartyear', 'int'));
 
