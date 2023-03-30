@@ -211,18 +211,19 @@ if (empty($reshook)) {
                         $task->fetch($commTaskID);
 
                         $task->timespent_date     = dol_now();
+                        $task->timespent_note     = $actioncomm->label;
                         $task->timespent_duration = GETPOST('timespent', 'int') * 60;
                         $task->timespent_fk_user  = $user->id;
 
                         if ($task->timespent_duration > 0) {
-                            $task->addTimeSpent($user);
+                            $task->addTimeSpent($user, 1);
                         }
                     }
                 }
 
                 // Create reminders
-                if (getDolGlobalString('AGENDA_REMINDER_BROWSER') && $dateEnd > dol_now()) {
-                    $dateremind = dol_time_plus_duree($dateEnd, -30, 'i');
+                if (getDolGlobalString('AGENDA_REMINDER_BROWSER') && $dateStart > dol_now()) {
+                    $dateremind = dol_time_plus_duree($dateStart, -30, 'i');
 
                     $actionCommReminder->dateremind    = $dateremind;
                     $actionCommReminder->typeremind    = 'browser';
@@ -237,7 +238,7 @@ if (empty($reshook)) {
                         setEventMessages($langs->trans('ErrorReminderActionCommCreation'), $actioncomm->errors, 'errors');
                         $error++;
                     } else {
-                        $mesg .= $langs->trans('ReminderActionCommCreation', dol_print_date($dateremind, 'dayhourtext')) . '<br>';
+                        $mesg .= $langs->trans('ReminderActionCommCreation', dol_print_date($dateremind, 'dayhourtext', 'tzuser')) . '<br>';
                     }
                 }
             } else {
