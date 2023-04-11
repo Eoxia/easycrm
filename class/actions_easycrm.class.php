@@ -243,7 +243,7 @@ class ActionsEasycrm
      */
     public function printCommonFooter(array $parameters): int
     {
-        global $conf, $db, $langs, $user;
+        global $conf, $db, $langs;
 
         // Do something only for the current context
         if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
@@ -280,66 +280,6 @@ class ActionsEasycrm
             }
         }
 
-        if ($parameters['currentcontext'] == 'projectlist') {
-            if (isModEnabled('agenda') && isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
-                require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
-                require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
-
-                require_once __DIR__ . '/../../saturne/lib/object.lib.php';
-
-                $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
-                $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
-
-                $limit = GETPOST('limit', 'int') ?GETPOST('limit', 'int') : $conf->liste_limit;
-                $page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
-                if (empty($page) || $page < 0 || GETPOST('button_search', 'alpha') || GETPOST('button_removefilter', 'alpha')) {
-                    // If $page is not defined, or '' or -1 or if we click on clear filters
-                    $page = 0;
-                }
-
-                $offset = $limit * $page;
-                
-                $actiomcomm = new ActionComm($db);
-
-                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
-                $projects = saturne_fetch_all_object_type('Project', '', '', $limit, $offset);
-                if (is_array($projects) && !empty($projects)) {
-                    foreach ($projects as $project) {
-                        if (!empty($project->id)) {
-                            $actiomcomms = $actiomcomm->getActions($project->fk_soc, $project->id, 'project', $filter, 'a.datec');
-                            if (is_array($actiomcomms) && !empty($actiomcomms)) {
-                                $nbActiomcomms  = count($actiomcomms);
-                                $lastActiomcomm = array_shift($actiomcomms);
-                            } else {
-                                $nbActiomcomms = 0;
-                            }
-
-                            $out = $picto . $langs->trans('CommercialsRelaunching');
-                            $out .= ' <span class="badge badge-info">' . $nbActiomcomms . '</span>';
-                            if ($nbActiomcomms > 0) {
-                                $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
-                                $out .= ' ' . $lastActiomcomm->getNomUrl(1);
-                            }
-                            $url = '?socid=' . $project->fk_soc . '&fromtype=project' . '&project_id=' . $project->id . '&action=create&token=' . newToken();
-                            if ($user->hasRight('agenda', 'myactions', 'create')) {
-                                $out .= '<a href="' . dol_buildpath('/easycrm/view/quickevent.php', 1) . $url . '" target="_blank"><span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span></a>';
-                            }
-                            $outArray[] = $out;
-                        }
-                    } ?>
-                    <script>
-                        var outArrayJS = <?php echo json_encode($outArray); ?>;
-                        $('.liste > tbody > tr.oddeven').each(function(index) {
-                            var commRelauchCell = $(this).find('td[data-key="projet.commrelaunch"]');
-                            commRelauchCell.addClass('minwidth300');
-                            commRelauchCell.append(outArrayJS[index]);
-                        });
-                    </script>
-                    <?php
-                }
-            }
-        }
-
         // Do something only for the current context
         if ($parameters['currentcontext'] == 'projectcard') {
             if (empty(GETPOST('action')) || GETPOST('action') == 'update') {
@@ -361,6 +301,64 @@ class ActionsEasycrm
                     jQuery('.project_extras_commtask').html(<?php echo json_encode($out2); ?>)
                 </script>
                 <?php
+            }
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
+
+    /**
+     * Overloading the printFieldListValue function : replacing the parent's function with the one below
+     *
+     * @param  array $parameters Hook metadatas (context, etc...)
+     * @return int               0 < on error, 0 on success, 1 to replace standard code
+     * @throws Exception
+     */
+    public function printFieldListValue(array $parameters): int
+    {
+        global $conf, $db, $langs, $user;
+
+        // Do something only for the current context
+        if ($parameters['currentcontext'] == 'projectlist') {
+            if (isModEnabled('agenda') && isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
+                require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+                require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+
+                $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
+                $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+
+                $actiomcomm = new ActionComm($db);
+                
+                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
+                if (is_object($parameters['obj']) && !empty($parameters['obj'])) {
+                    if (!empty($parameters['obj']->id)) {
+                        $actiomcomms = $actiomcomm->getActions($parameters['obj']->socid, $parameters['obj']->id, 'project', $filter, 'a.datec');
+                        if (is_array($actiomcomms) && !empty($actiomcomms)) {
+                            $nbActiomcomms  = count($actiomcomms);
+                            $lastActiomcomm = array_shift($actiomcomms);
+                        } else {
+                            $nbActiomcomms = 0;
+                        }
+
+                        $out = $picto . $langs->trans('CommercialsRelaunching');
+                        $out .= ' <span class="badge badge-info">' . $nbActiomcomms . '</span>';
+                        if ($nbActiomcomms > 0) {
+                            $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
+                            $out .= ' ' . $lastActiomcomm->getNomUrl(1);
+                        }
+                        $url = '?socid=' . $parameters['obj']->socid . '&fromtype=project' . '&project_id=' . $parameters['obj']->id . '&action=create&token=' . newToken();
+                        if ($user->hasRight('agenda', 'myactions', 'create')) {
+                            $out .= '<a href="' . dol_buildpath('/easycrm/view/quickevent.php', 1) . $url . '" target="_blank"><span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span></a>';
+                        }
+                    } ?>
+                    <script>
+                        var outJS = <?php echo json_encode($out); ?>;
+                        var commRelauchCell = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commrelaunch"]').last();
+                        commRelauchCell.addClass('minwidth300');
+                        commRelauchCell.append(outJS);
+                    </script>
+                    <?php
+                }
             }
         }
 
