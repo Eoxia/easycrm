@@ -1,18 +1,17 @@
 <?php
 
 if ($action == 'add') {
-	// Check thirdparty parameters
-	if (!empty($thirdparty->email) && !isValidEMail($thirdparty->email)) {
-		setEventMessages($langs->trans('ErrorBadEMail', $thirdparty->email), [], 'errors');
-		$error++;
-	}
-
 	// Check project parameters
 	if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) {
 		if (GETPOST('opp_amount') != '' && !(GETPOST('opp_status') > 0)) {
 			setEventMessages($langs->trans('ErrorOppStatusRequiredIfAmount'), [], 'errors');
 			$error++;
 		}
+	}
+
+	if (empty(GETPOST('name')) && empty(GETPOST('title'))) {
+		setEventMessages($langs->trans('ErrorNoProjectAndThirdpartyInformations'), [], 'errors');
+		$error++;
 	}
 
 	if (!$error) {
