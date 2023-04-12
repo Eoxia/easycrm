@@ -24,6 +24,8 @@
 // Load EasyCRM environment
 if (file_exists('../easycrm.main.inc.php')) {
     require_once __DIR__ . '/../easycrm.main.inc.php';
+} elseif (file_exists('../../easycrm.main.inc.php')) {
+    require_once __DIR__ . '/../../easycrm.main.inc.php';
 } else {
     die('Include of easycrm main fails');
 }

@@ -4,9 +4,9 @@
 
 - Numéro du module : 436351
 - Version :  1.0.0
-- Dernière mise à jour : 01/03/2023
+- Dernière mise à jour : 12/04/2023
 - Éditeur : [Eoxia](https://www.eoxia.com)
-- Compatibilité : Dolibarr 15.0.0 - 16.0.4
+- Compatibilité : Dolibarr 15.0.0 - 16.0.5
 - Thème : eldy
 - Licence : GPLv3
 - Disponible sur : Windows - MacOS - Linux
