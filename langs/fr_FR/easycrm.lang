@@ -47,14 +47,14 @@ CommercialTask           = Tâche commerciale
 #
 
 # Data - Donnée
-QuickEventCreation         = Ajout rapide d'événement
-QuickEventCreations        = ajouts rapide d'événements
-CommercialRelaunching      = Relance commerciale
-CommercialsRelaunching     = Relances commerciales
-LastCommercialReminderDate = Date dernière relance commerciale
-ActionCommCreation         = Événement créé
-ReminderActionCommCreation = Rappel crée le %s
-
+QuickEventCreation                      = Ajout rapide d'événement
+QuickEventCreations                     = ajouts rapide d'événements
+CommercialRelaunching                   = Relance commerciale
+CommercialsRelaunching                  = Relances commerciales
+LastCommercialReminderDate              = Date dernière relance commerciale
+ActionCommCreation                      = Événement créé
+ReminderActionCommCreation              = Rappel crée le %s
+ErrorNoProjectAndThirdpartyInformations = Veuillez renseigner un nom de projet et un nom de tiers
 
 #
 # Config page - Page d'administration
