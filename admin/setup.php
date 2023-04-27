@@ -346,6 +346,17 @@ print '<td class="center">';
 print ajax_constantonoff('EASYCRM_PROJECT_DATE_START_VISIBLE');
 print '</td></td><td></td></tr>';
 
+// Extrafields
+print '<tr class="oddeven"><td>';
+print $langs->trans('Extrafields');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Extrafields'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('EASYCRM_PROJECT_CATEGORIES_VISIBLE');
+print '</td></td><td></td></tr>';
+
 // Categories
 print '<tr class="oddeven"><td>';
 print $langs->trans('Categories');
