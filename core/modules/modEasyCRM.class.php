@@ -378,6 +378,7 @@ class modEasyCRM extends DolibarrModules
 
         $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', '', '', 2);
         $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, 2000, 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 1);
+        $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
 
         if (empty($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG)) {
             require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
