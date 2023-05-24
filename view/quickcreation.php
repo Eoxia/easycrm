@@ -60,6 +60,7 @@ $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
+$extrafields = new ExtraFields($db);
 if (isModEnabled('project')) {
     $project = new Project($db);
     $task = new Task($db);
