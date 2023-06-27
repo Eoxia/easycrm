@@ -20,4 +20,5 @@ CREATE TABLE llx_c_status_propal(
     label       varchar(255),
     description text,
     active      tinyint(4) DEFAULT 1,
+    position    integer DEFAULT 0
 ) ENGINE=innodb;
