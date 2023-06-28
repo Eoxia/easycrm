@@ -95,7 +95,7 @@ class EasycrmDashboard
 				$arrayNbDataByLabel[$i] = 0;
 				$array['labels'][$i] = [
 					'label' => $langs->transnoentities($data->label),
-					'color' => '#' . str_pad(dechex(rand(0x000000, 0xFFFFFF)), 6, 0, STR_PAD_LEFT)
+					'color' => $this->getColorRange($i)
 				];
 				$i++;
 			}
@@ -113,5 +113,17 @@ class EasycrmDashboard
 		$array['data'] = $arrayNbDataByLabel;
 
 		return $array;
+	}
+
+	/**
+	 * get color range for key
+	 *
+	 * @param  int    $key Key to find in color array
+	 * @return string
+	 */
+	public function getColorRange($key)
+	{
+		$colorArray = ['#f44336', '#e81e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#9e9e9e', '#607d8b'];
+		return $colorArray[$key % count($colorArray)];
 	}
 }
