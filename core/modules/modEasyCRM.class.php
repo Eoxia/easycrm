@@ -224,8 +224,12 @@ class modEasyCRM extends DolibarrModules
 			$conf->easycrm->enabled = 0;
 		}
 
+		$pictopath    = dol_buildpath('/custom/easycrm/img/easycrm_color.png', 1);
+		$pictoEasycrm = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 		// Array to add new pages in new tabs
         $this->tabs   = [];
+		$this->tabs[] = ['data' => 'project:+address:' . $pictoEasycrm . $langs->trans('Addresses') . ':easycrm@easycrm:1:/custom/easycrm/view/address.php?id=__ID__&object_type=project']; // To add a new tab identified by code tabname1
+
         // Example:
         // $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@easycrm:$user->rights->othermodule->read:/easycrm/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
         // $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');
@@ -254,6 +258,16 @@ class modEasyCRM extends DolibarrModules
         $this->rights[$r][4] = 'read';
         $this->rights[$r][5] = 1;
         $r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
+		$this->rights[$r][1] = $langs->trans('WriteModule', 'EasyCRM');
+		$this->rights[$r][4] = 'write';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
+		$this->rights[$r][1] = $langs->trans('DeleteModule', 'EasyCRM');
+		$this->rights[$r][4] = 'delete';
+		$this->rights[$r][5] = 'delete';
+		$r++;
 
         /* ADMINPAGE PANEL ACCESS PERMISSIONS */
         $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
