@@ -206,6 +206,9 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_EVENT_DESCRIPTION_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
 
+			// CONST ADDRESS
+			$i++ => ['EASYCRM_DISPLAY_MAIN_ADDRESS', 'integer', 0, '', 0, 'current'],
+
             // CONST MODULE
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],
 			$i++ => ['EASYCRM_DB_VERSION', 'chaine', $this->version, '', 0, 'current'],
@@ -312,6 +315,22 @@ class modEasyCRM extends DolibarrModules
             'user'     => 0, // 0=Menu for internal users, 1=external users, 2=both
         ];
 
+		$this->menu[$r++] = [
+			'fk_menu'  => 'fk_mainmenu=project,fk_leftmenu=projects',
+			'type'     => 'left',
+			'titre'    => $langs->transnoentities('Map'),
+			'prefix'   => '<i class="fas fa-map pictofixedwidth"></i>',
+			'mainmenu' => '',
+			'leftmenu' => 'address',
+			'url'      => 'easycrm/view/map.php?&object_type=project',
+			'langs'    => 'easycrm@easycrm',
+			'position' => 2000 + $r,
+			'enabled'  => '$conf->easycrm->enabled',
+			'perms'    => '$user->rights->easycrm->read',
+			'target'   => '',
+			'user'     => 0,
+		];
+
 		// Exports profiles provided by this module
 		// $r = 1;
 		/* BEGIN MODULEBUILDER EXPORT MYOBJECT */
@@ -408,6 +427,7 @@ class modEasyCRM extends DolibarrModules
         $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
+		$extrafields->addExtraField('projectaddress', $langs->transnoentities('ProjectAddress'), 'sellist', 101, 255, 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:56:"easycrm_address:name:rowid::element_id=$ID$ AND status>0";N;}}', 1, '', 1);
 
         if (empty($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG)) {
             require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
