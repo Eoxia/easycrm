@@ -1,4 +1,4 @@
--- Copyright (C) 2023 EVARISK <technique@evarisk.com>
+-- Copyright (C) 2022-2023 EVARISK <technique@evarisk.com>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,5 +14,12 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_rowid (rowid);
+ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_ref (ref);
 ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_status (status);
 ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_element_id (element_id);
+ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_fk_country (fk_country);
+ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_fk_region (fk_region);
+ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_fk_department (fk_department);
+ALTER TABLE llx_easycrm_address ADD INDEX idx_easycrm_address_osm_id (osm_id);
+ALTER TABLE llx_easycrm_address ADD UNIQUE INDEX uk_easycrm_address_ref (ref, entity);
+ALTER TABLE llx_easycrm_address ADD CONSTRAINT llx_easycrm_address_fk_user_creat FOREIGN KEY (fk_user_creat) REFERENCES llx_user(rowid);

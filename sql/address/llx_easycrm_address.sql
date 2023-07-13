@@ -1,4 +1,4 @@
--- Copyright (C) 2023 EVARISK <technique@evarisk.com>
+-- Copyright (C) 2022-2023 EVARISK <technique@evarisk.com>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,27 +14,29 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 CREATE TABLE llx_easycrm_address(
-     rowid                integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
-     entity               integer DEFAULT 1 NOT NULL,
-     date_creation        datetime NOT NULL,
-     tms                  timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-     import_key           varchar(14),
-     status               integer NOT NULL,
-     element_type         varchar(255),
-     element_id           integer NOT NULL,
-     name                 varchar(255),
-     type                 varchar(255),
-     fk_country           integer,
-     fk_region            integer,
-     fk_department        integer,
-     town                 varchar(255),
-     zip                  integer(5),
-     address              varchar(255),
-     latitude             double(24,8) DEFAULT 0 NOT NULL,
-     longitude            double(24,8) DEFAULT 0 NOT NULL,
-     osm_id               bigint(20),
-     osm_category         varchar(255),
-     osm_type             varchar(255),
-     fk_user_creat        integer NOT NULL,
-     fk_user_modif        integer
+  rowid         integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  ref           varchar(128) DEFAULT '(PROV)' NOT NULL,
+  ref_ext       varchar(128),
+  entity        integer DEFAULT 1 NOT NULL,
+  date_creation datetime NOT NULL,
+  tms           timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  import_key    varchar(14),
+  status        integer NOT NULL,
+  element_type  varchar(255),
+  element_id    integer NOT NULL,
+  name          varchar(255),
+  type          varchar(255),
+  fk_country    integer,
+  fk_region     integer,
+  fk_department integer,
+  town          varchar(255),
+  zip           integer(5),
+  address       varchar(255),
+  latitude      double(24,8) DEFAULT 0 NOT NULL,
+  longitude     double(24,8) DEFAULT 0 NOT NULL,
+  osm_id        bigint(20),
+  osm_category  varchar(255),
+  osm_type      varchar(255),
+  fk_user_creat integer NOT NULL,
+  fk_user_modif integer
 ) ENGINE=innodb;
