@@ -31,7 +31,7 @@ if (file_exists('../easycrm.main.inc.php')) {
 }
 
 // Get map filters parameters
-$filterType    = GETPOST('filter_type','array');
+$filterType    = GETPOST('filter_type','alpha');
 $filterId      = GETPOST('object_id');
 $filterCountry = GETPOST('filter_country');
 $filterRegion  = GETPOST('filter_region');
@@ -42,6 +42,7 @@ $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 // Libraries
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
 
 require_once __DIR__ . '/../class/address.class.php';
@@ -65,6 +66,7 @@ saturne_check_access($permissiontoread);
 
 // Initialize technical object
 $form        = new Form($db);
+$formOther   = new FormOther($db);
 $formCompany = new FormCompany($db);
 $address     = new Address($db);
 $object      = new $objectInfos['className']($db);
@@ -86,12 +88,12 @@ if (empty($reshook)) {
 	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) // All tests are required to be compatible with all browsers
 	{
 		//$filterCat   = [];
-		$filterType    = [];
 		$filterId      = 0;
 		$filterCountry = 0;
 		$filterRegion  = 0;
 		$filterState   = 0;
 		$filterTown    = '';
+		$filterType    = '';
 	}
 }
 
@@ -109,11 +111,12 @@ saturne_header(0, '', $title);
 
 // Filter on address
 $IdFilter      = ($filterId > 0 ? 'element_id = "' . $filterId . '" AND ' : '');
+$typeFilter    = (dol_strlen($filterType) > 0 ? 'type = "' . $filterType . '" AND ' : '');
 $townFilter    = (dol_strlen($filterTown) > 0 ? 'town = "' . $filterTown . '" AND ' : '');
 $countryFilter = ($filterCountry > 0 ? 'fk_country = ' . $filterCountry . ' AND ' : '');
 $regionFilter  = ($filterRegion > 0 ? 'fk_region = ' . $filterRegion . ' AND ' : '');
 $stateFilter   = ($filterState > 0 ? 'fk_department = ' . $filterState . ' AND ' : '');
-$filter        = ['customsql' => $IdFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . 'element_type = "'. $objectType .'"'];
+$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . 'element_type = "'. $objectType .'"'];
 
 $icon          = dol_buildpath('/easycrm/img/dot.png', 1);
 $objectList    = [];
@@ -211,6 +214,19 @@ print '<input type="hidden" name="formfilteraction" id="formfilteraction" value=
 
 // Filter box
 print '<div class="liste_titre liste_titre_bydiv centpercent">';
+
+$allObjects  = saturne_fetch_all_object_type($objectType);
+$selectArray = [];
+foreach ($allObjects as $singleObject) {
+	$selectArray[$singleObject->id] = $singleObject->ref;
+}
+// Object ?>
+<div class="divsearchfield"> <?php print img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
+print $form->selectarray('object_id', $selectArray, $filterId, 1);
+
+// Type ?>
+<div class="divsearchfield"> <?php print $langs->trans('Type'). ': ';
+print saturne_select_dictionary('filter_type', 'c_address_type', 'ref', 'label', $filterType, 1);
 
 // Country ?>
 <div class="divsearchfield"> <?php print $langs->trans('Country'). ': ';

@@ -31,12 +31,12 @@ if (file_exists('../easycrm.main.inc.php')) {
 }
 
 // Get address create parameters
-$addressName    = GETPOST('name', 'aZ09');
-$addressType    = GETPOST('address_type', 'aZ09');
+$addressName    = GETPOST('name');
+$addressType    = GETPOST('address_type');
 $addressCountry = GETPOST('fk_country', 'int');
 $addressRegion  = GETPOST('fk_region', 'int');
 $addressState   = GETPOST('fk_state', 'int');
-$addressTown    = GETPOST('town', 'aZ09');
+$addressTown    = GETPOST('town');
 $addressZip     = GETPOST('zip', 'int');
 $addressAddress = GETPOST('address');
 
