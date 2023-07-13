@@ -31,7 +31,7 @@ if (file_exists('../easycrm.main.inc.php')) {
 }
 
 // Get map filters parameters
-$filterType    = GETPOST('filter_type','alpha');
+$filterType    = GETPOST('filter_type','aZ');
 $filterId      = GETPOST('object_id');
 $filterCountry = GETPOST('filter_country');
 $filterRegion  = GETPOST('filter_region');
@@ -138,6 +138,11 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 			}
 
 			$address->fetch($addressId);
+
+			if (($filterId > 0 && $filterId != $address->id) || (dol_strlen($filterType) > 0 && $filterType != $address->type) || (dol_strlen($filterTown) > 0 && $filterTown != $address->town) ||
+				($filterCountry > 0 && $filterCountry != $address->fk_country) || ($filterRegion > 0 && $filterRegion != $address->fk_region) || ($filterState > 0 && $filterState != $address->fk_department)) {
+				continue;
+			}
 
 			if ($address->longitude != 0 && $address->latitude != 0) {
 				$address->convertCoordinates();
