@@ -32,10 +32,11 @@ if (file_exists('../easycrm.main.inc.php')) {
 
 // Get map filters parameters
 $filterType    = GETPOST('filter_type','array');
-$filterCountry = GETPOST("filter_country");
-$filterRegion  = GETPOST("filter_region");
-$filterState   = GETPOST("filter_state");
-$filterTown    = trim(GETPOST("filter_town", 'alpha'));
+$filterId      = GETPOST('object_id');
+$filterCountry = GETPOST('filter_country');
+$filterRegion  = GETPOST('filter_region');
+$filterState   = GETPOST('filter_state');
+$filterTown    = trim(GETPOST('filter_town', 'alpha'));
 //$filterCat   = GETPOST("search_category_" . $objectType ."_list", 'array');
 
 // Libraries
@@ -49,19 +50,6 @@ require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 // Get object parameters
 $objectType  = GETPOST('object_type', 'alpha');
 $objectInfos = get_objects_metadata($objectType);
-
-// Object class and lib
-if (file_exists('../../' . $objectInfos['class_path'])) {
-	require_once __DIR__ . '/../../' . $objectInfos['class_path'];
-} else if (file_exists('../../../' . $objectInfos['class_path'])) {
-	require_once __DIR__ . '/../../../' . $objectInfos['class_path'];
-}
-
-if (file_exists('../../' . $objectInfos['lib_path'])) {
-	require_once __DIR__ . '/../../' . $objectInfos['lib_path'];
-} else if (file_exists('../../../' . $objectInfos['lib_path'])) {
-	require_once __DIR__ . '/../../../' . $objectInfos['lib_path'];
-}
 
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
@@ -79,7 +67,7 @@ saturne_check_access($permissiontoread);
 $form        = new Form($db);
 $formCompany = new FormCompany($db);
 $address     = new Address($db);
-$object      = new $objectType($db);
+$object      = new $objectInfos['className']($db);
 
 $hookmanager->initHooks(['easycrmmap', $objectType . 'map']);
 
@@ -99,6 +87,7 @@ if (empty($reshook)) {
 	{
 		//$filterCat   = [];
 		$filterType    = [];
+		$filterId      = 0;
 		$filterCountry = 0;
 		$filterRegion  = 0;
 		$filterState   = 0;
@@ -119,11 +108,12 @@ saturne_header(0, '', $title);
  */
 
 // Filter on address
+$IdFilter      = ($filterId > 0 ? 'element_id = "' . $filterId . '" AND ' : '');
 $townFilter    = (dol_strlen($filterTown) > 0 ? 'town = "' . $filterTown . '" AND ' : '');
 $countryFilter = ($filterCountry > 0 ? 'fk_country = ' . $filterCountry . ' AND ' : '');
 $regionFilter  = ($filterRegion > 0 ? 'fk_region = ' . $filterRegion . ' AND ' : '');
 $stateFilter   = ($filterState > 0 ? 'fk_department = ' . $filterState . ' AND ' : '');
-$filter        = ['customsql' => $townFilter . $countryFilter . $regionFilter . $stateFilter . 'element_type = "'. $objectType .'"'];
+$filter        = ['customsql' => $IdFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . 'element_type = "'. $objectType .'"'];
 
 $icon          = dol_buildpath('/easycrm/img/dot.png', 1);
 $objectList    = [];

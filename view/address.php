@@ -51,19 +51,6 @@ require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 $objectType  = GETPOST('object_type', 'alpha');
 $objectInfos = get_objects_metadata($objectType);
 
-// Object class and lib
-if (file_exists('../../' . $objectInfos['class_path'])) {
-	require_once __DIR__ . '/../../' . $objectInfos['class_path'];
-} else if (file_exists('../../../' . $objectInfos['class_path'])) {
-	require_once __DIR__ . '/../../../' . $objectInfos['class_path'];
-}
-
-if (file_exists('../../' . $objectInfos['lib_path'])) {
-	require_once __DIR__ . '/../../' . $objectInfos['lib_path'];
-} else if (file_exists('../../../' . $objectInfos['lib_path'])) {
-	require_once __DIR__ . '/../../../' . $objectInfos['lib_path'];
-}
-
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
 
@@ -79,7 +66,7 @@ $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
-$classname = ucfirst($objectType);
+$classname = $objectInfos['className'];
 $object    = new $classname($db);
 $address   = new Address($db);
 $usertmp   = new User($db);
@@ -88,7 +75,7 @@ $usertmp   = new User($db);
 $form        = new Form($db);
 $formcompany = new FormCompany($db);
 
-$hookmanager->initHooks([$objectType . 'address', $object->element . 'address', 'easycrmglobal', 'globalcard']); // Note that conf->hooks_modules contains array
+$hookmanager->initHooks([$objectType . 'address', $objectType . 'address', 'easycrmglobal', 'globalcard']); // Note that conf->hooks_modules contains array
 
 // Load object
 include DOL_DOCUMENT_ROOT . '/core/actions_fetchobject.inc.php'; // Must be included, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
@@ -118,9 +105,9 @@ if (empty($reshook)) {
 
 	// Action to add address
 	if ($action == 'add_address' && $permissiontoadd && !$cancel) {
-		if (empty($addressName) || empty($addressType) || empty($addressCountry) || empty($addressRegion) || empty($addressState) || empty($addressTown)) {
+		if (empty($addressName) || empty($addressType) || empty($addressCountry) || empty($addressTown)) {
 			setEventMessages($langs->trans('EmptyValue'), [], 'errors');
-			header('Location: ' . $_SERVER['PHP_SELF'] .  '?id=' . $id . '&action=create&object_type=' . $object->element . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
+			header('Location: ' . $_SERVER['PHP_SELF'] .  '?id=' . $id . '&action=create&object_type=' . $objectType . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
 			exit;
 		} else {
 			$address->name          = $addressName;
@@ -129,7 +116,7 @@ if (empty($reshook)) {
 			$address->fk_region     = $addressRegion;
 			$address->fk_department = $addressState;
 			$address->town          = $addressTown;
-			$address->zip           = (int) $addressZip ?? 0;
+			$address->zip           = (int) $addressZip;
 			$address->address       = $addressAddress;
 			$address->element_type  = $objectType;
 			$address->element_id    = $id;
@@ -179,7 +166,7 @@ if (empty($reshook)) {
 *	View
 */
 
-$title   = $langs->trans('Address') . ' - ' . $langs->trans(ucfirst($object->element));
+$title   = $langs->trans('Address') . ' - ' . $langs->trans(ucfirst($objectType));
 $helpUrl = 'FR:Module_Easycrm';
 
 saturne_header(0,'', $title, $helpUrl);
@@ -189,7 +176,7 @@ if ($action == 'create' && $id > 0) {
 
 	print load_fiche_titre($langs->trans("NewAddress"), $backtopage, 'fa-map-pin');
 
-	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&object_type=' . $object->element . '">';
+	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&object_type=' . $objectType . '">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<input type="hidden" name="action" value="add_address">';
 	if ($backtopage) print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
@@ -212,12 +199,12 @@ if ($action == 'create' && $id > 0) {
 	print '</td></tr>';
 
 	// Region -- Region
-	print '<tr><td class="fieldrequired"><label class="" for="type">' . $langs->trans("Region") . '</label></td><td>';
+	print '<tr><td class=""><label class="" for="type">' . $langs->trans("Region") . '</label></td><td>';
 	print $formcompany->select_region($addressRegion, 'fk_region') . ' ' . img_picto('', 'state', 'class="pictofixedwidth"');;
 	print '</td></tr>';
 
 	// State - Departements
-	print '<tr><td class="fieldrequired"><label class="" for="type">' . $langs->trans("State") . '</label></td><td>';
+	print '<tr><td class=""><label class="" for="type">' . $langs->trans("State") . '</label></td><td>';
 	print $formcompany->select_state($addressState, '', 'fk_state', 'minwidth300 maxwidth300') . ' ' . img_picto('', 'state', 'class="pictofixedwidth"');
 	print '</td></tr>';
 
@@ -257,7 +244,7 @@ if ($action == 'create' && $id > 0) {
 	if ($reshook > 0) {
 		$addressByType = $hookmanager->resArray;
 	} else {
-		$addressByType['Address'] = $address->fetchAddresses($object->id, $object->element);
+		$addressByType['Address'] = $address->fetchAddresses($object->id, $objectType);
 	}
 
 	$alreadyAddedAddress = [];

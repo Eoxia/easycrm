@@ -41,8 +41,9 @@ class modEasyCRM extends DolibarrModules
 		global $langs, $conf;
 		$this->db = $db;
 
-        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php')) {
-            require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
+        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php') && file_exists(__DIR__ . '/../../../saturne/lib/object.lib.php')) {
+			require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
+			require_once __DIR__ . '/../../../saturne/lib/object.lib.php';
             saturne_load_langs(['easycrm@easycrm']);
         } else {
             $this->error++;
@@ -227,15 +228,30 @@ class modEasyCRM extends DolibarrModules
 			$conf->easycrm->enabled = 0;
 		}
 
-		$pictopath    = dol_buildpath('/custom/easycrm/img/easycrm_color.png', 1);
-		$pictoEasycrm = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 		// Array to add new pages in new tabs
-        $this->tabs   = [];
-		$this->tabs[] = ['data' => 'project:+address:' . $pictoEasycrm . $langs->trans('Addresses') . ':easycrm@easycrm:1:/custom/easycrm/view/address.php?id=__ID__&object_type=project']; // To add a new tab identified by code tabname1
+		// Example:
+		// $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@easycrm:$user->rights->othermodule->read:/easycrm/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
+		// $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');
 
-        // Example:
-        // $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@easycrm:$user->rights->othermodule->read:/easycrm/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
-        // $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');
+		$pictopath       = dol_buildpath('/custom/easycrm/img/easycrm_color.png', 1);
+		$pictoEasycrm    = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+		$objectsMetadata = get_objects_metadata();
+		$this->tabs      = [];
+
+		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
+			foreach($objectsMetadata as $objectsMetadataType => $objectMetadata) {
+				if (preg_match('/_/', $objectsMetadataType)) {
+					$splittedElementType = preg_split('/_/', $objectsMetadataType);
+					$moduleName = $splittedElementType[0];
+					$objectName = strtolower($objectsMetadataType['className']);
+					$objectType = $objectName . '@' . $moduleName;
+				} else {
+					$objectType = $objectsMetadataType;
+				}
+				$this->tabs[] = ['data' => $objectType . ':+address:' . $pictoEasycrm . $langs->trans('Addresses') . ':easycrm@easycrm:$user->rights->easycrm->read:/custom/easycrm/view/address.php?id=__ID__&object_type=' . $objectType];
+				$this->tabs[] = ['data' => $objectType . ':+map:' . $pictoEasycrm . $langs->trans('Map') . ':easycrm@easycrm:$user->rights->easycrm->read:/custom/easycrm/view/map.php?object_type=' . $objectType . '&object_id=__ID__'];
+			}
+		}
 
 		// Dictionaries
 		$this->dictionaries = [];
@@ -315,21 +331,27 @@ class modEasyCRM extends DolibarrModules
             'user'     => 0, // 0=Menu for internal users, 1=external users, 2=both
         ];
 
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=project,fk_leftmenu=projects',
-			'type'     => 'left',
-			'titre'    => $langs->transnoentities('Map'),
-			'prefix'   => '<i class="fas fa-map pictofixedwidth"></i>',
-			'mainmenu' => '',
-			'leftmenu' => 'address',
-			'url'      => 'easycrm/view/map.php?&object_type=project',
-			'langs'    => 'easycrm@easycrm',
-			'position' => 2000 + $r,
-			'enabled'  => '$conf->easycrm->enabled',
-			'perms'    => '$user->rights->easycrm->read',
-			'target'   => '',
-			'user'     => 0,
-		];
+		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
+			foreach($objectsMetadata as $objectsMetadataType => $objectMetadata) {
+				if (dol_strlen($objectMetadata['leftmenu']) > 0) {
+					$this->menu[$r++] = [
+						'fk_menu'  => 'fk_mainmenu=' . $objectMetadata['mainmenu'] . ',fk_leftmenu=' . $objectMetadata['leftmenu'],
+						'type'     => 'left',
+						'titre'    => $langs->transnoentities('Map'),
+						'prefix'   => '<i class="fas fa-map pictofixedwidth"></i>',
+						'mainmenu' => '',
+						'leftmenu' => 'map',
+						'url'      => 'easycrm/view/map.php?object_type=' . $objectsMetadataType,
+						'langs'    => 'easycrm@easycrm',
+						'position' => 2000 + $r,
+						'enabled'  => '$conf->easycrm->enabled',
+						'perms'    => '$user->rights->easycrm->read',
+						'target'   => '',
+						'user'     => 0,
+					];
+				}
+			}
+		}
 
 		// Exports profiles provided by this module
 		// $r = 1;

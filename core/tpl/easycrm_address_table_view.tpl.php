@@ -35,7 +35,7 @@ print load_fiche_titre($langs->trans('Addresses'), '', '');
 print '<table class="border centpercent tableforfield">';
 
 print '<tr class="liste_titre">';
-print '<td>' . img_picto('', $objectType) . ' ' . $langs->trans(ucfirst($objectType)) . '</td>';
+print '<td>' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']) . '</td>';
 print '<td class="center">' . $langs->trans('Name') . '</td>';
 print '<td class="center">' . $langs->trans('Type') . '</td>';
 print '<td class="center">' . $langs->trans('Country') . '</td>';
@@ -49,7 +49,7 @@ print '</tr>';
 
 if (is_array($addresses) && !empty($addresses)) {
 	foreach ($addresses as $element) {
-		$objectTmp = class_exists($objectType) ? new $objectType($db) : new Project($db);
+		$objectTmp = class_exists($objectInfos['className']) ? new $objectInfos['className']($db) : new Project($db);
 
 		// Object type
 		print '<tr class="oddeven" data-address-id="' . $element->id . '">';
@@ -128,7 +128,7 @@ if (is_array($addresses) && !empty($addresses)) {
 }
 
 if ($permissiontoadd) {
-	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&action=create&object_type=' . $object->element . '">';
+	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&action=create&object_type=' . $objectType . '">';
 	print '<input type="hidden" name="token" value="' . newToken() . '">';
 	print '<input type="hidden" name="action" value="create">';
 	if (!empty($backtopage)) {
