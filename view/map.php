@@ -30,6 +30,24 @@ if (file_exists('../easycrm.main.inc.php')) {
 	die('Include of easycrm main fails');
 }
 
+// Libraries
+require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
+
+require_once __DIR__ . '/../class/address.class.php';
+require_once __DIR__ . '/../../saturne/lib/object.lib.php';
+
+// Global variables definitions
+global $conf, $db, $hookmanager, $langs, $user;
+
+// Load translation files required by the page
+saturne_load_langs();
+
+// Get object parameters
+$objectType  = GETPOST('object_type', 'alpha');
+$objectInfos = get_objects_metadata($objectType);
+
 // Get map filters parameters
 $filterType    = GETPOST('filter_type','aZ');
 $filterId      = GETPOST('object_id');
@@ -39,25 +57,6 @@ $filterState   = GETPOST('filter_state');
 $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 //$filterCat   = GETPOST("search_category_" . $objectType ."_list", 'array');
 
-// Libraries
-require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
-require_once DOL_DOCUMENT_ROOT . '/core/class/html.formother.class.php';
-require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
-
-require_once __DIR__ . '/../class/address.class.php';
-require_once __DIR__ . '/../../saturne/lib/object.lib.php';
-
-// Get object parameters
-$objectType  = GETPOST('object_type', 'alpha');
-$objectInfos = get_objects_metadata($objectType);
-
-// Global variables definitions
-global $conf, $db, $hookmanager, $langs, $user;
-
-// Load translation files required by the page
-saturne_load_langs();
-
 // Security check - Protection if external user
 $permissiontoread   = $user->rights->saturne->read;
 $permissiontoadd    = $user->rights->saturne->write;
@@ -65,11 +64,12 @@ $permissiontodelete = $user->rights->saturne->delete;
 saturne_check_access($permissiontoread);
 
 // Initialize technical object
-$form        = new Form($db);
-$formOther   = new FormOther($db);
-$formCompany = new FormCompany($db);
 $address     = new Address($db);
-$object      = new $objectInfos['className']($db);
+$object      = new $objectInfos['class_name']($db);
+
+// Initialize view objects
+$form        = new Form($db);
+$formCompany = new FormCompany($db);
 
 $hookmanager->initHooks(['easycrmmap', $objectType . 'map']);
 
@@ -101,9 +101,10 @@ if (empty($reshook)) {
  * View
  */
 
-$title = $langs->trans("Map");
+$title   = $langs->trans("Map");
+$helpUrl = 'FR:Module_EasyCRM';
 
-saturne_header(0, '', $title);
+saturne_header(0, '', $title, $helpUrl);
 
 /**
  * Build geoJSON datas.
@@ -122,19 +123,18 @@ $icon          = dol_buildpath('/easycrm/img/dot.png', 1);
 $objectList    = [];
 $features      = [];
 $num           = 0;
+$allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
 
 
 if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
-	$allObjects = saturne_fetch_all_object_type($objectType);
-
 	if (is_array($allObjects) && !empty($allObjects)) {
 		foreach ($allObjects as $object) {
 			$object->fetch_optionals();
 
-			if (!isset($object->array_options['options_projectaddress']) || dol_strlen($object->array_options['options_projectaddress']) <= 0) {
+			if (!isset($object->array_options['options_' . $objectType . 'address']) || dol_strlen($object->array_options['options_' . $objectType . 'address']) <= 0) {
 				continue;
 			} else {
-				$addressId = $object->array_options['options_projectaddress'];
+				$addressId = $object->array_options['options_' . $objectType . 'address'];
 			}
 
 			$address->fetch($addressId);
@@ -153,7 +153,7 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 
 			$locationID   = $addressId;
 
-			$description  = method_exists($objectType, 'getNomUrl') ? $object->getNomUrl(1) . '</br>' : '';
+			$description  = $object->getNomUrl(1) . '</br>';
 			$description .= $langs->trans($address->type) . ' : ' . $address->name;
 			$description .= dol_strlen($address->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $address->town : '';
 			$color        = randomColor();
@@ -188,7 +188,7 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 			$object->fetch($address->element_id);
 
 			$locationID   = $address->id ?? 0;
-			$description  = method_exists($objectType, 'getNomUrl') ? $object->getNomUrl(1) . '</br>' : '';
+			$description  = $object->getNomUrl(1) . '</br>';
 			$description .= $langs->trans($address->type) . ' : ' . $address->name;
 			$description .= dol_strlen($address->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $address->town : '';
 			$color        = randomColor();
@@ -211,7 +211,7 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 	}
 }
 
-print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map');
+print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
 
 print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?object_type=' . $objectType . '" name="formfilter">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -220,7 +220,6 @@ print '<input type="hidden" name="formfilteraction" id="formfilteraction" value=
 // Filter box
 print '<div class="liste_titre liste_titre_bydiv centpercent">';
 
-$allObjects  = saturne_fetch_all_object_type($objectType);
 $selectArray = [];
 foreach ($allObjects as $singleObject) {
 	$selectArray[$singleObject->id] = $singleObject->ref;

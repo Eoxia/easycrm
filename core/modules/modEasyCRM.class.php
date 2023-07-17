@@ -209,6 +209,7 @@ class modEasyCRM extends DolibarrModules
 
 			// CONST ADDRESS
 			$i++ => ['EASYCRM_DISPLAY_MAIN_ADDRESS', 'integer', 0, '', 0, 'current'],
+            $i++ => ['EASYCRM_ADDRESS_ADDON', 'chaine', 'mod_address_standard', '', 0, 'current'],
 
             // CONST MODULE
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],
@@ -445,12 +446,18 @@ class modEasyCRM extends DolibarrModules
         include_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
         $extrafields = new ExtraFields($this->db);
 
+        $objectsMetadata = get_objects_metadata();
+
         $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', '', '', 2);
         $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
-		$extrafields->addExtraField('projectaddress', $langs->transnoentities('ProjectAddress'), 'sellist', 101, 255, 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:56:"easycrm_address:name:rowid::element_id=$ID$ AND status>0";N;}}', 1, '', 1);
 
+        if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
+            foreach ($objectsMetadata as $objectsMetadataType => $objectMetadata) {
+                $extrafields->addExtraField($objectsMetadataType . 'address', $langs->transnoentities('FavoriteAddress'), 'sellist', 101, 255, $objectMetadata['table_element'], 0, 0, '', 'a:1:{s:7:"options";a:1:{s:56:"easycrm_address:name:rowid::element_id=$ID$ AND status>0";N;}}', 0, '', 1);
+            }
+        }
         if (empty($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG)) {
             require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 

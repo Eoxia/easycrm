@@ -30,6 +30,24 @@ if (file_exists('../easycrm.main.inc.php')) {
 	die('Include of easycrm main fails');
 }
 
+// Libraries
+require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
+
+require_once __DIR__ . '/../core/modules/easycrm/address/mod_address_standard.php';
+require_once __DIR__ . '/../class/address.class.php';
+require_once __DIR__ . '/../../saturne/lib/object.lib.php';
+
+// Global variables definitions
+global $conf, $db, $hookmanager, $langs, $user;
+
+// Load translation files required by the page
+saturne_load_langs();
+
+// Get object parameters
+$objectType  = GETPOST('object_type', 'alpha');
+$objectInfos = get_objects_metadata($objectType);
+
 // Get address create parameters
 $addressName    = GETPOST('name');
 $addressType    = GETPOST('address_type');
@@ -40,36 +58,21 @@ $addressTown    = GETPOST('town');
 $addressZip     = GETPOST('zip', 'int');
 $addressAddress = GETPOST('address');
 
-// Libraries
-require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
-
-require_once __DIR__ . '/../class/address.class.php';
-require_once __DIR__ . '/../../saturne/lib/object.lib.php';
-
-// Get object parameters
-$objectType  = GETPOST('object_type', 'alpha');
-$objectInfos = get_objects_metadata($objectType);
-
-// Global variables definitions
-global $conf, $db, $hookmanager, $langs, $user;
-
-// Load translation files required by the page
-saturne_load_langs();
-
 // Get parameters
 $id          = GETPOST('id', 'int');
 $ref         = GETPOST('ref', 'alpha');
 $action      = GETPOST('action', 'aZ09');
-$contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : $objectType . 'signature'; // To manage different context of search
+$contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : $objectType . 'address'; // To manage different context of search
 $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
-$classname = $objectInfos['className'];
-$object    = new $classname($db);
-$address   = new Address($db);
-$usertmp   = new User($db);
+$classname     = $objectInfos['class_name'];
+$object        = new $classname($db);
+$usertmp       = new User($db);
+$address       = new Address($db);
+$refAddressMod = new $conf->global->EASYCRM_ADDRESS_ADDON($db);
+
 
 // Initialize view objects
 $form        = new Form($db);
@@ -110,6 +113,7 @@ if (empty($reshook)) {
 			header('Location: ' . $_SERVER['PHP_SELF'] .  '?id=' . $id . '&action=create&object_type=' . $objectType . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
 			exit;
 		} else {
+            $address->ref           = $refAddressMod->getNextValue($address);
 			$address->name          = $addressName;
 			$address->type          = $addressType;
 			$address->fk_country    = $addressCountry;
@@ -160,6 +164,15 @@ if (empty($reshook)) {
 			$action = '';
 		}
 	}
+
+    if ($action == 'add_favorite') {
+        $favoriteAddressId = GETPOST('favorite_id');
+
+        if (isset($object->array_options['options_' . $objectType . 'address']) && dol_strlen($object->array_options['options_' . $objectType . 'address']) > 0) {
+            $object->array_options['options_' . $objectType . 'address'] = $object->array_options['options_' . $objectType . 'address'] == $favoriteAddressId ? 0 : $favoriteAddressId;
+            $object->update($user);
+        }
+    }
 }
 
 /*
@@ -167,19 +180,21 @@ if (empty($reshook)) {
 */
 
 $title   = $langs->trans('Address') . ' - ' . $langs->trans(ucfirst($objectType));
-$helpUrl = 'FR:Module_Easycrm';
+$helpUrl = 'FR:Module_EasyCRM';
 
 saturne_header(0,'', $title, $helpUrl);
 
 if ($action == 'create' && $id > 0) {
-	saturne_get_fiche_head($object, 'address', $title);
+    print load_fiche_titre($langs->trans("NewAddress"), $backtopage, 'fa-map-marker-alt');
 
-	print load_fiche_titre($langs->trans("NewAddress"), $backtopage, 'fa-map-pin');
+    print dol_get_fiche_head();
 
-	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&object_type=' . $objectType . '">';
+    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&object_type=' . $objectType . '">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<input type="hidden" name="action" value="add_address">';
-	if ($backtopage) print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+	if ($backtopage) {
+        print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+    }
 
 	print '<table class="border centpercent tableforfieldcreate address-table">'."\n";
 
@@ -225,9 +240,9 @@ if ($action == 'create' && $id > 0) {
 
 	print '</table></br>';
 
-	print $form->buttonsSaveCancel('Create');
+    print dol_get_fiche_end();
 
-	print dol_get_fiche_end();
+    print $form->buttonsSaveCancel('Create');
 } else if ($id > 0 || !empty($ref) && empty($action)) {
 	saturne_get_fiche_head($object, 'address', $title);
 

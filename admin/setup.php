@@ -127,26 +127,6 @@ print load_fiche_titre($title, $linkback, 'easycrm_color@easycrm');
 $head = easycrm_admin_prepare_head();
 print dol_get_fiche_head($head, 'settings', $title, -1, 'easycrm_color@easycrm');
 
-print load_fiche_titre($langs->trans('Configs', $langs->trans('Addresses')), '', '');
-
-print '<div class="div-table-responsive-no-min">';
-print '<table class="noborder centpercent">';
-print '<tr class="liste_titre">';
-print '<td>' . $langs->trans('Name') . '</td>';
-print '<td>' . $langs->trans('Description') . '</td>';
-print '<td class="center">' . $langs->trans('Status') . '</td>';
-print '</tr>';
-
-// Display single/multi address on map
-print '<tr class="oddeven"><td>';
-print  $langs->trans('DisplayAllAddress');
-print '</td><td>';
-print $langs->trans('DisplayAllAddressDescription');
-print '</td><td class="center">';
-print ajax_constantonoff('EASYCRM_DISPLAY_MAIN_ADDRESS');
-print '</td></tr>';
-print '</table>';
-
 print load_fiche_titre($langs->trans('Configs', $langs->trans('QuickCreations')), '', '');
 
 print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '" name="quickcreation_data">';

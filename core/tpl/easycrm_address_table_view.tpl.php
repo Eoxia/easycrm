@@ -29,13 +29,12 @@
  * Variable   : $addressType, $addresses, $moduleNameLowerCase, $permissiontoadd
  */
 
-
 print load_fiche_titre($langs->trans('Addresses'), '', '');
 
 print '<table class="border centpercent tableforfield">';
 
 print '<tr class="liste_titre">';
-print '<td>' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']) . '</td>';
+print '<td>' . img_picto('', 'fa-map-marker-alt') . ' ' . $langs->trans('Ref') . '</td>';
 print '<td class="center">' . $langs->trans('Name') . '</td>';
 print '<td class="center">' . $langs->trans('Type') . '</td>';
 print '<td class="center">' . $langs->trans('Country') . '</td>';
@@ -49,20 +48,17 @@ print '</tr>';
 
 if (is_array($addresses) && !empty($addresses)) {
 	foreach ($addresses as $element) {
-		$objectTmp = class_exists($objectInfos['className']) ? new $objectInfos['className']($db) : new Project($db);
+        //Object favorite
+        if (isset($object->array_options['options_' . $objectType . 'address']) && dol_strlen($object->array_options['options_' . $objectType . 'address']) > 0) {
+            $favorite = $object->array_options['options_' . $objectType . 'address'] == $element->id ? 1 : 0;
+        } else {
+            $favorite = 0;
+        }
 
-		// Object type
-		print '<tr class="oddeven" data-address-id="' . $element->id . '">';
-		print '<td class="oddeven">';
-		if (method_exists($objectTmp, 'getNomUrl')) {
-			$objectTmp->fetch($element->element_id);
-			print $objectTmp->getNomUrl(1);
-		} else {
-			$nameField = explode(",", $objectInfos['name_field']);
-			$nameField = $nameField[count($nameField) - 1];
-			$label     = $objectTmp->$nameField ?? $conf->global->MAIN_INFO_SOCIETE_NOM;
-			print img_picto('', $objectType) . ' ' . $label;
-		}
+		// Object ref
+		print '<tr class="oddeven">';
+		print '<td>';
+        print $element->ref . ' ' . '<span style="cursor:pointer;" name="favorite_address" id="address'.$element->id.'" onclick="toggleFavoriteAddress('. $element->id .');" class=' . ($favorite ? '"fas fa-star"' : '"far fa-star"') . '></span>';
 		print '</td>';
 
 		// Address name
@@ -128,7 +124,7 @@ if (is_array($addresses) && !empty($addresses)) {
 }
 
 if ($permissiontoadd) {
-	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&action=create&object_type=' . $objectType . '">';
+	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&object_type=' . $objectType . '">';
 	print '<input type="hidden" name="token" value="' . newToken() . '">';
 	print '<input type="hidden" name="action" value="create">';
 	if (!empty($backtopage)) {
@@ -144,3 +140,42 @@ if ($permissiontoadd) {
 	print '</table>';
 	print '</form>';
 }
+?>
+
+<script>
+    function toggleFavoriteAddress(id) {
+        let token = window.saturne.toolbox.getToken();
+
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: {
+                action: 'add_favorite',
+                token: token,
+                favorite_id: id
+            },
+            success: function () {
+                let selectedAddress = document.getElementById("address"+id);
+
+                if (selectedAddress.classList.contains("far")) {
+                    let elements = document.querySelectorAll(".fas.fa-star");
+
+                    if (elements.length > 0) {
+                        elements.forEach(function(element) {
+                            if (element.classList.contains("fas") && element.classList.contains("fa-star")) {
+                                let oldFavorite = document.getElementById(element.id);
+                                oldFavorite.classList.remove("fas");
+                                oldFavorite.classList.add("far");
+                            }
+                        });
+                    }
+                    selectedAddress.classList.remove("far");
+                    selectedAddress.classList.add("fas");
+                } else if (selectedAddress.classList.contains("fas")) {
+                    selectedAddress.classList.remove("fas");
+                    selectedAddress.classList.add("far");
+                }
+            }
+        });
+    }
+</script>
