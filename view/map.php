@@ -58,14 +58,14 @@ $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 //$filterCat   = GETPOST("search_category_" . $objectType ."_list", 'array');
 
 // Security check - Protection if external user
-$permissiontoread   = $user->rights->saturne->read;
-$permissiontoadd    = $user->rights->saturne->write;
-$permissiontodelete = $user->rights->saturne->delete;
+$permissiontoread   = $user->rights->easycrm->address->read;
+$permissiontoadd    = $user->rights->easycrm->address->write;
+$permissiontodelete = $user->rights->easycrm->address->delete;
 saturne_check_access($permissiontoread);
 
 // Initialize technical object
-$address     = new Address($db);
-$object      = new $objectInfos['class_name']($db);
+$address = new Address($db);
+$object  = new $objectInfos['class_name']($db);
 
 // Initialize view objects
 $form        = new Form($db);
@@ -125,7 +125,6 @@ $features      = [];
 $num           = 0;
 $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
 
-
 if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 	if (is_array($allObjects) && !empty($allObjects)) {
 		foreach ($allObjects as $object) {
@@ -139,9 +138,9 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 
 			$address->fetch($addressId);
 
-			if (($filterId > 0 && $filterId != $address->id) || (dol_strlen($filterType) > 0 && $filterType != $address->type) || (dol_strlen($filterTown) > 0 && $filterTown != $address->town) ||
+			if (($filterId > 0 && $filterId != $object->id) || (dol_strlen($filterType) > 0 && $filterType != $address->type) || (dol_strlen($filterTown) > 0 && $filterTown != $address->town) ||
 				($filterCountry > 0 && $filterCountry != $address->fk_country) || ($filterRegion > 0 && $filterRegion != $address->fk_region) || ($filterState > 0 && $filterState != $address->fk_department)) {
-				continue;
+                continue;
 			}
 
 			if ($address->longitude != 0 && $address->latitude != 0) {
@@ -211,6 +210,15 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 	}
 }
 
+if ($filterId > 0) {
+    $object->fetch($filterId);
+
+    saturne_get_fiche_head($object, 'map', $title);
+
+    $morehtml = '<a href="' . dol_buildpath('/' . $object->element . '/list.php', 1) . '?restore_lastsearch_values=1&object_type=' . $object->element . '">' . $langs->trans('BackToList') . '</a>';
+    saturne_banner_tab($object, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($object->photo));
+}
+
 print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
 
 print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?object_type=' . $objectType . '" name="formfilter">';
@@ -222,11 +230,11 @@ print '<div class="liste_titre liste_titre_bydiv centpercent">';
 
 $selectArray = [];
 foreach ($allObjects as $singleObject) {
-	$selectArray[$singleObject->id] = $singleObject->ref;
+    $selectArray[$singleObject->id] = $singleObject->ref;
 }
 // Object ?>
 <div class="divsearchfield"> <?php print img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
-print $form->selectarray('object_id', $selectArray, $filterId, 1);
+print $form->selectarray('object_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $filterId > 0);
 
 // Type ?>
 <div class="divsearchfield"> <?php print $langs->trans('Type'). ': ';
@@ -316,7 +324,7 @@ print '</form>';
 		}
 	</style>
 
-	<div id="map" class="map"></div>
+	<div id="display_map" class="display_map"></div>
 	<div id="popup" class="ol-popup">
 		<a href="#" id="popup-closer" class="ol-popup-closer"></a>
 		<div id="popup-content"></div>
@@ -326,7 +334,7 @@ print '</form>';
 		/**
 		 * Set map height.
 		 */
-		var _map = $('#map');
+		var _map = $('#display_map');
 		var _map_pos = _map.position();
 		var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		_map.height(h - _map_pos.top - 20);
@@ -334,7 +342,7 @@ print '</form>';
 		/**
 		 * Prospect markers geoJSON.
 		 */
-		var geojsonProspectMarkers = {
+		var geojsonMarkers = {
 			"type": "FeatureCollection",
 			"crs": {
 				"type": "name",
@@ -351,7 +359,7 @@ print '</form>';
 		}
 		?>
 		console.log("Map metrics: EPSG:3857");
-		console.log("Map features length: " + geojsonProspectMarkers.features.length + " map features loaded.");
+		console.log("Map features length: " + geojsonMarkers.features.length + " map features loaded.");
 
 		/**
 		 * Prospect markers styles.
@@ -377,7 +385,7 @@ print '</form>';
 		 * Prospect markers source.
 		 */
 		var prospectSource = new ol.source.Vector({
-			features: (new ol.format.GeoJSON()).readFeatures(geojsonProspectMarkers)
+			features: (new ol.format.GeoJSON()).readFeatures(geojsonMarkers)
 		});
 
 		/**
@@ -447,7 +455,7 @@ print '</form>';
 		 * Create the map.
 		 */
 		var map = new ol.Map({
-			target: 'map',
+			target: 'display_map',
 			layers: [osmLayer, prospectLayer],
 			overlays: [popupOverlay],
 			view: mapView

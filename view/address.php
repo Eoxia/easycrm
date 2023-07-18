@@ -84,9 +84,9 @@ $hookmanager->initHooks([$objectType . 'address', $objectType . 'address', 'easy
 include DOL_DOCUMENT_ROOT . '/core/actions_fetchobject.inc.php'; // Must be included, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 
 // Security check - Protection if external user
-$permissiontoread   = $user->rights->easycrm->read;
-$permissiontoadd    = $user->rights->easycrm->write;
-$permissiontodelete = $user->rights->easycrm->delete;
+$permissiontoread   = $user->rights->easycrm->address->read;
+$permissiontoadd    = $user->rights->easycrm->address->write;
+$permissiontodelete = $user->rights->easycrm->address->delete;
 saturne_check_access($permissiontoread);
 
 /*
@@ -246,7 +246,8 @@ if ($action == 'create' && $id > 0) {
 } else if ($id > 0 || !empty($ref) && empty($action)) {
 	saturne_get_fiche_head($object, 'address', $title);
 
-	saturne_banner_tab($object, 'ref', '', 1, 'ref', 'ref', '', !empty($object->photo));
+    $morehtml = '<a href="' . dol_buildpath('/' . $object->element . '/list.php', 1) . '?restore_lastsearch_values=1&object_type=' . $object->element . '">' . $langs->trans('BackToList') . '</a>';
+	saturne_banner_tab($object, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($object->photo));
 
 	$object->fetch_optionals();
 

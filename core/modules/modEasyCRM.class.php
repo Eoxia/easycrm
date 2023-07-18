@@ -244,7 +244,7 @@ class modEasyCRM extends DolibarrModules
 				if (preg_match('/_/', $objectsMetadataType)) {
 					$splittedElementType = preg_split('/_/', $objectsMetadataType);
 					$moduleName = $splittedElementType[0];
-					$objectName = strtolower($objectsMetadataType['className']);
+					$objectName = strtolower($objectsMetadataType['class_name']);
 					$objectType = $objectName . '@' . $moduleName;
 				} else {
 					$objectType = $objectsMetadataType;
@@ -278,16 +278,23 @@ class modEasyCRM extends DolibarrModules
         $this->rights[$r][4] = 'read';
         $this->rights[$r][5] = 1;
         $r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = $langs->trans('WriteModule', 'EasyCRM');
-		$this->rights[$r][4] = 'write';
-		$this->rights[$r][5] = 'write';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = $langs->trans('DeleteModule', 'EasyCRM');
-		$this->rights[$r][4] = 'delete';
-		$this->rights[$r][5] = 'delete';
-		$r++;
+
+        /* ADDRESS PERMISSSIONS */
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
+        $this->rights[$r][1] = $langs->transnoentities('ReadObjects',$langs->transnoentities('Address')); // Permission label
+        $this->rights[$r][4] = 'address'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $r++;
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
+        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('Address')); // Permission label
+        $this->rights[$r][4] = 'address'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $r++;
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
+        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('Address')); // Permission label
+        $this->rights[$r][4] = 'address'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $r++;
 
         /* ADMINPAGE PANEL ACCESS PERMISSIONS */
         $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
@@ -338,9 +345,7 @@ class modEasyCRM extends DolibarrModules
 					$this->menu[$r++] = [
 						'fk_menu'  => 'fk_mainmenu=' . $objectMetadata['mainmenu'] . ',fk_leftmenu=' . $objectMetadata['leftmenu'],
 						'type'     => 'left',
-						'titre'    => $langs->transnoentities('Map'),
-						'prefix'   => '<i class="fas fa-map pictofixedwidth"></i>',
-						'mainmenu' => '',
+						'titre'    => '<i class="fas fa-map-marked-alt pictofixedwidth" style="padding-right: 4px; color:#63ACC9"></i>' . $langs->transnoentities('Map'),
 						'leftmenu' => 'map',
 						'url'      => 'easycrm/view/map.php?object_type=' . $objectsMetadataType,
 						'langs'    => 'easycrm@easycrm',

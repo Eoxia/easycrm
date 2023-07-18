@@ -257,6 +257,7 @@ class Address extends SaturneObject
             $address = $data[0];
 
             $this->status       = self::STATUS_ACTIVE;
+            $this->fk_region    = $this->fk_region > 0 ? $this->fk_region : $regionAndState['region_code'];
             $this->latitude     = $address->lat;
             $this->longitude    = $address->lon;
             $this->osm_type     = $address->osm_type ?? '';
@@ -350,7 +351,7 @@ class Address extends SaturneObject
             foreach ($bulkFeatures as $bulk) {
                 $encodedBulk = json_encode($bulk);
                 if (!empty($encodedBulk)) {
-                    print "geojsonProspectMarkers.features = $.merge(geojsonProspectMarkers.features, $encodedBulk);\n";
+                    print "geojsonMarkers.features = $.merge(geojsonMarkers.features, $encodedBulk);\n";
                 } else {
                     if ($chunkSize > 1) {
                         $result = $this->injectMapFeatures($bulk, floor($chunkSize / 2), $deep + 1);
