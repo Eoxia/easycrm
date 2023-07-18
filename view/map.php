@@ -34,6 +34,7 @@ if (file_exists('../easycrm.main.inc.php')) {
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
 require_once __DIR__ . '/../class/address.class.php';
 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
@@ -55,7 +56,7 @@ $filterCountry = GETPOST('filter_country');
 $filterRegion  = GETPOST('filter_region');
 $filterState   = GETPOST('filter_state');
 $filterTown    = trim(GETPOST('filter_town', 'alpha'));
-//$filterCat   = GETPOST("search_category_" . $objectType ."_list", 'array');
+$filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
 
 // Security check - Protection if external user
 $permissiontoread   = $user->rights->easycrm->address->read;
@@ -87,7 +88,7 @@ if (empty($reshook)) {
 	// Purge search criteria
 	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) // All tests are required to be compatible with all browsers
 	{
-		//$filterCat   = [];
+		$filterCat     = [];
 		$filterId      = 0;
 		$filterCountry = 0;
 		$filterRegion  = 0;
@@ -117,7 +118,15 @@ $townFilter    = (dol_strlen($filterTown) > 0 ? 'town = "' . $filterTown . '" AN
 $countryFilter = ($filterCountry > 0 ? 'fk_country = ' . $filterCountry . ' AND ' : '');
 $regionFilter  = ($filterRegion > 0 ? 'fk_region = ' . $filterRegion . ' AND ' : '');
 $stateFilter   = ($filterState > 0 ? 'fk_department = ' . $filterState . ' AND ' : '');
-$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . 'element_type = "'. $objectType .'"'];
+
+$allCat = '';
+foreach($filterCat as $catId) {
+    $allCat .= $catId . ',';
+}
+$allCat        = rtrim($allCat, ',');
+$catFilter     = (dol_strlen($allCat) > 0 ? 'cp.fk_categorie IN (' . $allCat . ') AND ' : '');
+
+$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . $catFilter . 'element_type = "'. $objectType .'"'];
 
 $icon          = dol_buildpath('/easycrm/img/dot.png', 1);
 $objectList    = [];
@@ -174,7 +183,7 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 		}
 	}
 } else {
-	$addresses = $address->fetchAll('', '', 0, 0, $filter);
+	$addresses = $address->fetchAll('', '', 0, 0, $filter, 'AND', !empty($filterCat), $objectType, 't.element_id');
 	if (is_array($addresses) && !empty($addresses)) {
 		foreach($addresses as $address) {
 			if ($address->longitude != 0 && $address->latitude != 0) {
@@ -259,15 +268,17 @@ print $formCompany->select_state($filterState, 0, 'filter_state', 'maxwidth100')
 <?php
 
 //Categories project
-//if (!empty($conf->categorie->enabled) && $user->rights->categorie->lire) {
-//	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcategory.class.php';
-//	require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
-//
-//	$formCategory = new FormCategory($db);
-//
-//	print '<div class="divsearchfield">';
-//	print $langs->trans('ProjectsCategoriesShort') . '</br>' . $formCategory->getFilterBox(Categorie::TYPE_PROJECT, []) . '</div>';
-//}
+if (!empty($conf->categorie->enabled) && $user->rights->categorie->lire) {
+	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcategory.class.php';
+
+    if (in_array($objectType, Categorie::$MAP_ID_TO_CODE)) {
+        $formCategory = new FormCategory($db);
+
+        print '<div class="divsearchfield">';
+
+        print $langs->trans('ProjectsCategoriesShort') . '</br>' . $formCategory->getFilterBox($objectType, $filterCat) . '</div>';
+    }
+}
 
 // Morefilter buttons
 print '<div class="divsearchfield">';
