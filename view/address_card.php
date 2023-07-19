@@ -66,7 +66,7 @@ $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
-$objectInfos   = get_objects_metadata($objectType);
+$objectInfos   = saturne_get_objects_metadata($objectType);
 $className     = $objectInfos['class_name'];
 $objectLinked  = new $className($db);
 $object        = new Address($db);

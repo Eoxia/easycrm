@@ -62,7 +62,7 @@ $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
 
 // Initialize technical object
-$objectInfos  = get_objects_metadata($objectType);
+$objectInfos  = saturne_get_objects_metadata($objectType);
 $className    = $objectInfos['class_name'];
 $objectLinked = new $className($db);
 $object       = new Address($db);
