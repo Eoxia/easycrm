@@ -25,16 +25,14 @@
  * The following vars must be defined:
  * Global     : $conf, $db, $langs, $user,
  * Parameters : $objectType, $id, $backtopage,
- * Objects    : $object, $address
+ * Objects    : $objectLinked, $address
  * Variable   : $addressType, $addresses, $moduleNameLowerCase, $permissiontoadd
  */
-
-print load_fiche_titre($langs->trans('Addresses'), '', '');
 
 print '<table class="border centpercent tableforfield">';
 
 print '<tr class="liste_titre">';
-print '<td>' . img_picto('', 'fa-map-marker-alt') . ' ' . $langs->trans('Ref') . '</td>';
+print '<td>' . $langs->trans('Ref') . '</td>';
 print '<td class="center">' . $langs->trans('Name') . '</td>';
 print '<td class="center">' . $langs->trans('Type') . '</td>';
 print '<td class="center">' . $langs->trans('Country') . '</td>';
@@ -49,16 +47,15 @@ print '</tr>';
 if (is_array($addresses) && !empty($addresses)) {
 	foreach ($addresses as $element) {
         //Object favorite
-        if (isset($object->array_options['options_' . $objectType . 'address']) && dol_strlen($object->array_options['options_' . $objectType . 'address']) > 0) {
-            $favorite = $object->array_options['options_' . $objectType . 'address'] == $element->id ? 1 : 0;
-        } else {
-            $favorite = 0;
+        $favorite = 0;
+        if (isset($objectLinked->array_options['options_' . $objectType . 'address']) && dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) > 0) {
+            $favorite = $objectLinked->array_options['options_' . $objectType . 'address'] == $element->id;
         }
 
 		// Object ref
 		print '<tr class="oddeven">';
 		print '<td>';
-        print $element->ref . ' ' . '<span style="cursor:pointer;" name="favorite_address" id="address'.$element->id.'" onclick="toggleFavoriteAddress('. $element->id .');" class=' . ($favorite ? '"fas fa-star"' : '"far fa-star"') . '></span>';
+        print $element->getNomUrl(1, 'nolink') . ' ' . ($permissiontoadd ? '<span style="cursor:pointer;" name="favorite_address" id="address"' . $element->id . ' value="' . $element->id . '" class="' . ($favorite ? 'fas' : 'far') . ' fa-star"></span>' : '');
 		print '</td>';
 
 		// Address name
@@ -103,7 +100,7 @@ if (is_array($addresses) && !empty($addresses)) {
 		// Actions
 		print '<td class="center">';
 		if ($permissiontodelete) {
-			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&module_name=' . $moduleName . '&object_type=' . $object->element . '">';
+			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $id . '&module_name=' . $moduleName . '&from_type=' . $objectLinked->element . '">';
 			print '<input type="hidden" name="token" value="' . newToken() . '">';
 			print '<input type="hidden" name="action" value="delete_address">';
 			print '<input type="hidden" name="addressID" value="' . $element->id . '">';
@@ -124,9 +121,8 @@ if (is_array($addresses) && !empty($addresses)) {
 }
 
 if ($permissiontoadd) {
-	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '&object_type=' . $objectType . '">';
+	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $id . '&action=create&from_type=' . $objectType . '">';
 	print '<input type="hidden" name="token" value="' . newToken() . '">';
-	print '<input type="hidden" name="action" value="create">';
 	if (!empty($backtopage)) {
 		print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 	}
@@ -141,41 +137,3 @@ if ($permissiontoadd) {
 	print '</form>';
 }
 ?>
-
-<script>
-    function toggleFavoriteAddress(id) {
-        let token = window.saturne.toolbox.getToken();
-
-        $.ajax({
-            url: window.location.href,
-            type: 'POST',
-            data: {
-                action: 'add_favorite',
-                token: token,
-                favorite_id: id
-            },
-            success: function () {
-                let selectedAddress = document.getElementById("address"+id);
-
-                if (selectedAddress.classList.contains("far")) {
-                    let elements = document.querySelectorAll(".fas.fa-star");
-
-                    if (elements.length > 0) {
-                        elements.forEach(function(element) {
-                            if (element.classList.contains("fas") && element.classList.contains("fa-star")) {
-                                let oldFavorite = document.getElementById(element.id);
-                                oldFavorite.classList.remove("fas");
-                                oldFavorite.classList.add("far");
-                            }
-                        });
-                    }
-                    selectedAddress.classList.remove("far");
-                    selectedAddress.classList.add("fas");
-                } else if (selectedAddress.classList.contains("fas")) {
-                    selectedAddress.classList.remove("fas");
-                    selectedAddress.classList.add("far");
-                }
-            }
-        });
-    }
-</script>

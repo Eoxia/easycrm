@@ -30,33 +30,53 @@ if (file_exists('../easycrm.main.inc.php')) {
 	die('Include of easycrm main fails');
 }
 
-// Libraries
+// Load Dolibarr libraries
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
+if (isModEnabled('categorie')) {
+    require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcategory.class.php';
+    require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
+}
 
-require_once __DIR__ . '/../class/address.class.php';
+// Load Saturne librairies
 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
+
+// Load EasyCRM librairies
+require_once __DIR__ . '/../class/address.class.php';
 
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
 
 // Load translation files required by the page
-saturne_load_langs();
-
-// Get object parameters
-$objectType  = GETPOST('object_type', 'alpha');
-$objectInfos = get_objects_metadata($objectType);
+saturne_load_langs(['categories']);
 
 // Get map filters parameters
 $filterType    = GETPOST('filter_type','aZ');
-$filterId      = GETPOST('object_id');
+$filterId      = GETPOST('from_id');
+$objectType    = GETPOST('from_type', 'alpha');
 $filterCountry = GETPOST('filter_country');
 $filterRegion  = GETPOST('filter_region');
 $filterState   = GETPOST('filter_state');
 $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
+
+// Initialize technical object
+$objectInfos  = get_objects_metadata($objectType);
+$className    = $objectInfos['class_name'];
+$objectLinked = new $className($db);
+$object       = new Address($db);
+
+// Initialize view objects
+$form        = new Form($db);
+$formCompany = new FormCompany($db);
+if (isModEnabled('categorie')) {
+    $formCategory = new FormCategory($db);
+} else {
+    $formCategory = null;
+}
+
+$hookmanager->initHooks(['easycrmmap', $objectType . 'map']);
 
 // Security check - Protection if external user
 $permissiontoread   = $user->rights->easycrm->address->read;
@@ -64,27 +84,17 @@ $permissiontoadd    = $user->rights->easycrm->address->write;
 $permissiontodelete = $user->rights->easycrm->address->delete;
 saturne_check_access($permissiontoread);
 
-// Initialize technical object
-$address = new Address($db);
-$object  = new $objectInfos['class_name']($db);
-
-// Initialize view objects
-$form        = new Form($db);
-$formCompany = new FormCompany($db);
-
-$hookmanager->initHooks(['easycrmmap', $objectType . 'map']);
-
 /*
  * Actions
  */
 
 $parameters = [];
-$reshook    = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
-if ($reshook < 0) {
+$resHook    = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $objectLinked may have been modified by some hooks
+if ($resHook < 0) {
 	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 }
 
-if (empty($reshook)) {
+if (empty($resHook)) {
 	// Purge search criteria
 	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) // All tests are required to be compatible with all browsers
 	{
@@ -136,24 +146,24 @@ $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
 
 if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 	if (is_array($allObjects) && !empty($allObjects)) {
-		foreach ($allObjects as $object) {
-			$object->fetch_optionals();
+		foreach ($allObjects as $objectLinked) {
+			$objectLinked->fetch_optionals();
 
-			if (!isset($object->array_options['options_' . $objectType . 'address']) || dol_strlen($object->array_options['options_' . $objectType . 'address']) <= 0) {
+			if (!isset($objectLinked->array_options['options_' . $objectType . 'address']) || dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) <= 0) {
 				continue;
 			} else {
-				$addressId = $object->array_options['options_' . $objectType . 'address'];
+				$addressId = $objectLinked->array_options['options_' . $objectType . 'address'];
 			}
 
-			$address->fetch($addressId);
+			$object->fetch($addressId);
 
-			if (($filterId > 0 && $filterId != $object->id) || (dol_strlen($filterType) > 0 && $filterType != $address->type) || (dol_strlen($filterTown) > 0 && $filterTown != $address->town) ||
-				($filterCountry > 0 && $filterCountry != $address->fk_country) || ($filterRegion > 0 && $filterRegion != $address->fk_region) || ($filterState > 0 && $filterState != $address->fk_department)) {
+			if (($filterId > 0 && $filterId != $objectLinked->id) || (dol_strlen($filterType) > 0 && $filterType != $object->type) || (dol_strlen($filterTown) > 0 && $filterTown != $object->town) ||
+				($filterCountry > 0 && $filterCountry != $object->fk_country) || ($filterRegion > 0 && $filterRegion != $object->fk_region) || ($filterState > 0 && $filterState != $object->fk_department)) {
                 continue;
 			}
 
-			if ($address->longitude != 0 && $address->latitude != 0) {
-				$address->convertCoordinates();
+			if ($object->longitude != 0 && $object->latitude != 0) {
+				$object->convertCoordinates();
 				$num++;
 			} else {
 				continue;
@@ -161,19 +171,19 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 
 			$locationID   = $addressId;
 
-			$description  = $object->getNomUrl(1) . '</br>';
-			$description .= $langs->trans($address->type) . ' : ' . $address->name;
-			$description .= dol_strlen($address->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $address->town : '';
+			$description  = $objectLinked->getNomUrl(1) . '</br>';
+			$description .= $langs->trans($object->type) . ' : ' . $object->name;
+			$description .= dol_strlen($object->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $object->town : '';
 			$color        = randomColor();
 
-			$objectList[$locationID] = !empty($address->fields['color']) ? $address->fields['color'] : '#' . $color;
+			$objectList[$locationID] = !empty($object->fields['color']) ? $object->fields['color'] : '#' . $color;
 
 			// Add geoJSON point
 			$features[] = [
 				'type' => 'Feature',
 				'geometry' => [
 					'type' => 'Point',
-					'coordinates' => [$address->longitude, $address->latitude],
+					'coordinates' => [$object->longitude, $object->latitude],
 				],
 				'properties' => [
 					'desc'    => $description,
@@ -183,32 +193,32 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 		}
 	}
 } else {
-	$addresses = $address->fetchAll('', '', 0, 0, $filter, 'AND', !empty($filterCat), $objectType, 't.element_id');
+	$addresses = $object->fetchAll('', '', 0, 0, $filter, 'AND', !empty($filterCat), $objectType, 't.element_id');
 	if (is_array($addresses) && !empty($addresses)) {
-		foreach($addresses as $address) {
-			if ($address->longitude != 0 && $address->latitude != 0) {
-				$address->convertCoordinates();
+		foreach($addresses as $object) {
+			if ($object->longitude != 0 && $object->latitude != 0) {
+				$object->convertCoordinates();
 				$num++;
 			} else {
 				continue;
 			}
 
-			$object->fetch($address->element_id);
+			$objectLinked->fetch($object->element_id);
 
-			$locationID   = $address->id ?? 0;
-			$description  = $object->getNomUrl(1) . '</br>';
-			$description .= $langs->trans($address->type) . ' : ' . $address->name;
-			$description .= dol_strlen($address->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $address->town : '';
+			$locationID   = $object->id ?? 0;
+			$description  = $objectLinked->getNomUrl(1) . '</br>';
+			$description .= $langs->trans($object->type) . ' : ' . $object->name;
+			$description .= dol_strlen($object->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $object->town : '';
 			$color        = randomColor();
 
-			$objectList[$locationID] = !empty($address->fields['color']) ? $address->fields['color'] : '#' . $color;
+			$objectList[$locationID] = !empty($object->fields['color']) ? $object->fields['color'] : '#' . $color;
 
 			// Add geoJSON point
 			$features[] = [
 				'type' => 'Feature',
 				'geometry' => [
 					'type' => 'Point',
-					'coordinates' => [$address->longitude, $address->latitude],
+					'coordinates' => [$object->longitude, $object->latitude],
 				],
 				'properties' => [
 					'desc'    => $description,
@@ -220,17 +230,17 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 }
 
 if ($filterId > 0) {
-    $object->fetch($filterId);
+    $objectLinked->fetch($filterId);
 
-    saturne_get_fiche_head($object, 'map', $title);
+    saturne_get_fiche_head($objectLinked, 'map', $title);
 
-    $morehtml = '<a href="' . dol_buildpath('/' . $object->element . '/list.php', 1) . '?restore_lastsearch_values=1&object_type=' . $object->element . '">' . $langs->trans('BackToList') . '</a>';
-    saturne_banner_tab($object, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($object->photo));
+    $morehtml = '<a href="' . dol_buildpath('/' . $objectLinked->element . '/list.php', 1) . '?restore_lastsearch_values=1&from_type=' . $objectLinked->element . '">' . $langs->trans('BackToList') . '</a>';
+    saturne_banner_tab($objectLinked, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($objectLinked->photo));
 }
 
 print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
 
-print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?object_type=' . $objectType . '" name="formfilter">';
+print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?from_type=' . $objectType . '" name="formfilter">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 
@@ -241,42 +251,36 @@ $selectArray = [];
 foreach ($allObjects as $singleObject) {
     $selectArray[$singleObject->id] = $singleObject->ref;
 }
-// Object ?>
-<div class="divsearchfield"> <?php print img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
-print $form->selectarray('object_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $filterId > 0);
+// Object
+print '<div class="divsearchfield">' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
+print $form->selectarray('from_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $filterId > 0);
 
-// Type ?>
-<div class="divsearchfield"> <?php print $langs->trans('Type'). ': ';
+// Type
+print '<div class="divsearchfield">' . $langs->trans('Type'). ': ';
 print saturne_select_dictionary('filter_type', 'c_address_type', 'ref', 'label', $filterType, 1);
 
-// Country ?>
-<div class="divsearchfield"> <?php print $langs->trans('Country'). ': ';
+// Country
+print '<div class="divsearchfield">' . $langs->trans('Country'). ': ';
 print $form->select_country($filterCountry, 'filter_country', '', 0, 'maxwidth100') . '</div>';
 
-// Region ?>
-<div class="divsearchfield"> <?php print $langs->trans('Region'). ': ';
+// Region
+print '<div class="divsearchfield">' . $langs->trans('Region'). ': ';
 $formCompany->select_region($filterRegion, 'filter_region') . '</div>';
 
-// Department ?>
-<div class="divsearchfield"> <?php print $langs->trans('State'). ': ';
+// Department
+print '<div class="divsearchfield">' . $langs->trans('State'). ': ';
 print $formCompany->select_state($filterState, 0, 'filter_state', 'maxwidth100') . '</div>';
 
-// City ?>
-<div class="divsearchfield"> <?php print $langs->trans('Town'). ': '; ?>
-<input class="flat searchstring maxwidth200" type="text" name="filter_town" value="<?php echo dol_escape_htmltag($filterTown) ?> "> </div>
-
-<?php
+// City
+print '<div class="divsearchfield">' . $langs->trans('Town'). ': ';
+print '<input class="flat searchstring maxwidth200" type="text" name="filter_town" value="' . dol_escape_htmltag($filterTown) . '"></div>';
 
 //Categories project
-if (!empty($conf->categorie->enabled) && $user->rights->categorie->lire) {
-	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcategory.class.php';
-
+if (isModEnabled('categorie') && $user->rights->categorie->lire) {
     if (in_array($objectType, Categorie::$MAP_ID_TO_CODE)) {
-        $formCategory = new FormCategory($db);
-
         print '<div class="divsearchfield">';
 
-        print $langs->trans('ProjectsCategoriesShort') . '</br>' . $formCategory->getFilterBox($objectType, $filterCat) . '</div>';
+        print $langs->trans(ucfirst($objectInfos['langfile']) . 'CategoriesShort') . '</br>' . $formCategory->getFilterBox($objectType, $filterCat) . '</div>';
     }
 }
 
@@ -364,7 +368,7 @@ print '</form>';
 			"features": []
 		};
 		<?php
-		$result = $address->injectMapFeatures($features, 500);
+		$result = $object->injectMapFeatures($features, 500);
 		if ($result < 0) {
 			setEventMessage($langs->trans('ErrorMapFeatureEncoding'), 'errors');
 		}

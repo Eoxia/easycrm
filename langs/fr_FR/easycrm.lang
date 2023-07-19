@@ -29,13 +29,13 @@ EasyCRMDescriptionLong = Simplification de la CRM
 
 # Data - Donnée
 QuickCreation            = Ajout rapide
-QuickCreations           = ajouts rapide
+QuickCreations           = ajouts rapides
 QuickThirdPartyCreation  = Ajout rapide de tiers
 QuickThirdPartyCreations = ajouts rapides de tiers
 QuickProjectCreation     = Ajout rapide d'opportunité ou de projet
 QuickProjectCreations    = ajouts rapides d'opportunité ou de projet
 QuickContactCreation     = Ajout rapide de contact/adresse
-QuickContactCreations    = ajouts rapide de contact/adresse
+QuickContactCreations    = ajouts rapides de contact/adresse
 QuickTaskCreations       = ajouts rapides de tâche
 CommercialFollowUp       = SC
 CommercialTask           = Tâche commerciale
@@ -49,7 +49,7 @@ ProjectPhone             = Téléphone projet
 
 # Data - Donnée
 QuickEventCreation                      = Ajout rapide d'événement
-QuickEventCreations                     = ajouts rapide d'événements
+QuickEventCreations                     = ajouts rapides d'événements
 CommercialRelaunching                   = Relance commerciale
 CommercialsRelaunching                  = Relances commerciales
 LastCommercialReminderDate              = Date dernière relance commerciale
@@ -84,7 +84,7 @@ NoAddresses                  = Aucune adresse
 Map                          = Carte
 FavoriteAddress              = Adresse favorite
 NewAddress                   = Nouvelle adresse
-Workplace                    = Lieu de Travail
+Workplace                    = Lieu de travail
 PrincipalResidence           = Résidence principale
 SecondaryResidence           = Résidence secondaire
 Office                       = Bureau
@@ -93,7 +93,8 @@ WorkSite                     = Chantier
 Factory                      = Usine
 Headquarters                 = Siège social
 DisplayAllAddress            = Afficher une seule adresse par objet
-DisplayAllAddressDescription = Afficher l'adresse principale sur la carte au lieu de toute les adresses liées à l'objet
+DisplayAllAddressDescription = Afficher l'adresse principale sur la carte au lieu de toutes les adresses liées à l'objet
+AddressesList                = Liste des adresses
 
 
 #
