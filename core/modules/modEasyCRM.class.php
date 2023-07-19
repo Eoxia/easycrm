@@ -41,8 +41,9 @@ class modEasyCRM extends DolibarrModules
 		global $langs, $conf;
 		$this->db = $db;
 
-        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php')) {
-            require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
+        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php') && file_exists(__DIR__ . '/../../../saturne/lib/object.lib.php')) {
+			require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
+			require_once __DIR__ . '/../../../saturne/lib/object.lib.php';
             saturne_load_langs(['easycrm@easycrm']);
         } else {
             $this->error++;
@@ -206,6 +207,10 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_EVENT_DESCRIPTION_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
 
+			// CONST ADDRESS
+			$i++ => ['EASYCRM_DISPLAY_MAIN_ADDRESS', 'integer', 0, '', 0, 'current'],
+            $i++ => ['EASYCRM_ADDRESS_ADDON', 'chaine', 'mod_address_standard', '', 0, 'current'],
+
             // CONST MODULE
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],
 			$i++ => ['EASYCRM_DB_VERSION', 'chaine', $this->version, '', 0, 'current'],
@@ -225,10 +230,29 @@ class modEasyCRM extends DolibarrModules
 		}
 
 		// Array to add new pages in new tabs
-        $this->tabs   = [];
-        // Example:
-        // $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@easycrm:$user->rights->othermodule->read:/easycrm/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
-        // $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');
+		// Example:
+		// $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@easycrm:$user->rights->othermodule->read:/easycrm/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
+		// $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');
+
+		$pictopath       = dol_buildpath('/custom/easycrm/img/easycrm_color.png', 1);
+		$pictoEasycrm    = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+		$objectsMetadata = get_objects_metadata();
+		$this->tabs      = [];
+
+		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
+			foreach($objectsMetadata as $objectType => $objectMetadata) {
+				if (preg_match('/_/', $objectType)) {
+					$splittedElementType = preg_split('/_/', $objectType);
+					$moduleName = $splittedElementType[0];
+					$objectName = strtolower($objectType['class_name']);
+					$objectType = $objectName . '@' . $moduleName;
+				} else {
+					$objectType = $objectType;
+				}
+				$this->tabs[] = ['data' => $objectType . ':+address:' . $pictoEasycrm . $langs->trans('Addresses') . ':easycrm@easycrm:$user->rights->easycrm->read:/custom/easycrm/view/address_card.php?from_id=__ID__&from_type=' . $objectType];
+				$this->tabs[] = ['data' => $objectType . ':+map:' . $pictoEasycrm . $langs->trans('Map') . ':easycrm@easycrm:$user->rights->easycrm->read:/custom/easycrm/view/map.php?from_type=' . $objectType . '&from_id=__ID__'];
+			}
+		}
 
 		// Dictionaries
 		$this->dictionaries = [];
@@ -253,6 +277,23 @@ class modEasyCRM extends DolibarrModules
         $this->rights[$r][1] = $langs->trans('ReadModule', 'EasyCRM');
         $this->rights[$r][4] = 'read';
         $this->rights[$r][5] = 1;
+        $r++;
+
+        /* ADDRESS PERMISSSIONS */
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
+        $this->rights[$r][1] = $langs->transnoentities('ReadObjects',$langs->transnoentities('Address')); // Permission label
+        $this->rights[$r][4] = 'address'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $r++;
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
+        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('Address')); // Permission label
+        $this->rights[$r][4] = 'address'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $r++;
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
+        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('Address')); // Permission label
+        $this->rights[$r][4] = 'address'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
+        $this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->easycrm->level1->level2)
         $r++;
 
         /* ADMINPAGE PANEL ACCESS PERMISSIONS */
@@ -298,56 +339,25 @@ class modEasyCRM extends DolibarrModules
             'user'     => 0, // 0=Menu for internal users, 1=external users, 2=both
         ];
 
-		// Exports profiles provided by this module
-		// $r = 1;
-		/* BEGIN MODULEBUILDER EXPORT MYOBJECT */
-		/*
-		$langs->load("easycrm@easycrm");
-		$this->export_code[$r]=$this->rights_class.'_'.$r;
-		$this->export_label[$r]='MyObjectLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
-		$this->export_icon[$r]='myobject@easycrm';
-		// Define $this->export_fields_array, $this->export_TypeFields_array and $this->export_entities_array
-		$keyforclass = 'MyObject'; $keyforclassfile='/easycrm/class/myobject.class.php'; $keyforelement='myobject@easycrm';
-		include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		//$this->export_fields_array[$r]['t.fieldtoadd']='FieldToAdd'; $this->export_TypeFields_array[$r]['t.fieldtoadd']='Text';
-		//unset($this->export_fields_array[$r]['t.fieldtoremove']);
-		//$keyforclass = 'MyObjectLine'; $keyforclassfile='/easycrm/class/myobject.class.php'; $keyforelement='myobjectline@easycrm'; $keyforalias='tl';
-		//include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		$keyforselect='myobject'; $keyforaliasextra='extra'; $keyforelement='myobject@easycrm';
-		include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
-		//$keyforselect='myobjectline'; $keyforaliasextra='extraline'; $keyforelement='myobjectline@easycrm';
-		//include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
-		//$this->export_dependencies_array[$r] = array('myobjectline'=>array('tl.rowid','tl.ref')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
-		//$this->export_special_array[$r] = array('t.field'=>'...');
-		//$this->export_examplevalues_array[$r] = array('t.field'=>'Example');
-		//$this->export_help_array[$r] = array('t.field'=>'FieldDescHelp');
-		$this->export_sql_start[$r]='SELECT DISTINCT ';
-		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'myobject as t';
-		//$this->export_sql_end[$r]  =' LEFT JOIN '.MAIN_DB_PREFIX.'myobject_line as tl ON tl.fk_myobject = t.rowid';
-		$this->export_sql_end[$r] .=' WHERE 1 = 1';
-		$this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('myobject').')';
-		$r++; */
-		/* END MODULEBUILDER EXPORT MYOBJECT */
-
-		// Imports profiles provided by this module
-		// $r = 1;
-		/* BEGIN MODULEBUILDER IMPORT MYOBJECT */
-		/*
-		 $langs->load("easycrm@easycrm");
-		 $this->export_code[$r]=$this->rights_class.'_'.$r;
-		 $this->export_label[$r]='MyObjectLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
-		 $this->export_icon[$r]='myobject@easycrm';
-		 $keyforclass = 'MyObject'; $keyforclassfile='/easycrm/class/myobject.class.php'; $keyforelement='myobject@easycrm';
-		 include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
-		 $keyforselect='myobject'; $keyforaliasextra='extra'; $keyforelement='myobject@easycrm';
-		 include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
-		 //$this->export_dependencies_array[$r]=array('mysubobject'=>'ts.rowid', 't.myfield'=>array('t.myfield2','t.myfield3')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
-		 $this->export_sql_start[$r]='SELECT DISTINCT ';
-		 $this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'myobject as t';
-		 $this->export_sql_end[$r] .=' WHERE 1 = 1';
-		 $this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('myobject').')';
-		 $r++; */
-		/* END MODULEBUILDER IMPORT MYOBJECT */
+		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
+			foreach($objectsMetadata as $objectType => $objectMetadata) {
+				if (dol_strlen($objectMetadata['leftmenu']) > 0) {
+					$this->menu[$r++] = [
+						'fk_menu'  => 'fk_mainmenu=' . $objectMetadata['mainmenu'] . ',fk_leftmenu=' . $objectMetadata['leftmenu'],
+						'type'     => 'left',
+						'titre'    => '<i class="fas fa-map-marked-alt pictofixedwidth" style="padding-right: 4px; color: #63ACC9;"></i>' . $langs->transnoentities('Map'),
+						'leftmenu' => 'map',
+						'url'      => 'easycrm/view/map.php?from_type=' . $objectType,
+						'langs'    => 'easycrm@easycrm',
+						'position' => 1000 + $r,
+						'enabled'  => '$conf->easycrm->enabled',
+						'perms'    => '$user->rights->easycrm->address->read',
+						'target'   => '',
+						'user'     => 0,
+					];
+				}
+			}
+		}
 	}
 
     /**
@@ -390,11 +400,21 @@ class modEasyCRM extends DolibarrModules
         include_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
         $extrafields = new ExtraFields($this->db);
 
-        $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', '', '', 2);
+        $objectsMetadata = get_objects_metadata();
+
+        $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', 0, '', 2);
         $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
 
+        if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
+            foreach ($objectsMetadata as $objectType => $objectMetadata) {
+                $extrafieldParam     = 'easycrm_address:name:rowid::element_id=$ID$ AND element_type="' . $objectType . '" AND status>0';
+                $extrafieldParamSize = dol_strlen($extrafieldParam);
+                $extrafields->update($objectType . 'address', 'FavoriteAddress', 'sellist', 255, $objectMetadata['table_element'], 0, 0, 101, 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '$user->rights->easycrm->address->write', 1, '', '', '', '', 'easycrm@easycrm', '1', 0, 0, ['css => minwidth100 maxwidth300 widthcentpercentminusx']);
+                $extrafields->addExtraField($objectType . 'address', 'FavoriteAddress', 'sellist', 101, 255, $objectMetadata['table_element'], 0, 0, '', 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '$user->rights->easycrm->address->write', 1, '', '', '', 'easycrm@easycrm', '1', 0, 0, ['css => minwidth100 maxwidth300 widthcentpercentminusx']);
+            }
+        }
         if (empty($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG)) {
             require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 

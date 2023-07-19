@@ -61,11 +61,50 @@ class Address extends SaturneObject
     /**
      * @var string String with name of icon for signature. Must be the part after the 'object_' into object_signature.png
      */
-    public string $picto = 'fontawesome_fa-location-dot_fas_#d35968';
+    public string $picto = 'fontawesome_fa-map-marker-alt_fas_#63ACC9';
 
     public const STATUS_DELETED   = -1;
     public const STATUS_NOT_FOUND = 0;
     public const STATUS_ACTIVE    = 1;
+
+    /**
+     * 'type' field format:
+     *      'integer', 'integer:ObjectClass:PathToClass[:AddCreateButtonOrNot[:Filter[:Sortfield]]]',
+     *      'select' (list of values are in 'options'),
+     *      'sellist:TableName:LabelFieldName[:KeyFieldName[:KeyFieldParent[:Filter[:Sortfield]]]]',
+     *      'chkbxlst:...',
+     *      'varchar(x)',
+     *      'text', 'text:none', 'html',
+     *      'double(24,8)', 'real', 'price',
+     *      'date', 'datetime', 'timestamp', 'duration',
+     *      'boolean', 'checkbox', 'radio', 'array',
+     *      'mail', 'phone', 'url', 'password', 'ip'
+     *      Note: Filter can be a string like "(t.ref:like:'SO-%') or (t.date_creation:<:'20160101') or (t.nature:is:NULL)"
+     * 'label' the translation key.
+     * 'picto' is code of a picto to show before value in forms
+     * 'enabled' is a condition when the field must be managed (Example: 1 or '$conf->global->MY_SETUP_PARAM' or '!empty($conf->multicurrency->enabled)' ...)
+     * 'position' is the sort order of field.
+     * 'notnull' is set to 1 if not null in database. Set to -1 if we must set data to null if empty '' or 0.
+     * 'visible' says if field is visible in list (Examples: 0=Not visible, 1=Visible on list and create/update/view forms, 2=Visible on list only, 3=Visible on create/update/view form only (not list), 4=Visible on list and update/view form only (not create). 5=Visible on list and view only (not create/not update). Using a negative value means field is not shown by default on list but can be selected for viewing)
+     * 'noteditable' says if field is not editable (1 or 0)
+     * 'default' is a default value for creation (can still be overwroted by the Setup of Default Values if field is editable in creation form). Note: If default is set to '(PROV)' and field is 'ref', the default value will be set to '(PROVid)' where id is rowid when a new record is created.
+     * 'index' if we want an index in database.
+     * 'foreignkey'=>'tablename.field' if the field is a foreign key (it is recommanded to name the field fk_...).
+     * 'searchall' is 1 if we want to search in this field when making a search from the quick search button.
+     * 'isameasure' must be set to 1 or 2 if field can be used for measure. Field type must be summable like integer or double(24,8). Use 1 in most cases, or 2 if you don't want to see the column total into list (for example for percentage)
+     * 'css' and 'cssview' and 'csslist' is the CSS style to use on field. 'css' is used in creation and update. 'cssview' is used in view mode. 'csslist' is used for columns in lists. For example: 'css'=>'minwidth300 maxwidth500 widthcentpercentminusx', 'cssview'=>'wordbreak', 'csslist'=>'tdoverflowmax200'
+     * 'help' is a 'TranslationString' to use to show a tooltip on field. You can also use 'TranslationString:keyfortooltiponlick' for a tooltip on click.
+     * 'showoncombobox' if value of the field must be visible into the label of the combobox that list record
+     * 'disabled' is 1 if we want to have the field locked by a 'disabled' attribute. In most cases, this is never set into the definition of $fields into class, but is set dynamically by some part of code.
+     * 'arrayofkeyval' to set a list of values if type is a list of predefined values. For example: array("0"=>"Draft","1"=>"Active","-1"=>"Cancel"). Note that type can be 'integer' or 'varchar'
+     * 'autofocusoncreate' to have field having the focus on a create form. Only 1 field should have this property set to 1.
+     * 'comment' is not used. You can store here any text of your choice. It is not used by application.
+     * 'validate' is 1 if you need to validate with $this->validateField()
+     * 'copytoclipboard' is 1 or 2 to allow to add a picto to copy value into clipboard (1=picto after label, 2=picto after value)
+     * 'size' limit the length of a fields
+     *
+     * Note: To have value dynamic, you can set value to 0 in definition and edit the value on the fly into the constructor.
+     */
 
     /**
      * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
@@ -79,21 +118,21 @@ class Address extends SaturneObject
         'tms'                  => ['type' => 'timestamp',    'label' => 'DateModification',      'enabled' => 1, 'position' => 50,  'notnull' => 1, 'visible' => 0],
         'import_key'           => ['type' => 'varchar(14)',  'label' => 'ImportId',              'enabled' => 1, 'position' => 60,  'notnull' => 0, 'visible' => 0],
         'status'               => ['type' => 'smallint',     'label' => 'Status',                'enabled' => 1, 'position' => 70,  'notnull' => 1, 'visible' => 0, 'index' => 1, 'default' => 0],
-        'element_type'         => ['type' => 'varchar(255)', 'label' => 'ElementType',           'enabled' => 1, 'position' => 80,  'notnull' => 0, 'visible' => 1],
-        'element_id'           => ['type' => 'integer',      'label' => 'ElementId',             'enabled' => 1, 'position' => 90,  'notnull' => 1, 'visible' => 1, 'index' => 1],
-        'name'                 => ['type' => 'varchar(255)', 'label' => 'Name',                  'enabled' => 1, 'position' => 100, 'notnull' => 0, 'visible' => 1],
-        'type'                 => ['type' => 'varchar(255)', 'label' => 'Type',                  'enabled' => 1, 'position' => 110, 'notnull' => 0, 'visible' => 1],
-        'fk_country'           => ['type' => 'integer',      'label' => 'Country',               'enabled' => 1, 'position' => 120, 'notnull' => 0, 'visible' => 1, 'index' => 1],
-        'fk_region'            => ['type' => 'integer',      'label' => 'Region',                'enabled' => 1, 'position' => 130, 'notnull' => 0, 'visible' => 1, 'index' => 1],
-        'fk_department'        => ['type' => 'integer',      'label' => 'State',                 'enabled' => 1, 'position' => 140, 'notnull' => 0, 'visible' => 1, 'index' => 1],
-        'town'                 => ['type' => 'varchar(255)', 'label' => 'Town',                  'enabled' => 1, 'position' => 150, 'notnull' => 0, 'visible' => 1],
-        'zip'                  => ['type' => 'integer',      'label' => 'Zip',                   'enabled' => 1, 'position' => 160, 'notnull' => 0, 'visible' => 1],
-        'address'              => ['type' => 'varchar(255)', 'label' => 'Address',               'enabled' => 1, 'position' => 170, 'notnull' => 0, 'visible' => 1],
-        'latitude'             => ['type' => 'double(24,8)', 'label' => 'Latitude',              'enabled' => 1, 'position' => 180, 'notnull' => 1, 'visible' => 1, 'default' => 0],
-        'longitude'            => ['type' => 'double(24,8)', 'label' => 'Longitude',             'enabled' => 1, 'position' => 190, 'notnull' => 1, 'visible' => 1, 'default' => 0],
-        'osm_id'               => ['type' => 'integer',      'label' => 'OpenStreetMapId',       'enabled' => 1, 'position' => 200, 'notnull' => 0, 'visible' => 1, 'index' => 1],
-        'osm_type'             => ['type' => 'varchar(255)', 'label' => 'OpenStreetMapType',     'enabled' => 1, 'position' => 210, 'notnull' => 0, 'visible' => 3],
-        'osm_category'         => ['type' => 'varchar(255)', 'label' => 'OpenStreetMapCategory', 'enabled' => 1, 'position' => 220, 'notnull' => 0, 'visible' => 3],
+        'element_type'         => ['type' => 'varchar(255)', 'label' => 'ElementType',           'enabled' => 1, 'position' => 80,  'notnull' => 0, 'visible' => 0],
+        'element_id'           => ['type' => 'integer',      'label' => 'ElementId',             'enabled' => 1, 'position' => 90,  'notnull' => 1, 'visible' => 0, 'index' => 1],
+        'name'                 => ['type' => 'varchar(255)', 'label' => 'Name',                  'enabled' => 1, 'position' => 100, 'notnull' => 1, 'visible' => 0, 'css' => 'minwidth300 maxwidth300'],
+        'type'                 => ['type' => 'varchar(255)', 'label' => 'Type',                  'enabled' => 1, 'position' => 110, 'notnull' => 1, 'visible' => 0, 'css' => 'minwidth300 maxwidth300'],
+        'fk_country'           => ['type' => 'integer',      'label' => 'Country',               'enabled' => 1, 'position' => 120, 'notnull' => 1, 'visible' => 0, 'index' => 1, 'css' => 'minwidth300 maxwidth300'],
+        'fk_region'            => ['type' => 'integer',      'label' => 'Region',                'enabled' => 1, 'position' => 130, 'notnull' => 0, 'visible' => 0, 'index' => 1, 'css' => 'minwidth300 maxwidth300'],
+        'fk_department'        => ['type' => 'integer',      'label' => 'State',                 'enabled' => 1, 'position' => 140, 'notnull' => 0, 'visible' => 0, 'index' => 1, 'css' => 'minwidth300 maxwidth300'],
+        'town'                 => ['type' => 'varchar(255)', 'label' => 'Town',                  'enabled' => 1, 'position' => 150, 'notnull' => 1, 'visible' => 1, 'css' => 'minwidth300 maxwidth300'],
+        'zip'                  => ['type' => 'integer',      'label' => 'Zip',                   'enabled' => 1, 'position' => 160, 'notnull' => 0, 'visible' => 1, 'size' => 10, 'css' => 'minwidth300 maxwidth300'],
+        'address'              => ['type' => 'text',         'label' => 'Address',               'enabled' => 1, 'position' => 170, 'notnull' => 0, 'visible' => 1, 'css' => 'minwidth300 maxwidth300'],
+        'latitude'             => ['type' => 'double(24,8)', 'label' => 'Latitude',              'enabled' => 1, 'position' => 180, 'notnull' => 1, 'visible' => 0, 'default' => 0],
+        'longitude'            => ['type' => 'double(24,8)', 'label' => 'Longitude',             'enabled' => 1, 'position' => 190, 'notnull' => 1, 'visible' => 0, 'default' => 0],
+        'osm_id'               => ['type' => 'integer',      'label' => 'OpenStreetMapId',       'enabled' => 1, 'position' => 200, 'notnull' => 0, 'visible' => 0, 'index' => 1],
+        'osm_type'             => ['type' => 'varchar(255)', 'label' => 'OpenStreetMapType',     'enabled' => 1, 'position' => 210, 'notnull' => 0, 'visible' => 0],
+        'osm_category'         => ['type' => 'varchar(255)', 'label' => 'OpenStreetMapCategory', 'enabled' => 1, 'position' => 220, 'notnull' => 0, 'visible' => 0],
         'fk_user_creat'        => ['type' => 'integer:User:user/class/user.class.php', 'label' => 'UserAuthor', 'picto' => 'user', 'enabled' => 1, 'position' => 230, 'notnull' => 1, 'visible' => 0, 'foreignkey' => 'user.rowid'],
         'fk_user_modif'        => ['type' => 'integer:User:user/class/user.class.php', 'label' => 'UserModif',  'picto' => 'user', 'enabled' => 1, 'position' => 240, 'notnull' => 0, 'visible' => 0, 'foreignkey' => 'user.rowid'],
     ];
@@ -269,6 +308,91 @@ class Address extends SaturneObject
     }
 
     /**
+     * Load list of objects in memory from the database.
+     *
+     * @param  string     $sortorder        Sort Order.
+     * @param  string     $sortfield        Sort field.
+     * @param  int        $limit            Limit.
+     * @param  int        $offset           Offset.
+     * @param  array      $filter           Filter array. Example array('field'=>'valueforlike', 'customurl'=>...).
+     * @param  string     $filtermode       Filter mode (AND/OR).
+     * @param  boolean    $fetchCategories  Fetch categories or not.
+     * @param  string     $categoriesType   Type of category.
+     * @param  string     $categoriesIdName Name of the id field.
+     * @return array|int                    Int <0 if KO, array of pages if OK.
+     * @throws Exception
+     */
+    public function fetchAll(string $sortorder = '', string $sortfield = '', int $limit = 0, int $offset = 0, array $filter = [], string $filtermode = 'AND', bool $fetchCategories = false, string $categoriesType = '', string $categoriesIdName = 't.rowid')
+    {
+        dol_syslog(__METHOD__, LOG_DEBUG);
+
+        $records = [];
+
+        $sql = 'SELECT ';
+        $sql .= $this->getFieldList('t');
+        $sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
+        if (isModEnabled('categorie') && $fetchCategories > 0 && dol_strlen($categoriesType) > 0) {
+            $sql .= Categorie::getFilterJoinQuery($categoriesType, $categoriesIdName);
+        }
+        if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) {
+            $sql .= ' WHERE t.entity IN (' . getEntity($this->element) . ')';
+        } else {
+            $sql .= ' WHERE 1 = 1';
+        }
+        // Manage filter.
+        $sqlwhere = [];
+        if (count($filter) > 0) {
+            foreach ($filter as $key => $value) {
+                if ($key == 't.rowid') {
+                    $sqlwhere[] = $key . ' = ' . ((int) $value);
+                } elseif (in_array($this->fields[$key]['type'], ['date', 'datetime', 'timestamp'])) {
+                    $sqlwhere[] = $key . " = '" . $this->db->idate($value) . "'";
+                } elseif ($key == 'customsql') {
+                    $sqlwhere[] = $value;
+                } elseif (strpos($value, '%') === false) {
+                    $sqlwhere[] = $key . ' IN (' . $this->db->sanitize($this->db->escape($value)) . ')';
+                } else {
+                    $sqlwhere[] = $key . " LIKE '%" . $this->db->escape($value) . "%'";
+                }
+            }
+        }
+        if (count($sqlwhere) > 0) {
+            $sql .= ' AND (' . implode(' ' . $filtermode . ' ', $sqlwhere) . ')';
+        }
+
+        if (!empty($sortfield)) {
+            $sql .= $this->db->order($sortfield, $sortorder);
+        }
+        if (!empty($limit)) {
+            $sql .= $this->db->plimit($limit, $offset);
+        }
+
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $num = $this->db->num_rows($resql);
+            $i = 0;
+            while ($i < ($limit ? min($limit, $num) : $num)) {
+                $obj = $this->db->fetch_object($resql);
+
+                $record = new $this($this->db);
+                $record->setVarsFromFetchObj($obj);
+
+                $records[$record->id] = $record;
+
+                $i++;
+            }
+            $this->db->free($resql);
+
+            return $records;
+        } else {
+            $this->errors[] = 'Error ' . $this->db->lasterror();
+            dol_syslog(__METHOD__ . ' ' . join(',', $this->errors), LOG_ERR);
+
+            return -1;
+        }
+    }
+
+    /**
      * Return the status
      *
      * @param  int    $status Id status
@@ -350,7 +474,7 @@ class Address extends SaturneObject
             foreach ($bulkFeatures as $bulk) {
                 $encodedBulk = json_encode($bulk);
                 if (!empty($encodedBulk)) {
-                    print "geojsonProspectMarkers.features = $.merge(geojsonProspectMarkers.features, $encodedBulk);\n";
+                    print "geojsonMarkers.features = $.merge(geojsonMarkers.features, $encodedBulk);\n";
                 } else {
                     if ($chunkSize > 1) {
                         $result = $this->injectMapFeatures($bulk, floor($chunkSize / 2), $deep + 1);
