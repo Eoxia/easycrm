@@ -77,9 +77,6 @@ $formcompany = new FormCompany($db);
 
 $hookmanager->initHooks([$objectType . 'address', $objectType . 'address', 'easycrmglobal', 'globalcard']); // Note that conf->hooks_modules contains array
 
-// Load object
-include DOL_DOCUMENT_ROOT . '/core/actions_fetchobject.inc.php'; // Must be included, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
-
 // Security check - Protection if external user
 $permissiontoread   = $user->rights->easycrm->address->read;
 $permissiontoadd    = $user->rights->easycrm->address->write;
