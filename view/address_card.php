@@ -220,20 +220,8 @@ if ($action == 'create' && $id > 0) {
 	print $formcompany->select_state($addressState, '', 'fk_state', 'minwidth300 maxwidth300') . ' ' . img_picto('', 'state', 'class="pictofixedwidth"');
 	print '</td></tr>';
 
-	// City -- Ville
-	print '<tr><td class="fieldrequired">'.$langs->trans("Town").'</td><td>';
-	print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="town" id="town" value="'.$addressTown.'">';
-	print '</td></tr>';
-
-	// ZIP -- Code postal
-	print '<tr><td class="">'.$langs->trans("Zip").'</td><td>';
-	print '<input class="flat minwidth300 maxwidth300" type="number" max="9999999999" name="zip" id="zip" value="'.$addressZip.'">';
-	print '</td></tr>';
-
-	// Address -- Adresse
-	print '<tr><td class="">'.$langs->trans("Address").'</td><td>';
-	print '<input class="flat minwidth300 maxwidth300" type="text" size="36" name="address" id="address" value="'.$addressAddress.'">';
-	print '</td></tr>';
+    // Common attributes
+    include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
 
 	print '</table></br>';
 
