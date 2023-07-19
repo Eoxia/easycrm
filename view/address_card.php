@@ -34,7 +34,6 @@ if (file_exists('../easycrm.main.inc.php')) {
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
 
-require_once __DIR__ . '/../core/modules/easycrm/address/mod_address_standard.php';
 require_once __DIR__ . '/../class/address.class.php';
 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
@@ -48,7 +47,7 @@ saturne_load_langs();
 $objectType  = GETPOST('object_type', 'alpha');
 $objectInfos = get_objects_metadata($objectType);
 
-// Get address create parameters
+// Get create parameters
 $addressName    = GETPOST('name');
 $addressType    = GETPOST('address_type');
 $addressCountry = GETPOST('fk_country', 'int');
@@ -71,8 +70,6 @@ $classname     = $objectInfos['class_name'];
 $object        = new $classname($db);
 $usertmp       = new User($db);
 $address       = new Address($db);
-$refAddressMod = new $conf->global->EASYCRM_ADDRESS_ADDON($db);
-
 
 // Initialize view objects
 $form        = new Form($db);
@@ -113,7 +110,7 @@ if (empty($reshook)) {
 			header('Location: ' . $_SERVER['PHP_SELF'] .  '?id=' . $id . '&action=create&object_type=' . $objectType . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
 			exit;
 		} else {
-            $address->ref           = $refAddressMod->getNextValue($address);
+            $address->ref           = $address->getNextNumRef();
 			$address->name          = $addressName;
 			$address->type          = $addressType;
 			$address->fk_country    = $addressCountry;
@@ -165,7 +162,7 @@ if (empty($reshook)) {
 		}
 	}
 
-    if ($action == 'add_favorite') {
+    if ($action == 'toggle_favorite') {
         $favoriteAddressId = GETPOST('favorite_id');
 
         if (isset($object->array_options['options_' . $objectType . 'address']) && dol_strlen($object->array_options['options_' . $objectType . 'address']) > 0) {
@@ -263,14 +260,14 @@ if ($action == 'create' && $id > 0) {
 		$addressByType['Address'] = $address->fetchAddresses($object->id, $objectType);
 	}
 
-	$alreadyAddedAddress = [];
+    print load_fiche_titre($langs->trans('AddressesList'), '', 'fa-map-marker-alt');
+
+    $alreadyAddedAddress = [];
 	if (is_array($addressByType) && !empty($addressByType)) {
 		foreach ($addressByType as $addressType => $addresses) {
 			require __DIR__ . '/../core/tpl/easycrm_address_table_view.tpl.php';
 		}
 	} else {
-		print load_fiche_titre($langs->trans('Addresses') . ' - ' . $langs->trans('Address'), '', '');
-
 		print '<div class="opacitymedium">' . $langs->trans('NoAddresses') . '</div>';
 	}
 
