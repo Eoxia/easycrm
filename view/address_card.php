@@ -181,6 +181,10 @@ $helpUrl = 'FR:Module_EasyCRM';
 saturne_header(0,'', $title, $helpUrl);
 
 if ($action == 'create' && $id > 0) {
+    $objectLinked->fetch($id);
+
+    saturne_get_fiche_head($objectLinked, 'address', $title);
+
     print load_fiche_titre($langs->trans("NewAddress"), $backtopage, $object->picto);
 
     print dol_get_fiche_head();
