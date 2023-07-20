@@ -123,6 +123,7 @@ saturne_header(0, '', $title, $helpUrl);
  */
 
 // Filter on address
+$filterId      = $fromId > 0 ? $fromId : $filterId;
 $IdFilter      = ($filterId > 0 ? 'element_id = "' . $filterId . '" AND ' : '');
 $typeFilter    = (dol_strlen($filterType) > 0 ? 'type = "' . $filterType . '" AND ' : '');
 $townFilter    = (dol_strlen($filterTown) > 0 ? 'town = "' . $filterTown . '" AND ' : '');
@@ -230,8 +231,8 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 	}
 }
 
-if ($filterId > 0) {
-    $objectLinked->fetch($filterId);
+if ($fromId > 0) {
+    $objectLinked->fetch($fromId);
 
     saturne_get_fiche_head($objectLinked, 'map', $title);
 
@@ -254,7 +255,7 @@ foreach ($allObjects as $singleObject) {
 }
 // Object
 print '<div class="divsearchfield">' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
-print $form->selectarray('from_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $filterId > 0);
+print $form->selectarray('filter_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $fromId > 0);
 
 // Type
 print '<div class="divsearchfield">' . $langs->trans('Type'). ': ';
