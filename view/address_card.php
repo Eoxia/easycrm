@@ -131,10 +131,7 @@ if (empty($reshook)) {
 			} else {
 				setEventMessages($langs->trans('ErrorCreateAddress'), [], 'errors');
 			}
-			$urltogo = str_replace('__ID__', $result, $backtopage);
-			$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $fromId, $urltogo); // New method to autoselect project after a New on another form object creation.
-            header('Location: ' . $urltogo);
-			$action = '';
+            header('Location: ' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType);
 		}
 	}
 
@@ -152,10 +149,7 @@ if (empty($reshook)) {
 			} else {
 				setEventMessages($langs->trans('ErrorDeleteAddress'), [], 'errors');
 			}
-			$urltogo = str_replace('__ID__', $result, $backtopage);
-			$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $fromId, $urltogo); // New method to autoselect project after a New on another form object creation.
-            header('Location: ' . $urltogo);
-			$action = '';
+			header('Location: ' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType);
 		}
 	}
 
