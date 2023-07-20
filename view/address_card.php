@@ -123,7 +123,7 @@ if (empty($reshook)) {
 
 			if ($result > 0) {
 				if ($object->status == $object::STATUS_NOT_FOUND) {
-					setEventMessages($langs->trans('CouldntFindDataOnOSM'), []);
+					setEventMessages($langs->trans('CouldntFindDataOnOSM'), [], 'errors');
 				} else if ($object->status == $object::STATUS_ACTIVE) {
 					setEventMessages($langs->trans('DataSuccessfullyRetrieved'), []);
 				}
