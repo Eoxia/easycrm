@@ -1,5 +1,9 @@
- {
+{
   "main": "index.js",
+  "scripts": {
+    "update": "npm install",
+    "start": "node node_modules/gulp/bin/gulp.js"
+  },
   "author": "Evarisk",
   "contributors": [
     {
@@ -7,5 +11,16 @@
       "email": "technique@evarisk.com"
     }
   ],
-  "license": "GPLv3"
+  "license": "GPLv3",
+  "devDependencies": {
+    "gulp": "^4.0.0",
+    "gulp-autoprefixer": "^6.0.0",
+    "gulp-concat": "latest",
+    "gulp-line-ending-corrector": "^1.0.3",
+    "gulp-rename": "latest",
+    "gulp-sass": "latest",
+    "sass": "latest",
+    "gulp-uglify": "latest",
+    "gulp-watch": "latest"
+  }
 }

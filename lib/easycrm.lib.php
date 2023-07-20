@@ -29,18 +29,23 @@
 function easycrm_admin_prepare_head(): array
 {
     // Global variables definitions
-	global $langs, $conf;
+    global $langs, $conf;
 
     // Load translation files required by the page
-	saturne_load_langs();
+    saturne_load_langs();
 
     // Initialize values
-	$h = 0;
-	$head = [];
+    $h = 0;
+    $head = [];
 
     $head[$h][0] = dol_buildpath('/easycrm/admin/setup.php', 1);
     $head[$h][1] = '<i class="fas fa-cog pictofixedwidth"></i>' . $langs->trans('ModuleSettings');
     $head[$h][2] = 'settings';
+    $h++;
+
+    $head[$h][0] = dol_buildpath('/easycrm/admin/address.php', 1);
+    $head[$h][1] = '<i class="fas fa-map-marker-alt pictofixedwidth"></i>' . $langs->trans('Addresses');
+    $head[$h][2] = 'address';
     $h++;
 
     $head[$h][0] = dol_buildpath('/easycrm/admin/about.php', 1);
@@ -48,9 +53,10 @@ function easycrm_admin_prepare_head(): array
     $head[$h][2] = 'about';
     $h++;
 
-	complete_head_from_modules($conf, $langs, null, $head, $h, 'easycrm@easycrm');
 
-	complete_head_from_modules($conf, $langs, null, $head, $h, 'easycrm@easycrm', 'remove');
+    complete_head_from_modules($conf, $langs, null, $head, $h, 'easycrm@easycrm');
 
-	return $head;
+    complete_head_from_modules($conf, $langs, null, $head, $h, 'easycrm@easycrm', 'remove');
+
+    return $head;
 }
