@@ -138,7 +138,7 @@ foreach($filterCat as $catId) {
 $allCat        = rtrim($allCat, ',');
 $catFilter     = (dol_strlen($allCat) > 0 ? 'cp.fk_categorie IN (' . $allCat . ') AND ' : '');
 
-$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . $catFilter . 'element_type = "'. $objectType .'"'];
+$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . $catFilter . 'element_type = "'. $objectType .'" AND status >= 0'];
 
 $icon          = dol_buildpath('/easycrm/img/dot.png', 1);
 $objectList    = [];
