@@ -30,6 +30,4 @@ if (file_exists('easycrm.main.inc.php')) {
     die('Include of easycrm main fails');
 }
 
-$showDashboard = false;
-
 require_once __DIR__ . '/../saturne/core/tpl/index/index_view.tpl.php';

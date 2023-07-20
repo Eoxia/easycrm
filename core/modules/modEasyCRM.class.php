@@ -138,7 +138,7 @@ class modEasyCRM extends DolibarrModules
 		// A condition to hide module
 		$this->hidden = false;
 		// List of module class names as string that must be enabled if this module is enabled. Example: array('always1'=>'modModuleToEnable1','always2'=>'modModuleToEnable2', 'FR1'=>'modModuleToEnableFR'...)
-		$this->depends = ['modSaturne', 'modFckeditor', 'modAgenda', 'modSociete', 'modProjet', 'modCategorie'];
+		$this->depends = ['modSaturne', 'modFckeditor', 'modAgenda', 'modSociete', 'modProjet', 'modCategorie', 'modPropale'];
 		$this->requiredby = []; // List of module class names as string to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
 		$this->conflictwith = []; // List of module class names as string this module is in conflict with. Example: array('modModuleToDisable1', ...)
 
@@ -254,8 +254,55 @@ class modEasyCRM extends DolibarrModules
 			}
 		}
 
-		// Dictionaries
-		$this->dictionaries = [];
+		// Dictionaries.
+		$this->dictionaries = [
+			'langs' => 'easycrm@easycrm',
+			// List of tables we want to see into dictonnary editor.
+			'tabname' => [
+				MAIN_DB_PREFIX . 'c_commercial_status',
+				MAIN_DB_PREFIX . 'c_refusal_reason'
+			],
+			// Label of tables.
+			'tablib' => [
+				'CommercialStatus',
+				'RefusalReason'
+			],
+			// Request to select fields.
+			'tabsql' => [
+				'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.element_type, f.active, f.position FROM ' . MAIN_DB_PREFIX . 'c_commercial_status as f',
+				'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.element_type, f.active, f.position FROM ' . MAIN_DB_PREFIX . 'c_refusal_reason as f'
+			],
+			// Sort order.
+			'tabsqlsort' => [
+				'position ASC',
+				'position ASC'
+			],
+			// List of fields (result of select to show dictionary).
+			'tabfield' => [
+				'ref,label,description,element_type,position',
+				'ref,label,description,element_type,position'
+			],
+			// List of fields (list of fields to edit a record).
+			'tabfieldvalue' => [
+				'ref,label,description,element_type,position',
+				'ref,label,description,element_type,position'
+			],
+			// List of fields (list of fields for insert).
+			'tabfieldinsert' => [
+				'ref,label,description,element_type,position',
+				'ref,label,description,element_type,position'
+			],
+			// Name of columns with primary key (try to always name it 'rowid').
+			'tabrowid' => [
+				'rowid',
+				'rowid'
+			],
+			// Condition to show each dictionary.
+			'tabcond' => [
+				$conf->easycrm->enabled,
+				$conf->easycrm->enabled
+			]
+		];
 
 		// Boxes/Widgets
 		$this->boxes = [];
@@ -379,6 +426,7 @@ class modEasyCRM extends DolibarrModules
         }
 
         $sql = [];
+		$result = $this->_load_tables('/easycrm/sql/');
 
 		// Load sql sub folders
 		$sqlFolder = scandir(__DIR__ . '/../../sql');
@@ -406,6 +454,8 @@ class modEasyCRM extends DolibarrModules
         $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
+		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
+		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
 
         if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
             foreach ($objectsMetadata as $objectType => $objectMetadata) {
