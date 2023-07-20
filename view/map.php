@@ -53,7 +53,8 @@ saturne_load_langs(['categories']);
 
 // Get map filters parameters
 $filterType    = GETPOST('filter_type','aZ');
-$filterId      = GETPOST('from_id');
+$fromId        = GETPOST('from_id');
+$filterId      = GETPOST('filter_id');
 $objectType    = GETPOST('from_type', 'alpha');
 $filterCountry = GETPOST('filter_country');
 $filterRegion  = GETPOST('filter_region');
@@ -276,7 +277,7 @@ print '<div class="divsearchfield">' . $langs->trans('Town'). ': ';
 print '<input class="flat searchstring maxwidth200" type="text" name="filter_town" value="' . dol_escape_htmltag($filterTown) . '"></div>';
 
 //Categories project
-if (isModEnabled('categorie') && $user->rights->categorie->lire) {
+if (isModEnabled('categorie') && $user->rights->categorie->lire && $fromId <= 0) {
     if (in_array($objectType, Categorie::$MAP_ID_TO_CODE)) {
         print '<div class="divsearchfield">';
 
