@@ -30,7 +30,7 @@ CREATE TABLE llx_easycrm_address(
   fk_region     integer,
   fk_department integer,
   town          varchar(255),
-  zip           integer(5),
+  zip           varchar(255),
   address       varchar(255),
   latitude      double(24,8) DEFAULT 0 NOT NULL,
   longitude     double(24,8) DEFAULT 0 NOT NULL,

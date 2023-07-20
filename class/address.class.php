@@ -126,7 +126,7 @@ class Address extends SaturneObject
         'fk_region'            => ['type' => 'integer',      'label' => 'Region',                'enabled' => 1, 'position' => 130, 'notnull' => 0, 'visible' => 0, 'index' => 1, 'css' => 'minwidth300 maxwidth300'],
         'fk_department'        => ['type' => 'integer',      'label' => 'State',                 'enabled' => 1, 'position' => 140, 'notnull' => 0, 'visible' => 0, 'index' => 1, 'css' => 'minwidth300 maxwidth300'],
         'town'                 => ['type' => 'varchar(255)', 'label' => 'Town',                  'enabled' => 1, 'position' => 150, 'notnull' => 1, 'visible' => 1, 'css' => 'minwidth300 maxwidth300'],
-        'zip'                  => ['type' => 'integer',      'label' => 'Zip',                   'enabled' => 1, 'position' => 160, 'notnull' => 0, 'visible' => 1, 'size' => 10, 'css' => 'minwidth300 maxwidth300'],
+        'zip'                  => ['type' => 'varchar(255)', 'label' => 'Zip',                   'enabled' => 1, 'position' => 160, 'notnull' => 0, 'visible' => 1, 'css' => 'minwidth300 maxwidth300'],
         'address'              => ['type' => 'text',         'label' => 'Address',               'enabled' => 1, 'position' => 170, 'notnull' => 0, 'visible' => 1, 'css' => 'minwidth300 maxwidth300'],
         'latitude'             => ['type' => 'double(24,8)', 'label' => 'Latitude',              'enabled' => 1, 'position' => 180, 'notnull' => 1, 'visible' => 0, 'default' => 0],
         'longitude'            => ['type' => 'double(24,8)', 'label' => 'Longitude',             'enabled' => 1, 'position' => 190, 'notnull' => 1, 'visible' => 0, 'default' => 0],
@@ -207,9 +207,9 @@ class Address extends SaturneObject
     public string $town;
 
     /**
-     * @var int|null Zip
+     * @var string|null Zip
      */
-    public ?int $zip = 0;
+    public ?string $zip = '';
 
     /**
      * @var string|null Address
@@ -285,7 +285,7 @@ class Address extends SaturneObject
         $regionAndState = getState($this->fk_department, 'all', 0, 1);
         $region         = is_array($regionAndState) && !empty($regionAndState['region']) ? $regionAndState['region'] : '';
         $state          = is_array($regionAndState) && !empty($regionAndState['label']) ? $regionAndState['label'] : '';
-        $parameters     = (dol_strlen($country) > 0 ? $country . ',+' : '') . (dol_strlen($region) > 0 ? $region . ',+' : '') . (dol_strlen($state) > 0 ? $state . ',+' : '') . (dol_strlen($this->town) > 0 ? $this->town . ',+' : '') . ($this->zip > 0 ? $this->zip . ',+' : '') . (dol_strlen($this->address) > 0 ? $this->address : '');
+        $parameters     = (dol_strlen($country) > 0 ? $country . ',+' : '') . (dol_strlen($region) > 0 ? $region . ',+' : '') . (dol_strlen($state) > 0 ? $state . ',+' : '') . (dol_strlen($this->town) > 0 ? $this->town . ',+' : '') . (dol_strlen($this->zip) > 0 ? $this->zip . ',+' : '') . (dol_strlen($this->address) > 0 ? $this->address : '');
         $parameters     = str_replace(' ', '+', $parameters);
 
         $context  = stream_context_create(["http" => ["header" => "User-Agent:" . $_SERVER['HTTP_USER_AGENT']]]);
@@ -301,7 +301,7 @@ class Address extends SaturneObject
             $this->osm_type     = $address->osm_type ?? '';
             $this->osm_id       = $address->osm_id ?? 0;
             $this->osm_category = $address->osm_category ?? '';
-            $this->zip          = $this->zip > 0 ? $this->zip : $address->address->postcode;
+            $this->zip          = dol_strlen($this->zip) > 0 ? $this->zip : $address->address->postcode;
         }
 
         return parent::create($user, $notrigger);

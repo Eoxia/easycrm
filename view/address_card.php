@@ -53,7 +53,7 @@ $addressCountry = GETPOST('fk_country', 'int');
 $addressRegion  = GETPOST('fk_region', 'int');
 $addressState   = GETPOST('fk_state', 'int');
 $addressTown    = GETPOST('town');
-$addressZip     = GETPOST('zip', 'int');
+$addressZip     = GETPOST('zip');
 $addressAddress = GETPOST('address');
 
 // Get parameters
@@ -114,7 +114,7 @@ if (empty($reshook)) {
 			$object->fk_region     = $addressRegion;
 			$object->fk_department = $addressState;
 			$object->town          = $addressTown;
-			$object->zip           = (int) $addressZip;
+			$object->zip           = $addressZip;
 			$object->address       = $addressAddress;
 			$object->element_type  = $objectType;
 			$object->element_id    = $id;
@@ -163,7 +163,7 @@ if (empty($reshook)) {
         $favoriteAddressId = GETPOST('favorite_id');
 
         $objectLinked->fetch($id);
-        
+
         if (isset($objectLinked->array_options['options_' . $objectType . 'address']) && dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) > 0) {
             $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $favoriteAddressId ? 0 : $favoriteAddressId;
             $objectLinked->update($user);

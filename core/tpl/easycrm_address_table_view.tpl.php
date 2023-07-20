@@ -90,7 +90,7 @@ if (is_array($addresses) && !empty($addresses)) {
 		print '</td>';
 
 		print '<td class="center">';
-		print $element->zip > 0 ? $element->zip : $langs->trans('N/A');
+		print dol_strlen($element->zip) > 0 ? $element->zip : $langs->trans('N/A');
 		print '</td>';
 
 		print '<td class="center">';
