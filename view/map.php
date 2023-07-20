@@ -255,11 +255,11 @@ foreach ($allObjects as $singleObject) {
 }
 // Object
 print '<div class="divsearchfield">' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
-print $form->selectarray('filter_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $fromId > 0);
+print $form->selectarray('filter_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $fromId > 0) . '</div>';
 
 // Type
 print '<div class="divsearchfield">' . $langs->trans('Type'). ': ';
-print saturne_select_dictionary('filter_type', 'c_address_type', 'ref', 'label', $filterType, 1);
+print saturne_select_dictionary('filter_type', 'c_address_type', 'ref', 'label', $filterType, 1) . '</div>';
 
 // Country
 print '<div class="divsearchfield">' . $langs->trans('Country'). ': ';
@@ -267,7 +267,7 @@ print $form->select_country($filterCountry, 'filter_country', '', 0, 'maxwidth10
 
 // Region
 print '<div class="divsearchfield">' . $langs->trans('Region'). ': ';
-$formCompany->select_region($filterRegion, 'filter_region') . '</div>';
+print $formCompany->select_region($filterRegion, 'filter_region') . '</div>';
 
 // Department
 print '<div class="divsearchfield">' . $langs->trans('State'). ': ';
@@ -281,14 +281,13 @@ print '<input class="flat searchstring maxwidth200" type="text" name="filter_tow
 if (isModEnabled('categorie') && $user->rights->categorie->lire && $fromId <= 0) {
     if (in_array($objectType, Categorie::$MAP_ID_TO_CODE)) {
         print '<div class="divsearchfield">';
-
         print $langs->trans(ucfirst($objectInfos['langfile']) . 'CategoriesShort') . '</br>' . $formCategory->getFilterBox($objectType, $filterCat) . '</div>';
     }
 }
 
 // Morefilter buttons
 print '<div class="divsearchfield">';
-print $form->showFilterButtons() . '</div> </div> </div>';
+print $form->showFilterButtons() . '</div></div>';
 
 print '</form>';
 
