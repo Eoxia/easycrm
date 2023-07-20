@@ -25,6 +25,7 @@ if ($action == 'add') {
 			$thirdparty->email        = trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL));
 			$thirdparty->url          = trim(GETPOST('url', 'custom', 0, FILTER_SANITIZE_URL));
 			$thirdparty->note_private = GETPOST('note_private');
+            $thirdparty->country_id   = $mysoc->country_id;
 
 			$thirdpartyID = $thirdparty->create($user);
 			if ($thirdpartyID > 0) {
@@ -60,10 +61,13 @@ if ($action == 'add') {
 		}
 
 		if (!empty(GETPOST('title'))) {
-			$project->socid      = !empty($thirdpartyID) ? $thirdpartyID : '';
-			$project->ref        = GETPOST('ref');
-			$project->title      = GETPOST('title');
-			$project->opp_status = GETPOST('opp_status', 'int');
+            $project->socid      = !empty($thirdpartyID) ? $thirdpartyID : '';
+            $project->ref        = GETPOST('ref');
+            $project->title      = GETPOST('title');
+            $project->opp_status = GETPOST('opp_status', 'int');
+
+            $extrafields->fetch_name_optionals_label($project->table_element);
+            $extrafields->setOptionalsFromPost([], $project);
 
 			switch ($project->opp_status) {
 				case 2:
