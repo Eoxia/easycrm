@@ -14,11 +14,12 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 CREATE TABLE llx_c_refusal_reason(
-    rowid       integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    entity      integer default 1,
-    ref         varchar(128),
-    label       varchar(255),
-    description text,
-    active      tinyint(4) DEFAULT 1,
-    position    integer DEFAULT 0
+    rowid        integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    entity       integer default 1,
+    ref          varchar(128),
+    label        varchar(255),
+    description  text,
+    element_type varchar(255),
+    active       tinyint(4) DEFAULT 1,
+    position     integer DEFAULT 0
 ) ENGINE=innodb;

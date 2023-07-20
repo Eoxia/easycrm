@@ -17,7 +17,7 @@
 
 /**
  * \file    class/easycrmdashboard.class.php
- * \ingroup dolismq
+ * \ingroup easycrm
  * \brief   Class file for manage EasycrmDashboard.
  */
 
@@ -49,61 +49,66 @@ class EasycrmDashboard
 	 */
 	public function load_dashboard(): array
 	{
-		$array['StatusPropal']['graphs'][0] = $this->getDataFromExtrafieldsAndDictionnary('PropalStatusCommRepartition', 'c_status_propal');
-		$array['StatusPropal']['graphs'][1] = $this->getDataFromExtrafieldsAndDictionnary('PropalRefusalReasonRepartition', 'c_refusal_reason', 'propal', 'commrefusal');
+		$statusCommRepartition    = self::getDataFromExtrafieldsAndDictionary('PropalStatusCommRepartition', 'c_commercial_status');
+		$refusalReasonRepartition = self::getDataFromExtrafieldsAndDictionary('PropalRefusalReasonRepartition', 'c_refusal_reason', 'commrefusal');
+
+		$array['propal']['graphs'] = [$statusCommRepartition, $refusalReasonRepartition];
 
 		return $array;
 	}
 
 	/**
-	 * Get repartition of a dataset according to extrafields and dictionnary
+	 * Get repartition of a dataset according to extrafields and dictionary
 	 *
-	 * @return array     Graph datas (label/color/type/title/data etc..).
+	 * @param  string    $title      Title of the graph
+	 * @param  string    $dictionary Dictionary with every data
+	 * @param  string    $fieldName  Extrafields where we can set the status
+	 * @param  string    $class      Class linked to the extrafields
+	 * @return array                 Graph datas (label/color/type/title/data etc..).
 	 * @throws Exception
 	 */
-	public function getDataFromExtrafieldsAndDictionnary($title, $dico, $class = 'propal', $extrafield = 'commstatus'): array
+	public function getDataFromExtrafieldsAndDictionary(string $title, string $dictionary, string $fieldName = 'commstatus', string $class = 'propal'): array
 	{
 		global $langs;
 
 		require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 		require_once DOL_DOCUMENT_ROOT . '/comm/propal/class/propal.class.php';
 
-		require_once __DIR__ . '/../../saturne/lib/object.lib.php';
-
 		$extrafields = new ExtraFields($this->db);
 
 		$propals     = saturne_fetch_all_object_type($class);
-		$extralabels = $extrafields->fetch_name_optionals_label($class);
+		$extraLabels = $extrafields->fetch_name_optionals_label($class);
 
 		// Graph Title parameters.
 		$array['title'] = $langs->transnoentities($title);
-		$array['picto'] = 'fontawesome_fa-file-signature_fas_#63ACC9';
+		$array['picto'] = $class;
 
 		// Graph parameters.
-		$array['width']   = 800;
+		$array['width']   = '100%';
 		$array['height']  = 400;
 		$array['type']    = 'pie';
 		$array['dataset'] = 1;
 
-		$dictionnariesData = saturne_fetch_dictionary($dico);
+		$dictionaries = saturne_fetch_dictionary($dictionary);
 
-		$i = 1;
-		$array['labels'][0] = ['label' => 'N/A', 'color' => '999999'];
+		$i                  = 0;
+		$arrayNbDataByLabel = [];
 
-		if (is_array($dictionnariesData) && !empty($dictionnariesData)) {
-			foreach ($dictionnariesData as $data) {
+		$array['labels'][$i] = ['label' => 'N/A', 'color' => '#999999'];
+
+		if (is_array($dictionaries) && !empty($dictionaries)) {
+			foreach ($dictionaries as $dictionaryValue) {
 				$arrayNbDataByLabel[$i] = 0;
-				$array['labels'][$i] = [
-					'label' => $langs->transnoentities($data->label),
+				$array['labels'][++$i]  = [
+					'label' => $langs->transnoentities($dictionaryValue->label),
 					'color' => $this->getColorRange($i)
 				];
-				$i++;
 			}
 
 			if (is_array($propals) && !empty($propals)) {
 				foreach ($propals as $propal) {
-					$propal->fetch_optionals($propal->id, $extralabels[$extrafield]);
-					$commStatus = $propal->array_options['options_' . $extrafield];
+					$propal->fetch_optionals($propal->id, $extraLabels[$fieldName]);
+					$commStatus = $propal->array_options['options_' . $fieldName];
 					$arrayNbDataByLabel[$commStatus]++;
 				}
 				ksort($arrayNbDataByLabel);
@@ -121,7 +126,7 @@ class EasycrmDashboard
 	 * @param  int    $key Key to find in color array
 	 * @return string
 	 */
-	public function getColorRange($key)
+	public function getColorRange(int $key): string
 	{
 		$colorArray = ['#f44336', '#e81e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#9e9e9e', '#607d8b'];
 		return $colorArray[$key % count($colorArray)];

@@ -15,22 +15,22 @@
 
 -- 1.1.0
 
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(1, 0, 'Received', 'Received', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(2, 0, 'Sent', 'Sent', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(3, 0, 'OnHold', 'OnHold', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(4, 0, 'Reminder1', 'Reminder1', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(5, 0, 'Reminder2', 'Reminder2', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(6, 0, 'Reminder3', 'Reminder3', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(7, 0, 'Abandoned', 'Abandoned', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(8, 0, 'Unreachable', 'Unreachable', '', 1);
-INSERT INTO `llx_c_status_propal` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(9, 0, 'ToCallBack', 'ToCallBack', '', 1);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(1, 0, 'Received', 'Received', '', 'propal', 1, 1);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(2, 0, 'Sent', 'Sent', '', 'propal', 1, 10);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(3, 0, 'OnHold', 'OnHold', '', 'propal', 1, 20);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(4, 0, 'Reminder1', 'Reminder1', '', 'propal', 1, 30);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(5, 0, 'Reminder2', 'Reminder2', '', 'propal', 1, 40);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(6, 0, 'Reminder3', 'Reminder3', '', 'propal', 1, 50);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(7, 0, 'Abandoned', 'Abandoned', '', 'propal', 1, 60);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(8, 0, 'Unreachable', 'Unreachable', '', 'propal', 1, 70);
+INSERT INTO `llx_c_commercial_status` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(9, 0, 'ToCallBack', 'ToCallBack', '', 'propal', 1, 80);
 
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(1, 0, 'TooHard', 'TooHard', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(2, 0, 'Interface', 'Interface', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(3, 0, 'TooCheap', 'TooCheap', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(4, 0, 'TooExpensive', 'TooExpensive', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(5, 0, 'ToSignElsewhere', 'ToSignElsewhere', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(6, 0, 'NotAProjectAnymore', 'NotAProjectAnymore', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(7, 0, 'GoesBackOnExcel', 'GoesBackOnExcel', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(8, 0, 'DontWantToSay', 'DontWantToSay', '', 1);
-INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `active`) VALUES(9, 0, 'Other', 'Other', '', 1);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(1, 0, 'TooHard', 'TooHard', '', 'propal', 1, 1);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(2, 0, 'Interface', 'Interface', '', 'propal', 1, 10);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(3, 0, 'TooCheap', 'TooCheap', '', 'propal', 1, 20);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(4, 0, 'TooExpensive', 'TooExpensive', '', 'propal', 1, 30);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(5, 0, 'ToSignElsewhere', 'ToSignElsewhere', '', 'propal', 1, 40);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(6, 0, 'NotAProjectAnymore', 'NotAProjectAnymore', '', 'propal', 1, 50);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(7, 0, 'GoesBackOnExcel', 'GoesBackOnExcel', '', 'propal', 1, 60);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(8, 0, 'DontWantToSay', 'DontWantToSay', '', 'propal', 1, 70);
+INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(9, 0, 'Other', 'Other', '', 'propal', 1, 80);
