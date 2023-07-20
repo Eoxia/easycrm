@@ -53,7 +53,8 @@ saturne_load_langs(['categories']);
 
 // Get map filters parameters
 $filterType    = GETPOST('filter_type','aZ');
-$filterId      = GETPOST('from_id');
+$fromId        = GETPOST('from_id');
+$filterId      = GETPOST('filter_id');
 $objectType    = GETPOST('from_type', 'alpha');
 $filterCountry = GETPOST('filter_country');
 $filterRegion  = GETPOST('filter_region');
@@ -62,7 +63,7 @@ $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
 
 // Initialize technical object
-$objectInfos  = get_objects_metadata($objectType);
+$objectInfos  = saturne_get_objects_metadata($objectType);
 $className    = $objectInfos['class_name'];
 $objectLinked = new $className($db);
 $object       = new Address($db);
@@ -122,6 +123,7 @@ saturne_header(0, '', $title, $helpUrl);
  */
 
 // Filter on address
+$filterId      = $fromId > 0 ? $fromId : $filterId;
 $IdFilter      = ($filterId > 0 ? 'element_id = "' . $filterId . '" AND ' : '');
 $typeFilter    = (dol_strlen($filterType) > 0 ? 'type = "' . $filterType . '" AND ' : '');
 $townFilter    = (dol_strlen($filterTown) > 0 ? 'town = "' . $filterTown . '" AND ' : '');
@@ -136,7 +138,7 @@ foreach($filterCat as $catId) {
 $allCat        = rtrim($allCat, ',');
 $catFilter     = (dol_strlen($allCat) > 0 ? 'cp.fk_categorie IN (' . $allCat . ') AND ' : '');
 
-$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . $catFilter . 'element_type = "'. $objectType .'"'];
+$filter        = ['customsql' => $IdFilter . $typeFilter . $townFilter . $countryFilter . $regionFilter . $stateFilter . $catFilter . 'element_type = "'. $objectType .'" AND status >= 0'];
 
 $icon          = dol_buildpath('/easycrm/img/dot.png', 1);
 $objectList    = [];
@@ -229,8 +231,8 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 	}
 }
 
-if ($filterId > 0) {
-    $objectLinked->fetch($filterId);
+if ($fromId > 0) {
+    $objectLinked->fetch($fromId);
 
     saturne_get_fiche_head($objectLinked, 'map', $title);
 
@@ -253,7 +255,7 @@ foreach ($allObjects as $singleObject) {
 }
 // Object
 print '<div class="divsearchfield">' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
-print $form->selectarray('from_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $filterId > 0);
+print $form->selectarray('filter_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $fromId > 0);
 
 // Type
 print '<div class="divsearchfield">' . $langs->trans('Type'). ': ';
@@ -276,7 +278,7 @@ print '<div class="divsearchfield">' . $langs->trans('Town'). ': ';
 print '<input class="flat searchstring maxwidth200" type="text" name="filter_town" value="' . dol_escape_htmltag($filterTown) . '"></div>';
 
 //Categories project
-if (isModEnabled('categorie') && $user->rights->categorie->lire) {
+if (isModEnabled('categorie') && $user->rights->categorie->lire && $fromId <= 0) {
     if (in_array($objectType, Categorie::$MAP_ID_TO_CODE)) {
         print '<div class="divsearchfield">';
 

@@ -53,11 +53,11 @@ $addressCountry = GETPOST('fk_country', 'int');
 $addressRegion  = GETPOST('fk_region', 'int');
 $addressState   = GETPOST('fk_state', 'int');
 $addressTown    = GETPOST('town');
-$addressZip     = GETPOST('zip', 'int');
+$addressZip     = GETPOST('zip');
 $addressAddress = GETPOST('address');
 
 // Get parameters
-$id          = GETPOST('from_id', 'int');
+$fromId      = GETPOST('from_id', 'int');
 $objectType  = GETPOST('from_type', 'alpha');
 $ref         = GETPOST('ref', 'alpha');
 $action      = GETPOST('action', 'aZ09');
@@ -66,19 +66,16 @@ $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
-$objectInfos   = get_objects_metadata($objectType);
-$className     = $objectInfos['class_name'];
-$objectLinked  = new $className($db);
-$object        = new Address($db);
+$objectInfos  = saturne_get_objects_metadata($objectType);
+$className    = $objectInfos['class_name'];
+$objectLinked = new $className($db);
+$object       = new Address($db);
 
 // Initialize view objects
 $form        = new Form($db);
 $formcompany = new FormCompany($db);
 
 $hookmanager->initHooks([$objectType . 'address', $objectType . 'address', 'easycrmglobal', 'globalcard']); // Note that conf->hooks_modules contains array
-
-// Load object
-include DOL_DOCUMENT_ROOT . '/core/actions_fetchobject.inc.php'; // Must be included, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 
 // Security check - Protection if external user
 $permissiontoread   = $user->rights->easycrm->address->read;
@@ -90,7 +87,7 @@ saturne_check_access($permissiontoread);
 *  Actions
 */
 
-$parameters = ['id' => $id];
+$parameters = ['id' => $fromId];
 $reshook    = $hookmanager->executeHooks('doActions', $parameters, $objectLinked, $action); // Note that $action and $objectLinked may have been modified by some hooks
 if ($reshook < 0) {
 	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
@@ -107,7 +104,7 @@ if (empty($reshook)) {
 	if ($action == 'add_address' && $permissiontoadd && !$cancel) {
 		if (empty($addressName) || empty($addressType) || empty($addressCountry) || empty($addressTown)) {
 			setEventMessages($langs->trans('EmptyValue'), [], 'errors');
-			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $id . '&action=create&from_type=' . $objectType . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
+			header('Location: ' . $_SERVER['PHP_SELF'] .  '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '&name=' . $addressName . '&address_type=' . $addressType . '&fk_country=' . $addressCountry . '&fk_region=' . $addressRegion . '&fk_state=' . $addressState . '&address_type=' . $addressType . '&town=' . $addressTown . '&zip=' . $addressZip . '&address=' . $addressAddress);
 			exit;
 		} else {
             $object->ref           = $object->getNextNumRef();
@@ -117,16 +114,16 @@ if (empty($reshook)) {
 			$object->fk_region     = $addressRegion;
 			$object->fk_department = $addressState;
 			$object->town          = $addressTown;
-			$object->zip           = (int) $addressZip;
+			$object->zip           = $addressZip;
 			$object->address       = $addressAddress;
 			$object->element_type  = $objectType;
-			$object->element_id    = $id;
+			$object->element_id    = $fromId;
 
 			$result = $object->create($user);
 
 			if ($result > 0) {
 				if ($object->status == $object::STATUS_NOT_FOUND) {
-					setEventMessages($langs->trans('CouldntFindDataOnOSM'), []);
+					setEventMessages($langs->trans('CouldntFindDataOnOSM'), [], 'errors');
 				} else if ($object->status == $object::STATUS_ACTIVE) {
 					setEventMessages($langs->trans('DataSuccessfullyRetrieved'), []);
 				}
@@ -135,8 +132,8 @@ if (empty($reshook)) {
 				setEventMessages($langs->trans('ErrorCreateAddress'), [], 'errors');
 			}
 			$urltogo = str_replace('__ID__', $result, $backtopage);
-			$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $id, $urltogo); // New method to autoselect project after a New on another form object creation.
-			header('Location: ' . $urltogo);
+			$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $fromId, $urltogo); // New method to autoselect project after a New on another form object creation.
+            header('Location: ' . $urltogo);
 			$action = '';
 		}
 	}
@@ -156,14 +153,16 @@ if (empty($reshook)) {
 				setEventMessages($langs->trans('ErrorDeleteAddress'), [], 'errors');
 			}
 			$urltogo = str_replace('__ID__', $result, $backtopage);
-			$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $id, $urltogo); // New method to autoselect project after a New on another form object creation.
-			header('Location: ' . $urltogo);
+			$urltogo = preg_replace('/--IDFORBACKTOPAGE--/', $fromId, $urltogo); // New method to autoselect project after a New on another form object creation.
+            header('Location: ' . $urltogo);
 			$action = '';
 		}
 	}
 
     if ($action == 'toggle_favorite') {
         $favoriteAddressId = GETPOST('favorite_id');
+
+        $objectLinked->fetch($fromId);
 
         if (isset($objectLinked->array_options['options_' . $objectType . 'address']) && dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) > 0) {
             $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $favoriteAddressId ? 0 : $favoriteAddressId;
@@ -181,12 +180,16 @@ $helpUrl = 'FR:Module_EasyCRM';
 
 saturne_header(0,'', $title, $helpUrl);
 
-if ($action == 'create' && $id > 0) {
+if ($action == 'create' && $fromId > 0) {
+    $objectLinked->fetch($fromId);
+
+    saturne_get_fiche_head($objectLinked, 'address', $title);
+
     print load_fiche_titre($langs->trans("NewAddress"), $backtopage, $object->picto);
 
     print dol_get_fiche_head();
 
-    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $id . '&from_type=' . $objectType . '">';
+    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&from_type=' . $objectType . '">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<input type="hidden" name="action" value="add_address">';
 	if ($backtopage) {
@@ -228,8 +231,8 @@ if ($action == 'create' && $id > 0) {
     print dol_get_fiche_end();
 
     print $form->buttonsSaveCancel('Create');
-} else if ($id > 0 || !empty($ref) && empty($action)) {
-    $objectLinked->fetch($id);
+} else if ($fromId > 0 || !empty($ref) && empty($action)) {
+    $objectLinked->fetch($fromId);
 
     saturne_get_fiche_head($objectLinked, 'address', $title);
 

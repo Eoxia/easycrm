@@ -41,9 +41,8 @@ class modEasyCRM extends DolibarrModules
 		global $langs, $conf;
 		$this->db = $db;
 
-        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php') && file_exists(__DIR__ . '/../../../saturne/lib/object.lib.php')) {
+        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php')) {
 			require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
-			require_once __DIR__ . '/../../../saturne/lib/object.lib.php';
             saturne_load_langs(['easycrm@easycrm']);
         } else {
             $this->error++;
@@ -236,7 +235,7 @@ class modEasyCRM extends DolibarrModules
 
 		$pictopath       = dol_buildpath('/custom/easycrm/img/easycrm_color.png', 1);
 		$pictoEasycrm    = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
-		$objectsMetadata = get_objects_metadata();
+		$objectsMetadata = saturne_get_objects_metadata();
 		$this->tabs      = [];
 
 		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
@@ -448,7 +447,7 @@ class modEasyCRM extends DolibarrModules
         include_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
         $extrafields = new ExtraFields($this->db);
 
-        $objectsMetadata = get_objects_metadata();
+        $objectsMetadata = saturne_get_objects_metadata();
 
         $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', 0, '', 2);
         $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);

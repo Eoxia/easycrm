@@ -24,7 +24,7 @@
 /**
  * The following vars must be defined:
  * Global     : $conf, $db, $langs, $user,
- * Parameters : $objectType, $id, $backtopage,
+ * Parameters : $objectType, $fromId, $backtopage,
  * Objects    : $objectLinked, $address
  * Variable   : $addressType, $addresses, $moduleNameLowerCase, $permissiontoadd
  */
@@ -90,7 +90,7 @@ if (is_array($addresses) && !empty($addresses)) {
 		print '</td>';
 
 		print '<td class="center">';
-		print $element->zip > 0 ? $element->zip : $langs->trans('N/A');
+		print dol_strlen($element->zip) > 0 ? $element->zip : $langs->trans('N/A');
 		print '</td>';
 
 		print '<td class="center">';
@@ -100,7 +100,7 @@ if (is_array($addresses) && !empty($addresses)) {
 		// Actions
 		print '<td class="center">';
 		if ($permissiontodelete) {
-			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $id . '&module_name=' . $moduleName . '&from_type=' . $objectLinked->element . '">';
+			print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&module_name=' . $moduleName . '&from_type=' . $objectLinked->element . '">';
 			print '<input type="hidden" name="token" value="' . newToken() . '">';
 			print '<input type="hidden" name="action" value="delete_address">';
 			print '<input type="hidden" name="addressID" value="' . $element->id . '">';
@@ -121,7 +121,7 @@ if (is_array($addresses) && !empty($addresses)) {
 }
 
 if ($permissiontoadd) {
-	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $id . '&action=create&from_type=' . $objectType . '">';
+	print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?from_id=' . $fromId . '&action=create&from_type=' . $objectType . '">';
 	print '<input type="hidden" name="token" value="' . newToken() . '">';
 	if (!empty($backtopage)) {
 		print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
