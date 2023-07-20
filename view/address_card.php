@@ -162,6 +162,8 @@ if (empty($reshook)) {
     if ($action == 'toggle_favorite') {
         $favoriteAddressId = GETPOST('favorite_id');
 
+        $objectLinked->fetch($id);
+        
         if (isset($objectLinked->array_options['options_' . $objectType . 'address']) && dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) > 0) {
             $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $favoriteAddressId ? 0 : $favoriteAddressId;
             $objectLinked->update($user);
