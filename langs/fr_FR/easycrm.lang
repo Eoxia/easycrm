@@ -84,6 +84,7 @@ NoAddresses                  = Aucune adresse
 Map                          = Carte
 FavoriteAddress              = Adresse favorite
 NewAddress                   = Nouvelle adresse
+AddressType                  = Type d'adresse
 Workplace                    = Lieu de travail
 PrincipalResidence           = Résidence principale
 SecondaryResidence           = Résidence secondaire
