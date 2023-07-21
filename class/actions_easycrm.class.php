@@ -73,7 +73,7 @@ class ActionsEasycrm
     public function addMoreBoxStatsCustomer(array $parameters, CommonObject $object, string $action): int
     {
         global $conf, $langs, $user;
-        
+
         // Do something only for the current context
         if ($parameters['currentcontext'] == 'thirdpartycomm') {
             if (isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
@@ -328,7 +328,7 @@ class ActionsEasycrm
                 $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
 
                 $actiomcomm = new ActionComm($db);
-                
+
                 $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
                 if (is_object($parameters['obj']) && !empty($parameters['obj'])) {
                     if (!empty($parameters['obj']->id)) {
@@ -359,6 +359,25 @@ class ActionsEasycrm
                     </script>
                     <?php
                 }
+            }
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
+
+    /**
+     * Overloading the formConfirm hook
+     *
+     * @param  array        $parameters Hook metadatas (context, etc...)
+     * @param  CommonObject $object
+     * @return int                      0 < on error, 0 on success, 1 to replace standard code
+     * @throws Exception
+     */
+    public function formConfirm(array $parameters, CommonObject $object): int
+    {
+        if ($parameters['currentcontext'] == 'propalcard') {
+            if (empty($object->thirdparty->id)) {
+                $object->fetch_thirdparty();
             }
         }
 
