@@ -71,13 +71,9 @@ class EasycrmDashboard
 	{
 		global $langs;
 
-		require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 		require_once DOL_DOCUMENT_ROOT . '/comm/propal/class/propal.class.php';
 
-		$extrafields = new ExtraFields($this->db);
-
-		$propals     = saturne_fetch_all_object_type($class);
-		$extraLabels = $extrafields->fetch_name_optionals_label($class);
+		$propals = saturne_fetch_all_object_type($class);
 
 		// Graph Title parameters.
 		$array['title'] = $langs->transnoentities($title);
@@ -98,8 +94,9 @@ class EasycrmDashboard
 
 		if (is_array($dictionaries) && !empty($dictionaries)) {
 			foreach ($dictionaries as $dictionaryValue) {
-				$arrayNbDataByLabel[$i] = 0;
-				$array['labels'][++$i]  = [
+                ++$i;
+                $arrayNbDataByLabel[$i] = 0;
+				$array['labels'][$i]    = [
 					'label' => $langs->transnoentities($dictionaryValue->label),
 					'color' => $this->getColorRange($i)
 				];
@@ -107,9 +104,13 @@ class EasycrmDashboard
 
 			if (is_array($propals) && !empty($propals)) {
 				foreach ($propals as $propal) {
-					$propal->fetch_optionals($propal->id, $extraLabels[$fieldName]);
-					$commStatus = $propal->array_options['options_' . $fieldName];
-					$arrayNbDataByLabel[$commStatus]++;
+					$propal->fetch_optionals();
+                    if (!empty($propal->array_options['options_' . $fieldName])) {
+                        $commStatus = $propal->array_options['options_' . $fieldName];
+                        $arrayNbDataByLabel[$commStatus]++;
+                    } else {
+                        $arrayNbDataByLabel[0]++;
+                    }
 				}
 				ksort($arrayNbDataByLabel);
 			}
