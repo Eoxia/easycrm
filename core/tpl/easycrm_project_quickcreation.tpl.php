@@ -70,6 +70,14 @@ if ($permissiontoaddproject) {
 		print '</tr>';
 	}
 
+    // Other attributes.
+    if ($conf->global->EASYCRM_PROJECT_EXTRAFIELDS_VISIBLE > 0) {
+        $object = $project;
+        $extrafields->fetch_name_optionals_label($object->table_element);
+        include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_add.tpl.php';
+        $object = '';
+    }
+
 	// Categories
 	if (isModEnabled('categorie') && $conf->global->EASYCRM_PROJECT_CATEGORIES_VISIBLE > 0) {
 		print '<tr><td>' . $langs->trans('Categories') . '</td><td>';

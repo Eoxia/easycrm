@@ -29,16 +29,17 @@ EasyCRMDescriptionLong = Simplification de la CRM
 
 # Data - Donnée
 QuickCreation            = Ajout rapide
-QuickCreations           = ajouts rapide
+QuickCreations           = ajouts rapides
 QuickThirdPartyCreation  = Ajout rapide de tiers
 QuickThirdPartyCreations = ajouts rapides de tiers
 QuickProjectCreation     = Ajout rapide d'opportunité ou de projet
 QuickProjectCreations    = ajouts rapides d'opportunité ou de projet
 QuickContactCreation     = Ajout rapide de contact/adresse
-QuickContactCreations    = ajouts rapide de contact/adresse
+QuickContactCreations    = ajouts rapides de contact/adresse
 QuickTaskCreations       = ajouts rapides de tâche
 CommercialFollowUp       = SC
 CommercialTask           = Tâche commerciale
+ProjectPhone             = Téléphone projet
 
 
 
@@ -48,7 +49,7 @@ CommercialTask           = Tâche commerciale
 
 # Data - Donnée
 QuickEventCreation                      = Ajout rapide d'événement
-QuickEventCreations                     = ajouts rapide d'événements
+QuickEventCreations                     = ajouts rapides d'événements
 CommercialRelaunching                   = Relance commerciale
 CommercialsRelaunching                  = Relances commerciales
 LastCommercialReminderDate              = Date dernière relance commerciale
@@ -65,9 +66,61 @@ OpportunityStatusDescription = Selection du statut d'opportunité <br> Valeur pa
 OpportunityAmountDescription = Selection du montant d'opportunité <br> Valeur par défaut : <b> 3000 € </b>
 ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par défaut : <b> Prospect </b>
 
+
+#
+# Address - Adresse
+#
+
+# Data - Donnée
+Addresses                    = Adresses
+AddAnAddress                 = Ajouter une adresse
+AddressCreated               = Adresse créée
+AddressDeleted               = Adresse supprimée
+ErrorCreateAddress           = Une erreur est survenue lors de la création de l'adresse
+ErrorDeleteAddress           = Une erreur est survenue lors de la suppression de l'adresse
+CouldntFindDataOnOSM         = L'adresse n'a pas été trouvée sur OpenStreetMap
+DataSuccessfullyRetrieved    = Les données de l'adresse ont été récupérées avec succès
+NoAddresses                  = Aucune adresse
+Map                          = Carte
+FavoriteAddress              = Adresse favorite
+NewAddress                   = Nouvelle adresse
+AddressType                  = Type d'adresse
+Workplace                    = Lieu de travail
+PrincipalResidence           = Résidence principale
+SecondaryResidence           = Résidence secondaire
+Office                       = Bureau
+BranchOffice                 = Succursale
+WorkSite                     = Chantier
+Factory                      = Usine
+Headquarters                 = Siège social
+DisplayAllAddress            = Afficher une seule adresse par objet
+DisplayAllAddressDescription = Afficher l'adresse principale sur la carte au lieu de toutes les adresses liées à l'objet
+AddressesList                = Liste des adresses
+
+
 #
 # Other - Autre
 #
 
 # Data - Donnée
-LastProjects = Les %s derniers projets
+LastProjects                   = Les %s derniers projets
+Sent                           = Envoyé
+Reminder1                      = Relance 1
+Reminder2                      = Relance 2
+Reminder3                      = Relance 3
+Abandoned                      = Abandonné
+Unreachable                    = Injoignable
+ToCallBack                     = A rappeler
+TooHard                        = Trop compliqué
+TooCheap                       = Pas assez cher
+TooExpensive                   = Trop cher
+ToSignElsewhere                = A signer ailleurs
+NotAProjectAnymore             = Ce n'est plus un projet
+GoesBackOnExcel                = Repart sur Excel
+DontWantToSay                  = Ne veulent pas le dire
+CommercialStatus               = Statut commercial
+CommercialStatusHelp           = Statut commercial de la proposition commerciale
+RefusalReason                  = Raison refus
+RefusalReasonHelp              = Raison du refus de la proposition commerciale
+PropalStatusCommRepartition    = Répartition du statut des propositions commerciale ouvertes
+PropalRefusalReasonRepartition = Répartition des raisons de refus des propositions commerciale

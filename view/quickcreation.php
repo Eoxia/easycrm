@@ -48,7 +48,7 @@ if (isModEnabled('categorie')) {
 }
 
 // Global variables definitions
-global $conf, $db, $hookmanager, $langs, $user;
+global $conf, $db, $hookmanager, $mysoc, $langs, $user;
 
 // Load translation files required by the page
 saturne_load_langs(['categories']);
@@ -60,6 +60,7 @@ $cancel      = GETPOST('cancel', 'aZ09');
 $backtopage  = GETPOST('backtopage', 'alpha');
 
 // Initialize technical objects
+$extrafields = new ExtraFields($db);
 if (isModEnabled('project')) {
     $project = new Project($db);
     $task = new Task($db);
