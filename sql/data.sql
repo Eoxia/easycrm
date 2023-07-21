@@ -35,13 +35,13 @@ INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `descript
 INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(8, 0, 'DontWantToSay', 'DontWantToSay', '', 'propal', 1, 70);
 INSERT INTO `llx_c_refusal_reason` (`rowid`, `entity`, `ref`, `label`, `description`, `element_type`, `active`, `position`) VALUES(9, 0, 'Other', 'Other', '', 'propal', 1, 80);
 
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (1, 0, 'Workplace', 'Workplace', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (2, 0, 'Home', 'Home', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (3, 0, 'PrincipalResidence', 'PrincipalResidence', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (4, 0, 'SecondaryResidence', 'SecondaryResidence', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (5, 0, 'Office', 'Office', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (6, 0, 'BranchOffice', 'BranchOffice', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (7, 0, 'WorkSite', 'WorkSite', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (8, 0, 'Factory', 'Factory', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (9, 0, 'Warehouse', 'Warehouse', '', 1, 0);
-INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (10, 0, 'Headquarters', 'Headquarters', '', 1, 0);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (1, 0, 'Workplace', 'Workplace', '', 1, 1);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (2, 0, 'Home', 'Home', '', 1, 10);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (3, 0, 'PrincipalResidence', 'PrincipalResidence', '', 1, 20);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (4, 0, 'SecondaryResidence', 'SecondaryResidence', '', 1, 30);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (5, 0, 'Office', 'Office', '', 1, 40);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (6, 0, 'BranchOffice', 'BranchOffice', '', 1, 50);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (7, 0, 'WorkSite', 'WorkSite', '', 1, 60);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (8, 0, 'Factory', 'Factory', '', 1, 70);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (9, 0, 'Warehouse', 'Warehouse', '', 1, 80);
+INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (10, 0, 'Headquarters', 'Headquarters', '', 1, 90);

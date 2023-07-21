@@ -259,45 +259,54 @@ class modEasyCRM extends DolibarrModules
 			// List of tables we want to see into dictonnary editor.
 			'tabname' => [
 				MAIN_DB_PREFIX . 'c_commercial_status',
-				MAIN_DB_PREFIX . 'c_refusal_reason'
+				MAIN_DB_PREFIX . 'c_refusal_reason',
+				MAIN_DB_PREFIX . 'c_address_type'
 			],
 			// Label of tables.
 			'tablib' => [
 				'CommercialStatus',
-				'RefusalReason'
+				'RefusalReason',
+				'AddressType'
 			],
 			// Request to select fields.
 			'tabsql' => [
 				'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.element_type, f.active, f.position FROM ' . MAIN_DB_PREFIX . 'c_commercial_status as f',
-				'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.element_type, f.active, f.position FROM ' . MAIN_DB_PREFIX . 'c_refusal_reason as f'
+				'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.element_type, f.active, f.position FROM ' . MAIN_DB_PREFIX . 'c_refusal_reason as f',
+				'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.active, f.position FROM ' . MAIN_DB_PREFIX . 'c_address_type as f'
 			],
 			// Sort order.
 			'tabsqlsort' => [
+				'position ASC',
 				'position ASC',
 				'position ASC'
 			],
 			// List of fields (result of select to show dictionary).
 			'tabfield' => [
 				'ref,label,description,element_type,position',
-				'ref,label,description,element_type,position'
+				'ref,label,description,element_type,position',
+				'ref,label,description,position'
 			],
 			// List of fields (list of fields to edit a record).
 			'tabfieldvalue' => [
 				'ref,label,description,element_type,position',
-				'ref,label,description,element_type,position'
+				'ref,label,description,element_type,position',
+				'ref,label,description,position'
 			],
 			// List of fields (list of fields for insert).
 			'tabfieldinsert' => [
 				'ref,label,description,element_type,position',
-				'ref,label,description,element_type,position'
+				'ref,label,description,element_type,position',
+				'ref,label,description,position'
 			],
 			// Name of columns with primary key (try to always name it 'rowid').
 			'tabrowid' => [
+				'rowid',
 				'rowid',
 				'rowid'
 			],
 			// Condition to show each dictionary.
 			'tabcond' => [
+				$conf->easycrm->enabled,
 				$conf->easycrm->enabled,
 				$conf->easycrm->enabled
 			]
