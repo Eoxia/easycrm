@@ -466,6 +466,12 @@ class modEasyCRM extends DolibarrModules
 		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
 		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
 
+        // Invoice rec extrafields
+        $extrafieldParam     = 'socpeople:firstname|lastname:rowid::(fk_soc = ($SEL$ fk_soc FROM ' . MAIN_DB_PREFIX . 'facture_rec WHERE rowid = $ID$))';
+        $extrafieldParamSize = dol_strlen($extrafieldParam);
+        $extrafields->update('invoice_contact', 'InvoiceContact', 'sellist', '', 'facture_rec', 0, 1, 100, 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '', 1, 'InvoiceContactHelp', '', '', 0, 'easycrm@easycrm');
+        $extrafields->addExtraField('invoice_contact', 'InvoiceContact', 'sellist', 100, '', 'facture_rec', 0, 1, '', 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '', 1, 'InvoiceContactHelp', '', 0, 'easycrm@easycrm');
+
         if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
             foreach ($objectsMetadata as $objectType => $objectMetadata) {
                 $extrafieldParam     = 'easycrm_address:name:rowid::element_id=$ID$ AND element_type="' . $objectType . '" AND status>0';

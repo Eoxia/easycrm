@@ -124,3 +124,5 @@ RefusalReason                  = Raison refus
 RefusalReasonHelp              = Raison du refus de la proposition commerciale
 PropalStatusCommRepartition    = Répartition du statut des propositions commerciale ouvertes
 PropalRefusalReasonRepartition = Répartition des raisons de refus des propositions commerciale
+InvoiceContact                 = Contact de facturation
+InvoiceContactHelp             = Contact de facturation des factures récurrentes (il faut également penser à éditer le rôle du contact si cela n'a pas déjà été fait)
