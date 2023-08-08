@@ -384,4 +384,47 @@ class ActionsEasycrm
         return 0; // or return 1 to replace standard code
     }
 
+    /**
+     * Overloading the completeTabsHead function : replacing the parent's function with the one below
+     *
+     * @param  array $parameters Hook metadatas (context, etc...)
+     * @return int               0 < on error, 0 on success, 1 to replace standard code
+     */
+    public function completeTabsHead(array $parameters): int
+    {
+        global $hookmanager, $langs;
+
+        if (in_array($parameters['currentcontext'], ['invoicereccard', 'invoicereccontact'])) {
+            $nbContact = 0;
+            // Enable caching of thirdrparty count Contacts
+            require_once DOL_DOCUMENT_ROOT . '/core/lib/memory.lib.php';
+            $cacheKey      = 'count_contacts_thirdparty_' . $parameters['object']->id;
+            $dataRetrieved = dol_getcache($cacheKey);
+
+            if (!is_null($dataRetrieved)) {
+                $nbContact = $dataRetrieved;
+            } else {
+                $sql  = "SELECT COUNT(p.rowid) as nb";
+                $sql .= " FROM " . MAIN_DB_PREFIX . "socpeople as p";
+                $sql .= " WHERE p.fk_soc = " . $parameters['object']->socid;
+                $resql = $this->db->query($sql);
+                if ($resql) {
+                    $obj       = $this->db->fetch_object($resql);
+                    $nbContact = $obj->nb;
+                }
+
+                dol_setcache($cacheKey, $nbContact, 120); // If setting cache fails, this is not a problem, so we do not test result
+            }
+            $parameters['head'][1][0] = DOL_URL_ROOT . '/custom/easycrm/view/contact.php?id=' . $parameters['object']->id;
+            $parameters['head'][1][1] = $langs->trans('ContactsAddresses');
+            if ($nbContact > 0) {
+                $parameters['head'][1][1] .= '<span class="badge marginleftonlyshort">' . $nbContact . '</span>';
+            }
+            $parameters['head'][1][2] = 'contact';
+
+            $this->results = $parameters;
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
 }
