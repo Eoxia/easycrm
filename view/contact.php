@@ -107,18 +107,16 @@ if (empty($resHook)) {
     }
     if ($action == 'setref' && $permissionToAdd) {
         $result = $object->setValueFrom('titre', $ref, '', null, 'text', '', $user, 'BILLREC_MODIFY');
-    if ($result > 0) {
-        $object->title = $ref;
-        $object->ref   = $ref;
-    } else {
-        if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
+        if ($result > 0) {
+            $object->title = $ref;
+            $object->ref   = $ref;
+        } elseif ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
             $langs->load('errors');
             setEventMessages($langs->trans('ErrorRefAlreadyExists', $ref), [], 'errors');
         } else {
             setEventMessages($object->error, $object->errors, 'errors');
         }
     }
-}
 
     // Selection of new fields
     require_once DOL_DOCUMENT_ROOT . '/core/actions_changeselectedfields.inc.php';
