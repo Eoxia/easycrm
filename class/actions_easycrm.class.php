@@ -350,7 +350,7 @@ class ActionsEasycrm
             $picto     = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule');
 
             $out  = $picto;
-            $out .= '<div class="wpeo-button button-strong ' . (($object->array_options['options_notation_invoice_rec_contact'] >= 80) ? 'button-green' : 'button-red') . '">';
+            $out .= '<div class="wpeo-button button-strong ' . (($object->array_options['options_notation_invoice_rec_contact'] >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
             $out .= '<span>' . $object->array_options['options_notation_invoice_rec_contact'] . '</span>';
             $out .= '</div>';
             $out .= '<a class="reposition editfielda" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=set_notation_invoice_rec_contact&token=' . newToken() . '">';
@@ -422,7 +422,7 @@ class ActionsEasycrm
 
         if ($parameters['currentcontext'] == 'invoicereclist') {
             if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
-                $out  = '<div class="wpeo-button button-strong ' . (($parameters['obj']->options_notation_invoice_rec_contact >= 80) ? 'button-green' : 'button-red') . '">';
+                $out  = '<div class="wpeo-button button-strong ' . (($parameters['obj']->options_notation_invoice_rec_contact >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
                 $out .= '<span>' . $parameters['obj']->options_notation_invoice_rec_contact . '</span>';
                 $out .= '</div>'; ?>
 

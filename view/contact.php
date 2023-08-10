@@ -42,7 +42,7 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
 global $conf, $db, $hookmanager, $langs, $user;
 
 // Load translation files required by the page
-saturne_load_langs();
+saturne_load_langs(['bills']);
 
 // Get parameters
 $id         = (GETPOSTISSET('facid') ? GETPOST('facid', 'int') : GETPOST('id', 'int'));

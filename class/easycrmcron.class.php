@@ -32,6 +32,11 @@ class EasycrmCron
     public DoliDB $db;
 
     /**
+     * @var string Last output from end job execution
+     */
+    public string $output = '';
+
+    /**
      * Constructor
      *
      * @param DoliDB $db Database handler
@@ -49,6 +54,8 @@ class EasycrmCron
      */
     public function updateNotationInvoiceRecContacts(): int
     {
+        global $langs;
+
         // Load Dolibarr libraries
         require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture-rec.class.php';
 
@@ -62,9 +69,14 @@ class EasycrmCron
 
         if (is_array($factureRecs) &&!empty($factureRecs)) {
             foreach ($factureRecs as $factureRec) {
-                set_notation_invoice_rec_contact($factureRec);
+                $result = set_notation_invoice_rec_contact($factureRec);
+                if ($result < 0) {
+                    return -1;
+                }
             }
-            $this->output = 'test';
+            $this->output = $langs->transnoentities('NotationInvoiceRecContactsUpdated', count($factureRecs));
+        } else {
+            $this->output = $langs->transnoentities('NoInvoiceRec');
         }
         return 0;
     }

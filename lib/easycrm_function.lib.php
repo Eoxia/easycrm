@@ -25,15 +25,16 @@
  * Set notation invoice rec contact
  *
  * @param  CommonObject $object Object
+ * @return int                  -1 = error, O = did nothing, 1 = OK
  * @throws Exception
  */
-function set_notation_invoice_rec_contact(CommonObject $object)
+function set_notation_invoice_rec_contact(CommonObject $object): int
 {
     $notationInvoiceRecContacts = get_notation_invoice_rec_contacts($object);
     $notationInvoiceRecContact  = array_shift($notationInvoiceRecContacts);
     $object->fetch_optionals();
     $object->array_options['options_notation_invoice_rec_contact'] = ($notationInvoiceRecContact['percentage'] ?: 0) . ' %';
-    $object->updateExtraField('notation_invoice_rec_contact');
+    return $object->updateExtraField('notation_invoice_rec_contact');
 }
 
 /**

@@ -129,3 +129,5 @@ NotationInvoiceRecContactHelp              = Taux de remplissage des information
 SetNotationInvoiceRecContact               = Mise à jour de la notation contact client facturation
 UpdateNotationInvoiceRecContactsJob        = Mise à jour des notations contact client facturation sur les factures récurrentes
 UpdateNotationInvoiceRecContactsJobComment = Mise à jour de l'attribut suplémentaire des notations contact client facturation sur les factures récurrentes pour indiquer le taux de remplissage des informations du contact client facturation
+NotationInvoiceRecContactsUpdated          = Mise à jour des notations contact client facturation sur %d factures récurrentes
+NoInvoiceRec                               = Aucune facture récurrente
