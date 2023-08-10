@@ -95,7 +95,7 @@ class modEasyCRM extends DolibarrModules
         // Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = [
 			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 0,
+			'triggers' => 1,
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -123,7 +123,8 @@ class modEasyCRM extends DolibarrModules
                 'projectlist',
                 'propalcard',
                 'invoicereccard',
-                'invoicereccontact'
+                'invoicereccontact',
+                'invoicereclist'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -140,7 +141,7 @@ class modEasyCRM extends DolibarrModules
 		// A condition to hide module
 		$this->hidden = false;
 		// List of module class names as string that must be enabled if this module is enabled. Example: array('always1'=>'modModuleToEnable1','always2'=>'modModuleToEnable2', 'FR1'=>'modModuleToEnableFR'...)
-		$this->depends = ['modSaturne', 'modFckeditor', 'modAgenda', 'modSociete', 'modProjet', 'modCategorie', 'modPropale'];
+		$this->depends = ['modSaturne', 'modFckeditor', 'modAgenda', 'modSociete', 'modProjet', 'modCategorie', 'modPropale', 'modCron'];
 		$this->requiredby = []; // List of module class names as string to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
 		$this->conflictwith = []; // List of module class names as string this module is in conflict with. Example: array('modModuleToDisable1', ...)
 
@@ -318,8 +319,24 @@ class modEasyCRM extends DolibarrModules
 		// Boxes/Widgets
 		$this->boxes = [];
 
-		// Cronjobs (List of cron jobs entries to add when module is enabled)
-		$this->cronjobs = [];
+        // Cronjobs (List of cron jobs entries to add when module is enabled)
+        // unit_frequency must be 60 for minute, 3600 for hour, 86400 for day, 604800 for week
+        $this->cronjobs = [
+            0 => [
+                'label'         => $langs->transnoentities('UpdateNotationInvoiceRecContactsJob'),
+                'jobtype'       => 'method',
+                'class'         => '/easycrm/class/easycrmcron.class.php',
+                'objectname'    => 'EasycrmCron',
+                'method'        => 'updateNotationInvoiceRecContacts',
+                'parameters'    => '',
+                'comment'       => $langs->transnoentities('UpdateNotationInvoiceRecContactsJobComment'),
+                'frequency'     => 1,
+                'unitfrequency' => 86400,
+                'status'        => 1,
+                'test'          => '$conf->saturne->enabled && $conf->easycrm->enabled',
+                'priority'      => 50
+            ]
+        ];
 
 		// Permissions provided by this module
 		$this->rights = [];
@@ -467,6 +484,10 @@ class modEasyCRM extends DolibarrModules
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
 		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
 		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
+
+        // Invoice rec extrafields
+        $extrafields->update('notation_invoice_rec_contact', 'NotationInvoiceRecContact', 'text', '', 'facture_rec', 0, 0, 100, '', '', '', 5, 'NotationInvoiceRecContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        $extrafields->addExtraField('notation_invoice_rec_contact', 'NotationInvoiceRecContact', 'text', 100, '', 'facture_rec', 0, 0, '', '', '', '', 5, 'NotationInvoiceRecContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
 
         if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
             foreach ($objectsMetadata as $objectType => $objectMetadata) {
