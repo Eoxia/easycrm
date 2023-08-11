@@ -95,9 +95,12 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
         // Data and type of action are stored into $object and $action
         dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . '. id=' . $object->id);
 
-        if ($action == 'BILLREC_CREATE') {
-            $object->fetch($object->id);
-            set_notation_invoice_rec_contact($object);
+        switch ($action) {
+            case 'BILL_CREATE' :
+            case 'BILLREC_CREATE' :
+                $object->fetch($object->id);
+                set_notation_object_contact($object);
+                break;
         }
         return 0;
     }

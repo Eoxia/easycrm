@@ -124,7 +124,9 @@ class modEasyCRM extends DolibarrModules
                 'propalcard',
                 'invoicereccard',
                 'invoicereccontact',
-                'invoicereclist'
+                'invoicereclist',
+                'invoicelist',
+                'invoicecard'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -323,13 +325,27 @@ class modEasyCRM extends DolibarrModules
         // unit_frequency must be 60 for minute, 3600 for hour, 86400 for day, 604800 for week
         $this->cronjobs = [
             0 => [
-                'label'         => $langs->transnoentities('UpdateNotationInvoiceRecContactsJob'),
+                'label'         => $langs->transnoentities('UpdateNotationObjectContactsJob', $langs->transnoentities('FactureMins')),
                 'jobtype'       => 'method',
                 'class'         => '/easycrm/class/easycrmcron.class.php',
                 'objectname'    => 'EasycrmCron',
-                'method'        => 'updateNotationInvoiceRecContacts',
-                'parameters'    => '',
-                'comment'       => $langs->transnoentities('UpdateNotationInvoiceRecContactsJobComment'),
+                'method'        => 'updateNotationObjectContacts',
+                'parameters'    => 'Facture',
+                'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('FactureMins')),
+                'frequency'     => 1,
+                'unitfrequency' => 86400,
+                'status'        => 1,
+                'test'          => '$conf->saturne->enabled && $conf->easycrm->enabled',
+                'priority'      => 50
+            ],
+            1 => [
+                'label'         => $langs->transnoentities('UpdateNotationObjectContactsJob', $langs->transnoentities('FactureRecMins')),
+                'jobtype'       => 'method',
+                'class'         => '/easycrm/class/easycrmcron.class.php',
+                'objectname'    => 'EasycrmCron',
+                'method'        => 'updateNotationObjectContacts',
+                'parameters'    => 'FactureRec',
+                'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('FactureRecMins')),
                 'frequency'     => 1,
                 'unitfrequency' => 86400,
                 'status'        => 1,
@@ -485,9 +501,13 @@ class modEasyCRM extends DolibarrModules
 		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
 		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
 
-        // Invoice rec extrafields
-        $extrafields->update('notation_invoice_rec_contact', 'NotationInvoiceRecContact', 'text', '', 'facture_rec', 0, 0, 100, '', '', '', 5, 'NotationInvoiceRecContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
-        $extrafields->addExtraField('notation_invoice_rec_contact', 'NotationInvoiceRecContact', 'text', 100, '', 'facture_rec', 0, 0, '', '', '', '', 5, 'NotationInvoiceRecContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        // Facture extrafields
+        $extrafields->update('notation_facture_contact', 'NotationObjectContact', 'text', '', 'facture', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        $extrafields->addExtraField('notation_facture_contact', 'NotationObjectContact', 'text', 100, '', 'facture', 0, 0, '', '', '', '', 5, 'NotationObjectContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+
+        // Facturerec extrafields
+        $extrafields->update('notation_facturerec_contact', 'NotationObjectContact', 'text', '', 'facture_rec', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        $extrafields->addExtraField('notation_facturerec_contact', 'NotationObjectContact', 'text', 100, '', 'facture_rec', 0, 0, '', '', '', '', 5, 'NotationObjectContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
 
         if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
             foreach ($objectsMetadata as $objectType => $objectMetadata) {

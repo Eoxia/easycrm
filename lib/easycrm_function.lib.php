@@ -22,59 +22,59 @@
 */
 
 /**
- * Set notation invoice rec contact
+ * Set notation object contact
  *
  * @param  CommonObject $object Object
  * @return int                  -1 = error, O = did nothing, 1 = OK
  * @throws Exception
  */
-function set_notation_invoice_rec_contact(CommonObject $object): int
+function set_notation_object_contact(CommonObject $object): int
 {
-    $notationInvoiceRecContacts = get_notation_invoice_rec_contacts($object);
-    $notationInvoiceRecContact  = array_shift($notationInvoiceRecContacts);
+    $notationObjectContacts = get_notation_object_contacts($object);
+    $notationObjectContact  = array_shift($notationObjectContacts);
     $object->fetch_optionals();
-    $object->array_options['options_notation_invoice_rec_contact'] = ($notationInvoiceRecContact['percentage'] ?: 0) . ' %';
-    return $object->updateExtraField('notation_invoice_rec_contact');
+    $object->array_options['options_notation_' . $object->element . '_contact'] = ($notationObjectContact['percentage'] ?: 0) . ' %';
+    return $object->updateExtraField('notation_' . $object->element . '_contact');
 }
 
 /**
- * Get notation invoice rec contacts
+ * Get notation object contacts
  *
- * @param  object       $object                     Object
- * @return array        $notationInvoiceRecContacts Multidimensional associative array
+ * @param  object       $object                 Object
+ * @return array        $notationObjectContacts Multidimensional associative array
  * @throws Exception
  */
-function get_notation_invoice_rec_contacts(object $object): array
+function get_notation_object_contacts(object $object): array
 {
     require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
     require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
-    $notationInvoiceRecContacts = [];
-    $contacts                   = saturne_fetch_all_object_type('Contact', '', '', 0, 0, ['customsql' => 't.fk_soc=' . ($object->fk_soc > 0 ? $object->fk_soc : $object->socid)]);
+    $notationObjectContacts = [];
+    $contacts               = saturne_fetch_all_object_type('Contact', '', '', 0, 0, ['customsql' => 't.fk_soc=' . ($object->fk_soc > 0 ? $object->fk_soc : $object->socid)]);
     if (is_array($contacts) && !empty($contacts)) {
         foreach ($contacts as $contact) {
             $contact->fetchRoles();
-            $notationInvoiceRecContacts[$contact->id]['lastname']  = dol_strlen($contact->lastname) > 0 ? 5 : 0;
-            $notationInvoiceRecContacts[$contact->id]['firstname'] = dol_strlen($contact->firstname) > 0 ? 5 : 0;
-            $notationInvoiceRecContacts[$contact->id]['phone_pro'] = dol_strlen($contact->phone_pro) > 0 ? 5 : 0;
-            $notationInvoiceRecContacts[$contact->id]['phone']     = dol_strlen($contact->phone) > 0 ? 5 : 0;
-            $notationInvoiceRecContacts[$contact->id]['email']     = dol_strlen($contact->email) > 0 ? 40 : 0;
+            $notationObjectContacts[$contact->id]['lastname']  = dol_strlen($contact->lastname) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['firstname'] = dol_strlen($contact->firstname) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['phone_pro'] = dol_strlen($contact->phone_pro) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['phone']     = dol_strlen($contact->phone) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['email']     = dol_strlen($contact->email) > 0 ? 40 : 0;
 
-            $checkRolesArray = in_array('facture', array_column($contact->roles, 'element'));
+            $checkRolesArray  = in_array('facture', array_column($contact->roles, 'element'));
             $checkRolesArray += in_array('external', array_column($contact->roles, 'source'));
             $checkRolesArray += in_array('BILLING', array_column($contact->roles, 'code'));
-            $notationInvoiceRecContacts[$contact->id]['role'] = $checkRolesArray == 3 ? 40 : 0;
+            $notationObjectContacts[$contact->id]['role'] = $checkRolesArray == 3 ? 40 : 0;
 
             $percentage = 0;
-            foreach ($notationInvoiceRecContacts[$contact->id] as $notationInvoiceRecContactsField) {
-                $percentage += $notationInvoiceRecContactsField;
+            foreach ($notationObjectContacts[$contact->id] as $notationObjectContactsField) {
+                $percentage += $notationObjectContactsField;
             }
 
-            $notationInvoiceRecContacts[$contact->id]['percentage'] = price2num($percentage, 'MT', 1);
+            $notationObjectContacts[$contact->id]['percentage'] = price2num($percentage, 'MT', 1);
         }
-        uasort($notationInvoiceRecContacts, 'compareByPercentage');
+        uasort($notationObjectContacts, 'compareByPercentage');
     }
-    return $notationInvoiceRecContacts;
+    return $notationObjectContacts;
 }
 
 /**

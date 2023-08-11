@@ -47,16 +47,18 @@ class EasycrmCron
     }
 
     /**
-     * Update all notation invoice rec contacts (Cronjob)
+     * Update all notation object contacts (Cronjob)
      *
-     * @return int       0 < if KO, > 0 if OK
+     * @param  string    $className Object className
+     * @return int                  0 < if KO, > 0 if OK
      * @throws Exception
      */
-    public function updateNotationInvoiceRecContacts(): int
+    public function updateNotationObjectContacts($className): int
     {
         global $langs;
 
         // Load Dolibarr libraries
+        require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
         require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture-rec.class.php';
 
         // Load Saturne libraries
@@ -65,18 +67,18 @@ class EasycrmCron
         // Load EasyCRM libraries
         require_once __DIR__ . '/../lib/easycrm_function.lib.php';
 
-        $factureRecs = saturne_fetch_all_object_type('FactureRec');
+        $objects = saturne_fetch_all_object_type($className);
 
-        if (is_array($factureRecs) &&!empty($factureRecs)) {
-            foreach ($factureRecs as $factureRec) {
-                $result = set_notation_invoice_rec_contact($factureRec);
+        if (is_array($objects) &&!empty($objects)) {
+            foreach ($objects as $object) {
+                $result = set_notation_object_contact($object);
                 if ($result < 0) {
                     return -1;
                 }
             }
-            $this->output = $langs->transnoentities('NotationInvoiceRecContactsUpdated', count($factureRecs));
+            $this->output = $langs->transnoentities('NotationObjectContactsUpdated', count($objects),  $langs->transnoentities($className . 'Mins'));
         } else {
-            $this->output = $langs->transnoentities('NoInvoiceRec');
+            $this->output = $langs->transnoentities('NoObject', $langs->transnoentities($className . 'Min'));
         }
         return 0;
     }
