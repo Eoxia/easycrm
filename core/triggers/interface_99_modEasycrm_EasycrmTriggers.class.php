@@ -95,11 +95,32 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
         // Data and type of action are stored into $object and $action
         dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . '. id=' . $object->id);
 
+        require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+        $now        = dol_now();
+        $actioncomm = new ActionComm($this->db);
+
+        $actioncomm->type_code   = 'AC_OTH_AUTO';
+        $actioncomm->datep       = $now;
+        $actioncomm->fk_element  = $object->id;
+        $actioncomm->userownerid = $user->id;
+        $actioncomm->percentage  = -1;
+
         switch ($action) {
             case 'BILL_CREATE' :
             case 'BILLREC_CREATE' :
                 $object->fetch($object->id);
                 set_notation_object_contact($object);
+                break;
+            case 'FACTURE_ADD_CONTACT' :
+                $actioncomm->elementtype = $object->element;
+                $actioncomm->code        = 'AC_' . strtoupper($object->element) . '_ADD_CONTACT';
+                $actioncomm->label       = $langs->transnoentities('ObjectAddContactTrigger');
+                $actioncomm->create($user);
+                break;
+            case 'USER_UPDATE_OBJECT_CONTACT' :
+                $actioncomm->code   = 'AC_USER_UPDATE_OBJECT_CONTACT';
+                $actioncomm->label  = $langs->transnoentities('UpdateObjectContactTrigger', $langs->transnoentities('FactureMins'));
+                $actioncomm->create($user);
                 break;
         }
         return 0;

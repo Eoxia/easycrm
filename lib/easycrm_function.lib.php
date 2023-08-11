@@ -41,10 +41,11 @@ function set_notation_object_contact(CommonObject $object): int
  * Get notation object contacts
  *
  * @param  object       $object                 Object
+ * @param  string       $haveRole               object contacts presence role
  * @return array        $notationObjectContacts Multidimensional associative array
  * @throws Exception
  */
-function get_notation_object_contacts(object $object): array
+function get_notation_object_contacts(object $object, string $haveRole = ''): array
 {
     require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
     require_once __DIR__ . '/../../saturne/lib/object.lib.php';
@@ -54,11 +55,11 @@ function get_notation_object_contacts(object $object): array
     if (is_array($contacts) && !empty($contacts)) {
         foreach ($contacts as $contact) {
             $contact->fetchRoles();
-            $notationObjectContacts[$contact->id]['lastname']  = dol_strlen($contact->lastname) > 0 ? 5 : 0;
-            $notationObjectContacts[$contact->id]['firstname'] = dol_strlen($contact->firstname) > 0 ? 5 : 0;
-            $notationObjectContacts[$contact->id]['phone_pro'] = dol_strlen($contact->phone_pro) > 0 ? 5 : 0;
-            $notationObjectContacts[$contact->id]['phone']     = dol_strlen($contact->phone) > 0 ? 5 : 0;
-            $notationObjectContacts[$contact->id]['email']     = dol_strlen($contact->email) > 0 ? 40 : 0;
+            $notationObjectContacts[$contact->id]['lastname']     = dol_strlen($contact->lastname) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['firstname']    = dol_strlen($contact->firstname) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['phone']        = dol_strlen($contact->phone) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['phone_mobile'] = dol_strlen($contact->phone_mobile) > 0 ? 5 : 0;
+            $notationObjectContacts[$contact->id]['email']        = dol_strlen($contact->email) > 0 ? 40 : 0;
 
             $checkRolesArray  = in_array('facture', array_column($contact->roles, 'element'));
             $checkRolesArray += in_array('external', array_column($contact->roles, 'source'));
@@ -71,6 +72,9 @@ function get_notation_object_contacts(object $object): array
             }
 
             $notationObjectContacts[$contact->id]['percentage'] = price2num($percentage, 'MT', 1);
+            if ($haveRole == 'facture_external_BILLINGS' && $checkRolesArray != 3) {
+                unset($notationObjectContacts[$contact->id]);
+            }
         }
         uasort($notationObjectContacts, 'compareByPercentage');
     }
@@ -92,4 +96,43 @@ function compareByPercentage(array $first, array $second): int
         return 0;
     }
     return ($first['percentage'] > $second['percentage']) ? -1 : 1;
+}
+
+/**
+ * Load dictionary from database
+ *
+ * @param  string    $tableName SQL table name
+ * @param  string    $moreWhere More SQl filter
+ * @return int|array            0 < if KO, array of records if OK
+ */
+function easycrm_fetch_dictionary(string $tableName, string $moreWhere = '')
+{
+    global $db;
+
+    $sql  = 'SELECT *';
+    $sql .= ' FROM ' . MAIN_DB_PREFIX . $tableName . ' as t';
+    $sql .= ' WHERE 1 = 1';
+    if ($moreWhere) {
+        $sql .= $moreWhere;
+    }
+
+    $resql = $db->query($sql);
+    if ($resql) {
+        $num     = $db->num_rows($resql);
+        $i       = 0;
+        $records = [];
+        while ($i < $num) {
+            $obj = $db->fetch_object($resql);
+
+            $records[$obj->rowid] = $obj;
+
+            $i++;
+        }
+
+        $db->free($resql);
+
+        return $records;
+    } else {
+        return -1;
+    }
 }
