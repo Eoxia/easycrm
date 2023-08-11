@@ -53,9 +53,9 @@ class EasycrmCron
      * @return int                  0 < if KO, > 0 if OK
      * @throws Exception
      */
-    public function updateNotationObjectContacts($className): int
+    public function updateNotationObjectContacts(string $className): int
     {
-        global $langs;
+        global $conf, $langs;
 
         // Load Dolibarr libraries
         require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
@@ -67,7 +67,7 @@ class EasycrmCron
         // Load EasyCRM libraries
         require_once __DIR__ . '/../lib/easycrm_function.lib.php';
 
-        $objects = saturne_fetch_all_object_type($className);
+        $objects = saturne_fetch_all_object_type($className, '', '', 0, 0, ['customsql' => 't.entity = ' . $conf->entity]);
 
         if (is_array($objects) &&!empty($objects)) {
             foreach ($objects as $object) {
