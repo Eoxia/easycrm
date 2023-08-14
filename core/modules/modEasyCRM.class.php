@@ -330,7 +330,7 @@ class modEasyCRM extends DolibarrModules
                 'class'         => '/easycrm/class/easycrmcron.class.php',
                 'objectname'    => 'EasycrmCron',
                 'method'        => 'updateNotationObjectContacts',
-                'parameters'    => 'Facture',
+                'parameters'    => 'Facture, AND t.fk_statut = 1',
                 'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('FactureMins')),
                 'frequency'     => 1,
                 'unitfrequency' => 86400,
