@@ -235,6 +235,31 @@ class ActionsEasycrm
     }
 
     /**
+     * Overloading the doActions function : replacing the parent's function with the one below
+     *
+     * @param  array        $parameters Hook metadatas (context, etc...)
+     * @param  CommonObject $object     Current object
+     * @param  string       $action     Current action
+     * @return int                      0 < on error, 0 on success, 1 to replace standard code
+     * @throws Exception
+     */
+    public function doActions(array $parameters, $object, string $action): int
+    {
+        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard'])) {
+            if ($action == 'set_notation_object_contact') {
+                require_once __DIR__ . '/../lib/easycrm_function.lib.php';
+
+                set_notation_object_contact($object);
+
+                header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $object->id);
+                exit;
+            }
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
+
+    /**
      * Overloading the printCommonFooter function : replacing the parent's function with the one below
      *
      * @param  array $parameters Hook metadatas (context, etc...)
@@ -243,7 +268,7 @@ class ActionsEasycrm
      */
     public function printCommonFooter(array $parameters): int
     {
-        global $conf, $db, $langs;
+        global $conf, $db, $langs , $object;
 
         // Do something only for the current context
         if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
@@ -304,6 +329,43 @@ class ActionsEasycrm
             }
         }
 
+        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist'])) {
+            print '<link href="../../custom/saturne/css/saturne.min.css" rel="stylesheet">';
+
+            $jQueryElement = 'notation_' . $object->element . '_contact';
+            $pictoPath     = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
+            $picto         = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule'); ?>
+
+            <script>
+                var objectElement = <?php echo "'" . $jQueryElement . "'"; ?>;
+                var outJS         = <?php echo json_encode($picto); ?>;
+                var cell          = $('.liste > tbody > tr.liste_titre').find('th[data-titlekey="' + objectElement + '"]');
+                cell.prepend(outJS);
+            </script>
+            <?php
+        }
+
+        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard'])) {
+            print '<link href="../../custom/saturne/css/saturne.min.css" rel="stylesheet">';
+
+            $jQueryElement = '.' . $object->element . '_extras_notation_' . $object->element . '_contact';
+            $pictoPath     = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
+            $picto         = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule');
+
+            $out  = $picto;
+            $out .= '<div class="wpeo-button button-strong ' . (($object->array_options['options_notation_' . $object->element . '_contact'] >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
+            $out .= '<span>' . $object->array_options['options_notation_' . $object->element . '_contact'] . '</span>';
+            $out .= '</div>';
+            $out .= '<a class="reposition editfielda" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=set_notation_object_contact&token=' . newToken() . '">';
+            $out .= img_picto($langs->trans('SetNotationObjectContact'), 'fontawesome_fa-redo_fas_#444', 'class="paddingleft"') . '</a>'; ?>
+
+            <script>
+                var objectElement = <?php echo "'" . $jQueryElement . "'"; ?>;
+                jQuery(objectElement).html(<?php echo json_encode($out); ?>);
+            </script>
+            <?php
+        }
+
         return 0; // or return 1 to replace standard code
     }
 
@@ -316,7 +378,7 @@ class ActionsEasycrm
      */
     public function printFieldListValue(array $parameters): int
     {
-        global $conf, $db, $langs, $user;
+        global $conf, $db, $langs, $object, $user;
 
         // Do something only for the current context
         if ($parameters['currentcontext'] == 'projectlist') {
@@ -362,6 +424,29 @@ class ActionsEasycrm
             }
         }
 
+        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist'])) {
+            if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
+                $extrafieldName = 'options_notation_' . $object->element . '_contact';
+                if ($object->element == 'facturerec') {
+                    $specialName = 'facture_rec';
+                } else {
+                    $specialName = $object->element;
+                }
+                $jQueryElement  = $specialName . '.notation_' . $object->element . '_contact';
+                $out            = '<div class="wpeo-button button-strong ' . (($parameters['obj']->$extrafieldName >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
+                $out           .= '<span>' . $parameters['obj']->$extrafieldName . '</span>';
+                $out           .= '</div>'; ?>
+
+                <script>
+                    var objectElement = <?php echo "'" . $jQueryElement . "'"; ?>;
+                    var outJS         = <?php echo json_encode($out); ?>;
+                    var cell          = $('.liste > tbody > tr.oddeven').find('td[data-key="' + objectElement + '"]').last();
+                    cell.html(outJS);
+                </script>
+                <?php
+            }
+        }
+
         return 0; // or return 1 to replace standard code
     }
 
@@ -392,7 +477,7 @@ class ActionsEasycrm
      */
     public function completeTabsHead(array $parameters): int
     {
-        global $hookmanager, $langs;
+        global $langs;
 
         if (in_array($parameters['currentcontext'], ['invoicereccard', 'invoicereccontact'])) {
             $nbContact = 0;
