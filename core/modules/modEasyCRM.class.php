@@ -330,7 +330,7 @@ class modEasyCRM extends DolibarrModules
                 'class'         => '/easycrm/class/easycrmcron.class.php',
                 'objectname'    => 'EasycrmCron',
                 'method'        => 'updateNotationObjectContacts',
-                'parameters'    => 'Facture',
+                'parameters'    => 'Facture, AND t.fk_statut = 1',
                 'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('FactureMins')),
                 'frequency'     => 1,
                 'unitfrequency' => 86400,
@@ -428,6 +428,22 @@ class modEasyCRM extends DolibarrModules
             'perms'    => '$user->rights->easycrm->read', // Use 'perms'=>'$user->rights->easycrm->myobject->read' if you want your menu with a permission rules
             'target'   => '',
             'user'     => 0, // 0=Menu for internal users, 1=external users, 2=both
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=easycrm',
+            'type'     => 'left',
+            'titre'    => $langs->trans('Tools'),
+            'prefix'   => '<i class="fas fa-wrench pictofixedwidth"></i>',
+            'mainmenu' => 'easycrm',
+            'leftmenu' => 'easycrmtools',
+            'url'      => '/easycrm/view/easycrmtools.php',
+            'langs'    => 'easycrm@easycrm',
+            'position' => 1000 + $r,
+            'enabled'  => '$conf->easycrm->enabled',
+            'perms'    => '$user->rights->easycrm->adminpage->read',
+            'target'   => '',
+            'user'     => 0,
         ];
 
 		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {

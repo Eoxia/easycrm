@@ -67,6 +67,24 @@ OpportunityAmountDescription = Selection du montant d'opportunité <br> Valeur p
 ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par défaut : <b> Prospect </b>
 
 
+
+#
+# Tools - Outils
+#
+
+# Data - Donnée
+UpdateObjectContactManagement       = Gestion des mises à jour de contact facturation
+UpdateObjectContact                 = Contact facturation pour %s
+UpdateObjectContactDescription      = Mise à jour du rôle "contacts facturation" pour %d %s impayées <br> Vous trouverez ci-après la liste des tiers sans rôle "contact facturation" contrôlé le
+SocietyObjectContactNotDefinedTitle = Liste des %d tiers sans rôle "contact facturation"
+
+# SetEventMessage - Notice info
+ObjectContactUpdated           = Contact ajouté sur %s %s
+SocietyObjectContactNotDefined = Aucun contact défini sur le tiers :
+AllObjectHaveContact           = Les %s ont des contacts facturation
+
+
+
 #
 # Address - Adresse
 #
@@ -125,7 +143,7 @@ RefusalReasonHelp                      = Raison du refus de la proposition comme
 PropalStatusCommRepartition            = Répartition du statut des propositions commerciale ouvertes
 PropalRefusalReasonRepartition         = Répartition des raisons de refus des propositions commerciale
 NotationObjectContact                  = Contact facturation
-NotationObjectContactHelp              = Taux de remplissage des informations du contact client facturation
+NotationObjectContactHelp              = Taux de remplissage des informations du contact client facturation <ul><li>Nom / Libellé - 5 <li>Prénom - 5 </li><li>Tél pro - 5 </li><li>Tél portable - 5 </li><li>EMail - 40 </li><li>Contact / adresse par défaut - 40 </li></ul>
 SetNotationObjectContact               = Mise à jour de la notation contact client facturation
 UpdateNotationObjectContactsJob        = Mise à jour des notations contact client facturation sur les %s
 UpdateNotationObjectContactsJobComment = Mise à jour de l'attribut suplémentaire des notations contact client facturation sur les factures récurrentes pour indiquer le taux de remplissage des informations du contact client facturation
@@ -135,3 +153,5 @@ FactureMin                             = facture
 FactureMins                            = factures
 FactureRecMin                          = facture récurrente
 FactureRecMins                         = factures récurrentes
+ObjectAddContactTrigger                = Contact ajouté
+UpdateObjectContactTrigger             = Mise à jour du rôle "contacts facturation" pour %s

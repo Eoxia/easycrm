@@ -50,10 +50,11 @@ class EasycrmCron
      * Update all notation object contacts (Cronjob)
      *
      * @param  string    $className Object className
+     * @param  string    $filter    Filter
      * @return int                  0 < if KO, > 0 if OK
      * @throws Exception
      */
-    public function updateNotationObjectContacts(string $className): int
+    public function updateNotationObjectContacts(string $className, string $filter): int
     {
         global $conf, $langs;
 
@@ -67,7 +68,7 @@ class EasycrmCron
         // Load EasyCRM libraries
         require_once __DIR__ . '/../lib/easycrm_function.lib.php';
 
-        $objects = saturne_fetch_all_object_type($className, '', '', 0, 0, ['customsql' => 't.entity = ' . $conf->entity]);
+        $objects = saturne_fetch_all_object_type($className, '', '', 0, 0, ['customsql' => 't.entity = ' . $conf->entity . ' ' . $filter]);
 
         if (is_array($objects) &&!empty($objects)) {
             foreach ($objects as $object) {
