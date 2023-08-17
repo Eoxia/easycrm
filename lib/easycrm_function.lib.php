@@ -41,7 +41,7 @@ function set_notation_object_contact(CommonObject $object): int
  * Get notation object contacts
  *
  * @param  object       $object                 Object
- * @param  string       $haveRole               object contacts presence role
+ * @param  string       $haveRole               Object contacts presence role
  * @return array        $notationObjectContacts Multidimensional associative array
  * @throws Exception
  */
@@ -51,7 +51,7 @@ function get_notation_object_contacts(object $object, string $haveRole = ''): ar
     require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
     $notationObjectContacts = [];
-    $contacts               = saturne_fetch_all_object_type('Contact', '', '', 0, 0, ['customsql' => 't.fk_soc=' . ($object->fk_soc > 0 ? $object->fk_soc : $object->socid)]);
+    $contacts               = saturne_fetch_all_object_type('Contact', '', '', 0, 0, ['customsql' => 't.fk_soc = ' . ($object->element == 'societe' ? $object->id : ($object->fk_soc > 0 ? $object->fk_soc : $object->socid))]);
     if (is_array($contacts) && !empty($contacts)) {
         foreach ($contacts as $contact) {
             $contact->fetchRoles();
