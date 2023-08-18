@@ -486,7 +486,6 @@ class modEasyCRM extends DolibarrModules
         }
 
         $sql = [];
-		$result = $this->_load_tables('/easycrm/sql/');
 
 		// Load sql sub folders
 		$sqlFolder = scandir(__DIR__ . '/../../sql');
