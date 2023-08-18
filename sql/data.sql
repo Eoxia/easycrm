@@ -45,3 +45,6 @@ INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, 
 INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (8, 0, 'Factory', 'Factory', '', 1, 70);
 INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (9, 0, 'Warehouse', 'Warehouse', '', 1, 80);
 INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, position) VALUES (10, 0, 'Headquarters', 'Headquarters', '', 1, 90);
+
+-- 1.2.0
+ALTER TABLE llx_notify_def ADD UNIQUE INDEX uk_notify_def_asct (fk_action, fk_soc, fk_contact, type);

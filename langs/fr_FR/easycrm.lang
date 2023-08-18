@@ -73,15 +73,22 @@ ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par 
 #
 
 # Data - Donnée
-UpdateObjectContactManagement       = Gestion des mises à jour de contact facturation
-UpdateObjectContact                 = Contact facturation pour %s
-UpdateObjectContactDescription      = Mise à jour du rôle "contacts facturation" pour %d %s impayées <br> Vous trouverez ci-après la liste des tiers sans rôle "contact facturation" contrôlé le
-SocietyObjectContactNotDefinedTitle = Liste des %d tiers sans rôle "contact facturation"
+UpdateObjectContactManagement             = Gestion des mises à jour de contact facturation
+UpdateObjectContact                       = Contact facturation pour %s
+UpdateObjectContactDescription            = Mise à jour du rôle "contacts facturation" pour %d %s impayées <br> Vous trouverez ci-après la liste des tiers sans rôle "contact facturation" contrôlé le
+SocietyObjectContactNotDefinedTitle       = Liste des %d tiers sans rôle "contact facturation"
+AddContactNotificationManagement          = Gestion des ajouts de notification contact
+AddContactNotification                    = Notification contact pour %s
+AddContactNotificationDescription         = Ajout d'une notification contact "action Facture client validée" pour les tiers <br> Vous trouverez ci-après la liste des tiers sans notification contact "action Facture client validée" contrôlé le
+SocietyContactNotificationNotDefinedTitle = Liste des %d tiers sans notification contact "action Facture client validée"
 
 # SetEventMessage - Notice info
-ObjectContactUpdated           = Contact ajouté sur %s %s
-SocietyObjectContactNotDefined = Aucun contact défini sur le tiers :
-AllObjectHaveContact           = Les %s ont des contacts facturation
+ObjectContactUpdated                 = Contact ajouté sur %s %s
+SocietyObjectContactNotDefined       = Aucun contact défini sur le tiers :
+AllObjectHaveContact                 = Les %s ont des contacts facturation
+ContactNotificationAdded             = Notification ajouté sur :
+SocietyContactNotificationNotDefined = Aucune notification contact défini sur le tiers :
+AllContactHaveNotification           = Tous les tiers ont des notifications contacts
 
 
 
@@ -155,3 +162,5 @@ FactureRecMin                          = facture récurrente
 FactureRecMins                         = factures récurrentes
 ObjectAddContactTrigger                = Contact ajouté
 UpdateObjectContactTrigger             = Mise à jour du rôle "contacts facturation" pour %s
+NoContact                              = Aucun contact
+AddContactNotificationTrigger          = Mise à jour du rôle "contacts facturation" pour %s
