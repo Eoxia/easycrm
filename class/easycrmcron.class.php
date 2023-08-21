@@ -54,7 +54,7 @@ class EasycrmCron
      * @return int                  0 < if KO, > 0 if OK
      * @throws Exception
      */
-    public function updateNotationObjectContacts(string $className, string $filter): int
+    public function updateNotationObjectContacts(string $className, string $filter = ''): int
     {
         global $conf, $langs;
 
