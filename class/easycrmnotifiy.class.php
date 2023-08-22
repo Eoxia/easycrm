@@ -32,7 +32,7 @@ class EasycrmNotify extends SaturneObject
     /**
      * @var string Module name
      */
-    public string $module = 'easycrm';
+    public $module = 'easycrm';
 
     /**
      * @var string Element type of object
@@ -86,7 +86,7 @@ class EasycrmNotify extends SaturneObject
     /**
      * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
      */
-    public array $fields = [
+    public $fields = [
         'rowid'      => ['type' => 'integer',     'label' => 'TechnicalID',      'enabled' => 1, 'position' => 1,  'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'index' => 1, 'comment' => 'Id'],
         'tms'        => ['type' => 'timestamp',   'label' => 'DateModification', 'enabled' => 1, 'position' => 10, 'notnull' => 0, 'visible' => 0],
         'datec'      => ['type' => 'date',        'label' => 'DateCreation',     'enabled' => 1, 'position' => 20, 'notnull' => 0, 'visible' => 0],
