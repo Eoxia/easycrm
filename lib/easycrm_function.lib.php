@@ -40,12 +40,12 @@ function set_notation_object_contact(CommonObject $object): int
 /**
  * Get notation object contacts
  *
- * @param  object       $object                 Object
+ * @param  CommonObject $object                 Object
  * @param  string       $haveRole               Object contacts presence role
  * @return array        $notationObjectContacts Multidimensional associative array
  * @throws Exception
  */
-function get_notation_object_contacts(object $object, string $haveRole = ''): array
+function get_notation_object_contacts(CommonObject $object, string $haveRole = ''): array
 {
     require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
     require_once __DIR__ . '/../../saturne/lib/object.lib.php';
