@@ -366,6 +366,16 @@ class ActionsEasycrm
             <?php
         }
 
+        if ($parameters['currentcontext'] == 'contactcard') {
+            if (in_array(GETPOST('action'), ['create', 'edit'])) {
+                $out = img_picto('', 'fontawesome_fa-id-card-alt_fas', 'class="pictofixedwidth"'); ?>
+                <script>
+                    jQuery('#roles').before(<?php echo json_encode($out); ?>);
+                </script>
+                <?php
+            }
+        }
+
         return 0; // or return 1 to replace standard code
     }
 
