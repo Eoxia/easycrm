@@ -126,7 +126,8 @@ class modEasyCRM extends DolibarrModules
                 'invoicereccontact',
                 'invoicereclist',
                 'invoicelist',
-                'invoicecard'
+                'invoicecard',
+                'contactcard'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
