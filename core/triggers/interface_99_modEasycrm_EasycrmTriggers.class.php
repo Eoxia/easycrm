@@ -119,7 +119,7 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 break;
             case 'USER_UPDATE_OBJECT_CONTACT' :
                 $actioncomm->code   = 'AC_USER_UPDATE_OBJECT_CONTACT';
-                $actioncomm->label  = $langs->transnoentities('UpdateObjectContactTrigger', $langs->transnoentities('FactureMins'));
+                $actioncomm->label  = $langs->transnoentities('UpdateObjectContactTrigger');
                 $actioncomm->create($user);
                 break;
             case 'USER_ADD_CONTACT_NOTIFICATION' :
