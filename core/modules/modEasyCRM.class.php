@@ -78,7 +78,7 @@ class modEasyCRM extends DolibarrModules
 		$this->editor_url = 'https://www.eoxia.com';
 
         // Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.1.0';
+		$this->version = '1.2.0';
 
         // Url to the file with your last numberversion of this module
         //$this->url_last_version = 'http://www.example.com/versionmodule.txt';
@@ -95,7 +95,7 @@ class modEasyCRM extends DolibarrModules
         // Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = [
 			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 0,
+			'triggers' => 1,
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -122,6 +122,14 @@ class modEasyCRM extends DolibarrModules
                 'projectcard',
                 'projectlist',
                 'propalcard',
+                'invoicereccard',
+                'invoicereccontact',
+                'invoicereclist',
+                'invoicelist',
+                'invoicecard',
+                'contactcard',
+                'thirdpartycard',
+                'thirdpartylist'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -138,7 +146,7 @@ class modEasyCRM extends DolibarrModules
 		// A condition to hide module
 		$this->hidden = false;
 		// List of module class names as string that must be enabled if this module is enabled. Example: array('always1'=>'modModuleToEnable1','always2'=>'modModuleToEnable2', 'FR1'=>'modModuleToEnableFR'...)
-		$this->depends = ['modSaturne', 'modFckeditor', 'modAgenda', 'modSociete', 'modProjet', 'modCategorie', 'modPropale'];
+		$this->depends = ['modSaturne', 'modFckeditor', 'modAgenda', 'modSociete', 'modProjet', 'modCategorie', 'modPropale', 'modCron'];
 		$this->requiredby = []; // List of module class names as string to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
 		$this->conflictwith = []; // List of module class names as string this module is in conflict with. Example: array('modModuleToDisable1', ...)
 
@@ -316,8 +324,52 @@ class modEasyCRM extends DolibarrModules
 		// Boxes/Widgets
 		$this->boxes = [];
 
-		// Cronjobs (List of cron jobs entries to add when module is enabled)
-		$this->cronjobs = [];
+        // Cronjobs (List of cron jobs entries to add when module is enabled)
+        // unit_frequency must be 60 for minute, 3600 for hour, 86400 for day, 604800 for week
+        $this->cronjobs = [
+            0 => [
+                'label'         => $langs->transnoentities('UpdateNotationObjectContactsJob', $langs->transnoentities('FactureMins')),
+                'jobtype'       => 'method',
+                'class'         => '/easycrm/class/easycrmcron.class.php',
+                'objectname'    => 'EasycrmCron',
+                'method'        => 'updateNotationObjectContacts',
+                'parameters'    => 'Facture, AND t.fk_statut = 1',
+                'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('FactureMins')),
+                'frequency'     => 1,
+                'unitfrequency' => 86400,
+                'status'        => 1,
+                'test'          => '$conf->saturne->enabled && $conf->easycrm->enabled',
+                'priority'      => 50
+            ],
+            1 => [
+                'label'         => $langs->transnoentities('UpdateNotationObjectContactsJob', $langs->transnoentities('FactureRecMins')),
+                'jobtype'       => 'method',
+                'class'         => '/easycrm/class/easycrmcron.class.php',
+                'objectname'    => 'EasycrmCron',
+                'method'        => 'updateNotationObjectContacts',
+                'parameters'    => 'FactureRec',
+                'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('FactureRecMins')),
+                'frequency'     => 1,
+                'unitfrequency' => 86400,
+                'status'        => 1,
+                'test'          => '$conf->saturne->enabled && $conf->easycrm->enabled',
+                'priority'      => 50
+            ],
+            2 => [
+                'label'         => $langs->transnoentities('UpdateNotationObjectContactsJob', $langs->transnoentities('ThirdPartyMins')),
+                'jobtype'       => 'method',
+                'class'         => '/easycrm/class/easycrmcron.class.php',
+                'objectname'    => 'EasycrmCron',
+                'method'        => 'updateNotationObjectContacts',
+                'parameters'    => 'Societe',
+                'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('ThirdPartyMins')),
+                'frequency'     => 1,
+                'unitfrequency' => 86400,
+                'status'        => 1,
+                'test'          => '$conf->saturne->enabled && $conf->easycrm->enabled',
+                'priority'      => 50
+            ]
+        ];
 
 		// Permissions provided by this module
 		$this->rights = [];
@@ -395,6 +447,22 @@ class modEasyCRM extends DolibarrModules
             'user'     => 0, // 0=Menu for internal users, 1=external users, 2=both
         ];
 
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=easycrm',
+            'type'     => 'left',
+            'titre'    => $langs->trans('Tools'),
+            'prefix'   => '<i class="fas fa-wrench pictofixedwidth"></i>',
+            'mainmenu' => 'easycrm',
+            'leftmenu' => 'easycrmtools',
+            'url'      => '/easycrm/view/easycrmtools.php',
+            'langs'    => 'easycrm@easycrm',
+            'position' => 1000 + $r,
+            'enabled'  => '$conf->easycrm->enabled',
+            'perms'    => '$user->rights->easycrm->adminpage->read',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
 		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
 			foreach($objectsMetadata as $objectType => $objectMetadata) {
 				if (dol_strlen($objectMetadata['leftmenu']) > 0) {
@@ -435,7 +503,6 @@ class modEasyCRM extends DolibarrModules
         }
 
         $sql = [];
-		$result = $this->_load_tables('/easycrm/sql/');
 
 		// Load sql sub folders
 		$sqlFolder = scandir(__DIR__ . '/../../sql');
@@ -465,6 +532,18 @@ class modEasyCRM extends DolibarrModules
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
 		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
 		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
+
+        // Societe extrafields
+        $extrafields->update('notation_societe_contact', 'NotationObjectContact', 'text', '', 'societe', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        $extrafields->addExtraField('notation_societe_contact', 'NotationObjectContact', 'text', 100, '', 'societe', 0, 0, '', '', '', '', 5, 'NotationObjectContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+
+        // Facture extrafields
+        $extrafields->update('notation_facture_contact', 'NotationObjectContact', 'text', '', 'facture', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        $extrafields->addExtraField('notation_facture_contact', 'NotationObjectContact', 'text', 100, '', 'facture', 0, 0, '', '', '', '', 5, 'NotationObjectContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+
+        // Facturerec extrafields
+        $extrafields->update('notation_facturerec_contact', 'NotationObjectContact', 'text', '', 'facture_rec', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        $extrafields->addExtraField('notation_facturerec_contact', 'NotationObjectContact', 'text', 100, '', 'facture_rec', 0, 0, '', '', '', '', 5, 'NotationObjectContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
 
         if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
             foreach ($objectsMetadata as $objectType => $objectMetadata) {

@@ -73,7 +73,7 @@ class EasycrmDashboard
 
 		require_once DOL_DOCUMENT_ROOT . '/comm/propal/class/propal.class.php';
 
-		$propals = saturne_fetch_all_object_type($class);
+		$propals = saturne_fetch_all_object_type($class, '', '', 0, 0, [], 'AND', true);
 
 		// Graph Title parameters.
 		$array['title'] = $langs->transnoentities($title);
@@ -104,7 +104,6 @@ class EasycrmDashboard
 
 			if (is_array($propals) && !empty($propals)) {
 				foreach ($propals as $propal) {
-					$propal->fetch_optionals();
                     if (!empty($propal->array_options['options_' . $fieldName])) {
                         $commStatus = $propal->array_options['options_' . $fieldName];
                         $arrayNbDataByLabel[$commStatus]++;

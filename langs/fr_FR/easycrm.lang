@@ -67,6 +67,31 @@ OpportunityAmountDescription = Selection du montant d'opportunité <br> Valeur p
 ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par défaut : <b> Prospect </b>
 
 
+
+#
+# Tools - Outils
+#
+
+# Data - Donnée
+UpdateObjectContactManagement             = Gestion des mises à jour de contact facturation
+UpdateObjectContact                       = Contact facturation pour %s
+UpdateObjectContactDescription            = Mise à jour du rôle "contacts facturation" pour %d %s impayées <br> Vous trouverez ci-après la liste des tiers sans rôle "contact facturation" contrôlé le
+SocietyObjectContactNotDefinedTitle       = Liste des %d tiers sans rôle "contact facturation"
+AddContactNotificationManagement          = Gestion des ajouts de notification contact
+AddContactNotification                    = Notification contact pour %s
+AddContactNotificationDescription         = Ajout d'une notification contact "action Facture client validée" pour les tiers <br> Vous trouverez ci-après la liste des tiers sans notification contact "action Facture client validée" contrôlé le
+SocietyContactNotificationNotDefinedTitle = Liste des %d tiers sans notification contact "action Facture client validée"
+
+# SetEventMessage - Notice info
+ObjectContactUpdated                 = Contact ajouté sur %s %s
+SocietyObjectContactNotDefined       = Aucun contact défini sur le tiers :
+AllObjectHaveContact                 = Les %s ont des contacts facturation
+ContactNotificationAdded             = Notification ajouté sur :
+SocietyContactNotificationNotDefined = Aucune notification contact défini sur le tiers :
+AllContactHaveNotification           = Tous les tiers ont des notifications contacts
+
+
+
 #
 # Address - Adresse
 #
@@ -103,24 +128,40 @@ AddressesList                = Liste des adresses
 #
 
 # Data - Donnée
-LastProjects                   = Les %s derniers projets
-Sent                           = Envoyé
-Reminder1                      = Relance 1
-Reminder2                      = Relance 2
-Reminder3                      = Relance 3
-Abandoned                      = Abandonné
-Unreachable                    = Injoignable
-ToCallBack                     = A rappeler
-TooHard                        = Trop compliqué
-TooCheap                       = Pas assez cher
-TooExpensive                   = Trop cher
-ToSignElsewhere                = A signer ailleurs
-NotAProjectAnymore             = Ce n'est plus un projet
-GoesBackOnExcel                = Repart sur Excel
-DontWantToSay                  = Ne veulent pas le dire
-CommercialStatus               = Statut commercial
-CommercialStatusHelp           = Statut commercial de la proposition commerciale
-RefusalReason                  = Raison refus
-RefusalReasonHelp              = Raison du refus de la proposition commerciale
-PropalStatusCommRepartition    = Répartition du statut des propositions commerciale ouvertes
-PropalRefusalReasonRepartition = Répartition des raisons de refus des propositions commerciale
+LastProjects                           = Les %s derniers projets
+Sent                                   = Envoyé
+Reminder1                              = Relance 1
+Reminder2                              = Relance 2
+Reminder3                              = Relance 3
+Abandoned                              = Abandonné
+Unreachable                            = Injoignable
+ToCallBack                             = A rappeler
+TooHard                                = Trop compliqué
+TooCheap                               = Pas assez cher
+TooExpensive                           = Trop cher
+ToSignElsewhere                        = A signer ailleurs
+NotAProjectAnymore                     = Ce n'est plus un projet
+GoesBackOnExcel                        = Repart sur Excel
+DontWantToSay                          = Ne veulent pas le dire
+CommercialStatus                       = Statut commercial
+CommercialStatusHelp                   = Statut commercial de la proposition commerciale
+RefusalReason                          = Raison refus
+RefusalReasonHelp                      = Raison du refus de la proposition commerciale
+PropalStatusCommRepartition            = Répartition du statut des propositions commerciale ouvertes
+PropalRefusalReasonRepartition         = Répartition des raisons de refus des propositions commerciale
+NotationObjectContact                  = Contact facturation
+NotationObjectContactHelp              = Taux de remplissage des informations du contact client facturation <ul><li>Nom / Libellé - 5 <li>Prénom - 5 </li><li>Tél pro - 5 </li><li>Tél portable - 5 </li><li>EMail - 40 </li><li>Contact / adresse par défaut - 40 </li></ul>
+SetNotationObjectContact               = Mise à jour de la notation contact client facturation
+UpdateNotationObjectContactsJob        = Maj des notations contact client facturation sur les %s
+UpdateNotationObjectContactsJobComment = Mise à jour de l'attribut suplémentaire des notations contact client facturation sur les factures récurrentes pour indiquer le taux de remplissage des informations du contact client facturation
+NotationObjectContactsUpdated          = Mise à jour des notations contact client facturation sur %d %s
+NoObject                               = Aucune %s
+FactureMin                             = facture
+FactureMins                            = factures
+FactureRecMin                          = facture récurrente
+FactureRecMins                         = factures récurrentes
+ThirdPartyMins                         = tiers
+ObjectAddContactTrigger                = Contact ajouté
+UpdateObjectContactTrigger             = Mise à jour du rôle "contacts facturation" des factures
+NoContact                              = Aucun contact
+AddContactNotificationTrigger          = Ajout d'une notification contact "action Facture client validée" des tiers
