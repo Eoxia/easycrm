@@ -245,7 +245,7 @@ class ActionsEasycrm
      */
     public function doActions(array $parameters, $object, string $action): int
     {
-        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard'])) {
+        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
             if ($action == 'set_notation_object_contact') {
                 require_once __DIR__ . '/../lib/easycrm_function.lib.php';
 
@@ -329,8 +329,9 @@ class ActionsEasycrm
             }
         }
 
-        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist'])) {
-            print '<link href="../../custom/saturne/css/saturne.min.css" rel="stylesheet">';
+        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist', 'thirdpartylist'])) {
+            $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
+            print '<link href="' . $cssPath . '" rel="stylesheet">';
 
             $jQueryElement = 'notation_' . $object->element . '_contact';
             $pictoPath     = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
@@ -345,8 +346,9 @@ class ActionsEasycrm
             <?php
         }
 
-        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard'])) {
-            print '<link href="../../custom/saturne/css/saturne.min.css" rel="stylesheet">';
+        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
+            $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
+            print '<link href="' . $cssPath . '" rel="stylesheet">';
 
             $jQueryElement = '.' . $object->element . '_extras_notation_' . $object->element . '_contact';
             $pictoPath     = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
@@ -434,7 +436,7 @@ class ActionsEasycrm
             }
         }
 
-        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist'])) {
+        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist', 'thirdpartylist'])) {
             if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
                 $extrafieldName = 'options_notation_' . $object->element . '_contact';
                 if ($object->element == 'facturerec') {

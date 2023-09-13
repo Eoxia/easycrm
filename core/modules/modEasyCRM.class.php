@@ -127,7 +127,9 @@ class modEasyCRM extends DolibarrModules
                 'invoicereclist',
                 'invoicelist',
                 'invoicecard',
-                'contactcard'
+                'contactcard',
+                'thirdpartycard',
+                'thirdpartylist'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -352,6 +354,20 @@ class modEasyCRM extends DolibarrModules
                 'status'        => 1,
                 'test'          => '$conf->saturne->enabled && $conf->easycrm->enabled',
                 'priority'      => 50
+            ],
+            2 => [
+                'label'         => $langs->transnoentities('UpdateNotationObjectContactsJob', $langs->transnoentities('ThirdPartyMins')),
+                'jobtype'       => 'method',
+                'class'         => '/easycrm/class/easycrmcron.class.php',
+                'objectname'    => 'EasycrmCron',
+                'method'        => 'updateNotationObjectContacts',
+                'parameters'    => 'Societe',
+                'comment'       => $langs->transnoentities('UpdateNotationObjectContactsJobComment', $langs->transnoentities('ThirdPartyMins')),
+                'frequency'     => 1,
+                'unitfrequency' => 86400,
+                'status'        => 1,
+                'test'          => '$conf->saturne->enabled && $conf->easycrm->enabled',
+                'priority'      => 50
             ]
         ];
 
@@ -516,6 +532,10 @@ class modEasyCRM extends DolibarrModules
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
 		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
 		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
+
+        // Societe extrafields
+        $extrafields->update('notation_societe_contact', 'NotationObjectContact', 'text', '', 'societe', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
+        $extrafields->addExtraField('notation_societe_contact', 'NotationObjectContact', 'text', 100, '', 'societe', 0, 0, '', '', '', '', 5, 'NotationObjectContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
 
         // Facture extrafields
         $extrafields->update('notation_facture_contact', 'NotationObjectContact', 'text', '', 'facture', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
