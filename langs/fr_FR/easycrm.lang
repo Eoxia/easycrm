@@ -69,9 +69,9 @@ OpportunityStatusDescription = Selection du statut d'opportunité <br> Valeur pa
 OpportunityAmountDescription = Selection du montant d'opportunité <br> Valeur par défaut : <b> 3000 € </b>
 ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par défaut : <b> Prospect </b>
 
-# Product Kit Configuration
-ProductKitConf               = Completer la description d'une ligne de devis avec la composition du kit
-ProductKitConfDesc           = Indépendemment du paramétre du module produit sur la complétion de la description. A l'jout d'un produit/service sur une ligfne de devis, qui un kit, la description de la ligne sera remplacer par le libellé et la description des produits composants
+# Product Kit - Produit Kit
+ProductKitConf     = Compléter la description d'une ligne de devis avec la composition du kit
+ProductKitConfDesc = Indépendemment du paramètre du module produit sur la complétion de la description. <br> A l'ajout d'un produit/service, ayant un kit, sur une ligne de devis, la description de la ligne sera remplacée par le libellé et la description des produits composants.
 
 
 #
