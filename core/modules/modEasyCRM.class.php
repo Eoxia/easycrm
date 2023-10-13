@@ -244,7 +244,9 @@ class modEasyCRM extends DolibarrModules
 
 		$pictopath       = dol_buildpath('/custom/easycrm/img/easycrm_color.png', 1);
 		$pictoEasycrm    = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
-		$objectsMetadata = saturne_get_objects_metadata();
+        if (function_exists('saturne_get_objects_metadata')) {
+            $objectsMetadata = saturne_get_objects_metadata();
+        }
 		$this->tabs      = [];
 
 		if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
