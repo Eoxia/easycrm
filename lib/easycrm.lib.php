@@ -48,6 +48,11 @@ function easycrm_admin_prepare_head(): array
     $head[$h][2] = 'address';
     $h++;
 
+    $head[$h][0] = dol_buildpath('/easycrm/admin/product.php', 1);
+    $head[$h][1] = $conf->browser->layout != 'phone' ? '<i class="fas fa-map-marker-alt pictofixedwidth"></i>' . $langs->trans('Product') : '<i class="fas fa-map-marker-alt"></i>';
+    $head[$h][2] = 'product';
+    $h++;
+
     $head[$h][0] = dol_buildpath('/saturne/admin/about.php', 1) . '?module_name=EasyCRM';
     $head[$h][1] = $conf->browser->layout != 'phone' ? '<i class="fab fa-readme pictofixedwidth"></i>' . $langs->trans('About') : '<i class="fab fa-readme"></i>';
     $head[$h][2] = 'about';
