@@ -138,11 +138,11 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                         foreach ($tmpArrayOfSubProducts as $subProdVal) {
                             $productChild = new Product($this->db);
                             $productChild->fetch($subProdVal[0]);
-                            $concatDesc          = dol_concatdesc($productChild->label,$productChild->description);
+                            $concatDesc          = dol_concatdesc('<b>' . $productChild->label . '</b>',$productChild->description);
                             $labelProductService = dol_concatdesc($labelProductService, $concatDesc);
                         }
                         $result = $object->setValueFrom('description', $labelProductService, '', '', '', '', $user, '', '');
-                        if ($result<0) {
+                        if ($result < 0) {
                             $this->error   .= $object->error;
                             $this->errors[] = $object->error;
                             $this->errors   = array_merge($this->errors, $object->errors);
