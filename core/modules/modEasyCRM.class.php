@@ -178,6 +178,7 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_THIRDPARTY_PHONE_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_THIRDPARTY_EMAIL_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_THIRDPARTY_WEB_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_THIRDPARTY_COMMERCIAL_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_THIRDPARTY_PRIVATE_NOTE_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_THIRDPARTY_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
 

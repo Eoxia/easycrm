@@ -41,6 +41,14 @@ if ($permissiontoaddthirdparty) {
 		print '</tr>';
 	}
 
+    // Commerical
+    if ($conf->global->EASYCRM_THIRDPARTY_WEB_VISIBLE > 0) {
+        print '<tr><td>' . $langs->trans('AllocateCommercial') . '</td><td>';
+        $userList = $form->select_dolusers('', '', 0, null, 0, '', '', 0, 0, 0, ' AND u.statut = 1 AND u.employee = 1', 0, '', '', 0, 1);
+        print img_picto('', 'user', 'class="pictofixedwidth"') . $form->multiselectarray('commercial', $userList, GETPOST('commercial', 'array'), '', '', 'quatrevingtpercent widthcentpercentminusx');
+        print '</td></tr>';
+    }
+
 	// Private note
 	if ($conf->global->EASYCRM_THIRDPARTY_PRIVATE_NOTE_VISIBLE > 0 && isModEnabled('fckeditor')) {
 		print '<tr><td><label for="note_private">' . $langs->trans('NotePrivate') . '</label></td>';

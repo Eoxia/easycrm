@@ -31,6 +31,16 @@ if ($action == 'add') {
 			if ($thirdpartyID > 0) {
 				$backtopage = dol_buildpath('/societe/card.php', 1) . '?id=' . $thirdpartyID;
 
+                // Sales representatives association
+                $salesReps = GETPOST('commercial', 'array');
+                if (count($salesReps) > 0) {
+                    $result = $thirdparty->setSalesRep($salesReps, true);
+                    if ($result < 0) {
+                        setEventMessages($thirdparty->error, $thirdparty->errors, 'errors');
+                        $error++;
+                    }
+                }
+
 				// Category association
 				$categories = GETPOST('categories_customer', 'array');
 				if (count($categories) > 0) {
@@ -40,6 +50,7 @@ if ($action == 'add') {
 						$error++;
 					}
 				}
+
 				if (!empty(GETPOST('lastname', 'alpha'))) {
 					$contact->socid     = !empty($thirdpartyID) ? $thirdpartyID : '';
 					$contact->lastname  = GETPOST('lastname', 'alpha');
