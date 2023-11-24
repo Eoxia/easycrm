@@ -72,10 +72,11 @@ if ($action == 'add') {
 		}
 
 		if (!empty(GETPOST('title'))) {
-            $project->socid      = !empty($thirdpartyID) ? $thirdpartyID : '';
-            $project->ref        = GETPOST('ref');
-            $project->title      = GETPOST('title');
-            $project->opp_status = GETPOST('opp_status', 'int');
+            $project->socid       = !empty($thirdpartyID) ? $thirdpartyID : '';
+            $project->ref         = GETPOST('ref');
+            $project->title       = GETPOST('title');
+            $project->description = GETPOST('description', 'restricthtml'); // Do not use 'alpha' here, we want field as it is
+            $project->opp_status  = GETPOST('opp_status', 'int');
 
             $extrafields->fetch_name_optionals_label($project->table_element);
             $extrafields->setOptionalsFromPost([], $project);
