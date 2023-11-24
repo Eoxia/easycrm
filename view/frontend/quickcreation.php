@@ -114,7 +114,7 @@ $moreCSS  = ['/easycrm/css/pico.min.css'];
 $conf->dol_hide_topmenu  = 1;
 $conf->dol_hide_leftmenu = 1;
 
-saturne_header(1, '', $title, $help_url, '', 0, 0, [], $moreCSS);
+saturne_header(1, '', $title, $help_url, '', 0, 0, [], $moreCSS, '', 'quickcreation-frontend');
 
 if (empty($permissiontoaddproject)) {
     accessforbidden($langs->trans('NotEnoughPermissions'), 0);
