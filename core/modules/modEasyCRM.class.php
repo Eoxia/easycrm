@@ -196,6 +196,7 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE', 'integer', 3000, '', 0, 'current'],
             $i++ => ['EASYCRM_PROJECT_DATE_START_VISIBLE', 'integer', 1, '', 0, 'current'],
+            $i++ => ['EASYCRM_PROJECT_DESCRIPTION_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_PROJECT_EXTRAFIELDS_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_PROJECT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
 
