@@ -1,7 +1,7 @@
 <?php
 
 // Quick add project/task
-if ( !permissiontoaddproject) {
+if ( !$permissiontoaddproject) {
     exit;
 }
 
@@ -57,7 +57,7 @@ print '<input type="hidden" name="ref" value="' . dol_escape_htmltag($suggestedr
         <!-- Desctipion du projet -->
         <label for="content">
             <?php echo $langs->trans('Description'); ?>
-            <textarea><?php echo dol_escape_htmltag((GETPOSTISSET('description') ? GETPOST('description', 'restricthtml') : '')); ?></textarea>
+            <textarea id="content"><?php echo dol_escape_htmltag((GETPOSTISSET('description') ? GETPOST('description', 'restricthtml') : '')); ?></textarea>
         </label>
         
         <!-- Categories -->
