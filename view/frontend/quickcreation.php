@@ -130,8 +130,6 @@ if ($backtopage) {
 
 require_once __DIR__ . '/../../core/tpl/frontend/easycrm_project_quickcreation_frontend.tpl.php';
 
-print $form->buttonsSaveCancel('Create');
-
 print '</form>';
 
 // End of page
