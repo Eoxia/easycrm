@@ -48,7 +48,7 @@ if (isModEnabled('categorie')) {
 global $conf, $db, $hookmanager, $langs, $mysoc, $user;
 
 // Load translation files required by the page
-saturne_load_langs(['categories']);
+saturne_load_langs(['categories', 'projects']);
 
 // Get parameters
 $action      = GETPOST('action', 'aZ09');
@@ -99,7 +99,7 @@ if (empty($reshook)) {
         header('Location: ' . dol_buildpath('/easycrm/easycrmindex.php', 1));
         exit;
     }
-	require_once __DIR__ . '/../../core/tpl/easycrm_quickcreation_actions.tpl.php';
+	require_once __DIR__ . '/../../core/tpl/frontend/easycrm_quickcreation_actions_frontend.tpl.php';
 }
 
 /*
@@ -109,19 +109,20 @@ if (empty($reshook)) {
 
 $title    = $langs->trans('QuickCreation');
 $help_url = 'FR:Module_EasyCRM';
+$moreJS   = ['/custom/saturne/js/includes/signature-pad.min.js'];
 $moreCSS  = ['/easycrm/css/pico.min.css'];
 
 $conf->dol_hide_topmenu  = 1;
 $conf->dol_hide_leftmenu = 1;
 
-saturne_header(1, '', $title, $help_url, '', 0, 0, [], $moreCSS, '', 'quickcreation-frontend');
+saturne_header(1, '', $title, $help_url, '', 0, 0, $moreJS, $moreCSS, '', 'quickcreation-frontend');
 
 if (empty($permissiontoaddproject)) {
     accessforbidden($langs->trans('NotEnoughPermissions'), 0);
     exit;
 }
 
-print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'" enctype="multipart/form-data">';
+print '<form class="quickcreation-form" method="POST" action="' . $_SERVER["PHP_SELF"] . '" enctype="multipart/form-data">';
 print '<input type="hidden" name="token" value="' . newToken() . '">';
 print '<input type="hidden" name="action" value="add">';
 if ($backtopage) {

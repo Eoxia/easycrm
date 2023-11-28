@@ -12,10 +12,10 @@ if (!$permissiontoaddproject && empty($conf) || !is_object($conf)) {
         <div class="modal-container wpeo-modal-event">
             <!-- Modal-Header-->
             <div class="modal-header">
-                <h2 class="modal-title"><?php echo $langs->trans('Signature'); ?></h2>
+                <h2 class="modal-title"><?php echo $langs->trans('Image'); ?></h2>
                 <div class="modal-close"><i class="fas fa-2x fa-times"></i></div>
             </div>
-            <!-- Modal-ADD Signature Content-->
+            <!-- Modal-ADD Image Content-->
             <div class="modal-content" id="#modalContent" style="height: 75%;">
                 <canvas id="canvas" style="height: 98%; width: 100%; border: #0b419b solid 2px"></canvas>
             </div>

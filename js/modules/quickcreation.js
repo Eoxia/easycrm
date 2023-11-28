@@ -173,17 +173,12 @@ window.easycrm.quickcreation.clearCanvas = function() {
  * @return {void}
  */
 window.easycrm.quickcreation.drawImageOnCanvas = function(event) {
-  let ratio = Math.max(window.devicePixelRatio || 1, 1);
   window.easycrm.quickcreation.canvas = document.querySelector('#modal-upload-image0 canvas');
 
   window.easycrm.quickcreation.canvas.signaturePad = new SignaturePad(window.easycrm.quickcreation.canvas, {
     penColor: 'rgb(175, 175, 175)'
   });
 
-  window.easycrm.quickcreation.canvas.width = 200 * ratio;
-  window.easycrm.quickcreation.canvas.height = 200 * ratio;
-  window.easycrm.quickcreation.canvas.getContext('2d');
-  let context = window.easycrm.quickcreation.canvas.getContext('2d');
   window.easycrm.quickcreation.canvas.signaturePad.clear();
 
   // Draw the image on the canvas
@@ -192,7 +187,14 @@ window.easycrm.quickcreation.drawImageOnCanvas = function(event) {
   window.easycrm.quickcreation.img = event;
 
   img.onload = function() {
-      context.drawImage(img, 0, 0, window.easycrm.quickcreation.canvas.width, window.easycrm.quickcreation.canvas.height);
+    // let ratio = Math.max(window.devicePixelRatio || 1, 1);
+    // window.easycrm.quickcreation.canvas.width  = window.easycrm.quickcreation.canvas.offsetWidth * ratio;
+    // window.easycrm.quickcreation.canvas.height = window.easycrm.quickcreation.canvas.offsetHeight * ratio;
+    //let context = window.easycrm.quickcreation.canvas.getContext('2d').scale(ratio, ratio);
+    let context = window.easycrm.quickcreation.canvas.getContext('2d');
+    window.easycrm.quickcreation.canvas.width  = 300;
+    window.easycrm.quickcreation.canvas.height = 400;
+    context.drawImage(img, 0, 0, window.easycrm.quickcreation.canvas.width, window.easycrm.quickcreation.canvas.height);
   };
 
   window.easycrm.quickcreation.rotation = 0; // Reset rotation when a new image is selected
@@ -210,7 +212,7 @@ window.easycrm.quickcreation.drawImageOnCanvas = function(event) {
  */
 window.easycrm.quickcreation.createImg = function() {
   let canvas = $(this).closest('.wpeo-modal').find('canvas')[0];
-  let img    = canvas.toDataURL('image/png', 0.5);
+  let img    = canvas.toDataURL('image/png');
 
   let token          = window.saturne.toolbox.getToken();
   let querySeparator = window.saturne.toolbox.getQuerySeparator(document.URL);
