@@ -45,7 +45,7 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php';
                 <div class="wpeo-button button-square-50">
                     <i class="fas fa-camera"></i><i class="fas fa-plus-circle button-add"></i>
                 </div>
-                <?php print saturne_show_medias_linked('easycrm', $conf->easycrm->multidir_output[$conf->entity] . '/project/tmp/0/project_photos', 'small', '', 0, 0, 0, 50, 50, 0, 0, 0, 'project/tmp/0/project_photos', $project, '', 0, 0, 0, 0, '', 0); ?>
+                <?php print saturne_show_medias_linked('easycrm', $conf->easycrm->multidir_output[$conf->entity] . '/project/tmp/0/project_photos', 'small', '', 0, 0, 0, 50, 50, 0, 0, 0, 'project/tmp/0/project_photos', $project, '', 0, 1, 0, 0, ''); ?>
             </div>
         </label>
     </div>
