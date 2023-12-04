@@ -18,7 +18,7 @@
 /**
  * \file    view/frontend/quickcreation.php
  * \ingroup easycrm
- * \brief   Page to quick creation project on frontend view
+ * \brief   Page to quick creation on frontend view
  */
 
 // Load EasyCRM environment
@@ -30,82 +30,63 @@ if (file_exists('../easycrm.main.inc.php')) {
     die('Include of easycrm main fails');
 }
 
-// Libraries
+// Load Dolibarr libraries
 if (isModEnabled('project')) {
-    require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
-
     require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
     require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
-}
-if (isModEnabled('fckeditor')) {
-    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 }
 if (isModEnabled('categorie')) {
     require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 }
 
 // Global variables definitions
-global $conf, $db, $hookmanager, $langs, $mysoc, $user;
+global $conf, $db, $hookmanager, $langs, $user;
 
 // Load translation files required by the page
-saturne_load_langs(['categories', 'projects']);
+saturne_load_langs(['projects']);
 
 // Get parameters
 $action      = GETPOST('action', 'aZ09');
-$contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : 'quickcretion'; // To manage different context of search
-$cancel      = GETPOST('cancel', 'aZ09');
+$contextpage = GETPOST('contextpage', 'aZ') ? GETPOST('contextpage', 'aZ') : 'quickcretion_frontend'; // To manage different context of search
 $backtopage  = GETPOST('backtopage', 'alpha');
 $subaction   = GETPOST('subaction', 'alpha');
 
 // Initialize technical objects
-$extrafields = new ExtraFields($db);
 if (isModEnabled('project')) {
     $project = new Project($db);
     $task    = new Task($db);
 }
-if (isModEnabled('categorie')) {
-    $category = new Categorie($db);
-}
 
 // Initialize view objects
 $form = new Form($db);
-if (isModEnabled('project')) {
-    $formproject = new FormProjets($db);
-}
 
-$hookmanager->initHooks(['easycrm_quickcreation']); // Note that conf->hooks_modules contains array
-
-$date_start = dol_mktime(0, 0, 0, GETPOST('projectstartmonth', 'int'), GETPOST('projectstartday', 'int'), GETPOST('projectstartyear', 'int'));
+$hookmanager->initHooks(['easycrm_quickcreation_frontend']); // Note that conf->hooks_modules contains array
 
 // Security check - Protection if external user
-$permissiontoread       = $user->rights->easycrm->read;
-$permissiontoaddproject = $user->rights->projet->creer;
-saturne_check_access($permissiontoread);
+$permissionToRead       = $user->rights->easycrm->read;
+$permissionToAddProject = $user->rights->projet->creer;
+saturne_check_access($permissionToRead);
 
 /*
  * Actions
  */
 
 $parameters = [];
-$reshook = $hookmanager->executeHooks('doActions', $parameters, $project, $action); // Note that $action and $project may have been modified by some hooks
-if ($reshook < 0) {
+$resHook    = $hookmanager->executeHooks('doActions', $parameters, $project, $action); // Note that $action and $project may have been modified by some hooks
+if ($resHook < 0) {
     setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 }
 
-if (empty($reshook)) {
+if (empty($resHook)) {
     $error = 0;
 
-    if ($cancel) {
-        header('Location: ' . dol_buildpath('/easycrm/easycrmindex.php', 1));
-        exit;
-    }
-	require_once __DIR__ . '/../../core/tpl/frontend/easycrm_quickcreation_actions_frontend.tpl.php';
+    // Actions add_img, add
+    require_once __DIR__ . '/../../core/tpl/frontend/easycrm_quickcreation_actions_frontend.tpl.php';
 }
 
 /*
  * View
  */
-
 
 $title    = $langs->trans('QuickCreation');
 $help_url = 'FR:Module_EasyCRM';
@@ -115,9 +96,9 @@ $moreCSS  = ['/easycrm/css/pico.min.css'];
 $conf->dol_hide_topmenu  = 1;
 $conf->dol_hide_leftmenu = 1;
 
-saturne_header(1, '', $title, $help_url, '', 0, 0, $moreJS, $moreCSS, '', 'quickcreation-frontend');
+saturne_header(0, '', $title, $help_url, '', 0, 0, $moreJS, $moreCSS, '', 'quickcreation-frontend');
 
-if (empty($permissiontoaddproject)) {
+if (empty($permissionToAddProject)) {
     accessforbidden($langs->trans('NotEnoughPermissions'), 0);
     exit;
 }

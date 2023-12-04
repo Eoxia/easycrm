@@ -1,7 +1,34 @@
 <?php
+/* Copyright (C) 2023 EVARISK <technique@evarisk.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * \file    core/tpl/frontend/easycrm_media_editor_frontend.tpl.php
+ * \ingroup easycrm
+ * \brief   Template page for media editor frontend modal
+ */
+
+/**
+ * The following vars must be defined :
+ * Global   : $langs
+ * Variable : $permissionToAddProject
+ */
 
 // Protection to avoid direct call of template
-if (!$permissiontoaddproject && empty($conf) || !is_object($conf)) {
+if (!$permissionToAddProject) {
     exit;
 } ?>
 
@@ -29,9 +56,9 @@ if (!$permissiontoaddproject && empty($conf) || !is_object($conf)) {
                 <div class="image-rotate-right wpeo-button button-grey button-square-50">
                     <span><i class="fas fa-redo-alt"></i></span>
                 </div>
-                <div class="image-undo wpeo-button button-grey button-square-50">
-                    <span><i class="fas fa-undo-alt"></i></span>
-                </div>
+<!--                <div class="image-undo wpeo-button button-grey button-square-50">-->
+<!--                    <span><i class="fas fa-undo-alt"></i></span>-->
+<!--                </div>-->
                 <div class="image-erase wpeo-button button-grey button-square-50">
                     <span><i class="fas fa-eraser"></i></span>
                 </div>
@@ -42,3 +69,4 @@ if (!$permissiontoaddproject && empty($conf) || !is_object($conf)) {
         </div>
     </div>
 </div>
+<?php

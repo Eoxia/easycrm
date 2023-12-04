@@ -1,17 +1,44 @@
 <?php
+/* Copyright (C) 2023 EVARISK <technique@evarisk.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 
-// Quick add project/task
-if ( !$permissiontoaddproject) {
+/**
+ * \file    core/tpl/actions/easycrm_project_quickcreation_frontend.tpl.php
+ * \ingroup easycrm
+ * \brief   Template page for quick creation project frontend
+ */
+
+/**
+ * The following vars must be defined :
+ * Global   : $conf, $langs
+ * Objects  : $form, $project
+ * Variable : $permissionToAddProject
+ */
+
+// Protection to avoid direct call of template
+if (!$permissionToAddProject) {
     exit;
 }
 
-require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php';
+require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
 
-// File start
-?>
+<!-- File start-->
 <div class="project-container">
     <div class="page-header">
-        <div class="page-title"><?php echo $langs->trans('Opportunity'); ?></div>
+        <div class="page-title"><?php echo $langs->trans('Lead'); ?></div>
     </div>
 
     <div class="page-content">
@@ -38,14 +65,14 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php';
             </label>
         <?php endif; ?>
 
-        <!-- Photos -->
+        <!-- Images -->
         <input hidden multiple id="upload-image" type="file" name="userfile[]" capture="environment" accept="image/*">
         <label class="linked-medias" for="upload-image">
             <div class="linked-medias-list">
                 <div class="wpeo-button button-square-50">
                     <i class="fas fa-camera"></i><i class="fas fa-plus-circle button-add"></i>
                 </div>
-                <?php print saturne_show_medias_linked('easycrm', $conf->easycrm->multidir_output[$conf->entity] . '/project/tmp/0/project_photos', 'small', '', 0, 0, 0, 50, 50, 0, 0, 0, 'project/tmp/0/project_photos', $project, '', 0, 1, 0, 0, ''); ?>
+                <?php print saturne_show_medias_linked('easycrm', $conf->easycrm->multidir_output[$conf->entity] . '/project/tmp/0/project_photos', 'small', '', 0, 0, 0, 50, 50, 0, 0, 0, 'project/tmp/0/project_photos', $project, '', 0); ?>
             </div>
         </label>
     </div>
