@@ -24,7 +24,7 @@
 /**
  * The following vars must be defined :
  * Global     : $conf, $langs, $user
- * Parameters : $action
+ * Parameters : $action, $subaction
  * Objects    : $project, $task
  * Variable   : $error, $permissionToAddProject
  */
@@ -43,12 +43,12 @@ if ($action == 'add_img') {
     if (!dol_is_dir($uploadDir)) {
         dol_mkdir($uploadDir);
     }
-    file_put_contents($uploadDir . generate_random_id(8) . '_img.png', $decodedImage);
+    file_put_contents($uploadDir . generate_random_id(8) . '_img.jpg', $decodedImage);
 
-    vignette($uploadDir . generate_random_id(8) . '_img.png', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_MINI, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_MINI, '_mini');
-    vignette($uploadDir . generate_random_id(8) . '_img.png', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_SMALL, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_SMALL);
-    vignette($uploadDir . generate_random_id(8) . '_img.png', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_MEDIUM, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_MEDIUM, '_medium');
-    vignette($uploadDir . generate_random_id(8) . '_img.png', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_LARGE, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_LARGE, '_large');
+    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_MINI, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_MINI, '_mini');
+    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_SMALL, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_SMALL);
+    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_MEDIUM, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_MEDIUM, '_medium');
+    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_LARGE, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_LARGE, '_large');
 }
 
 if ($action == 'add') {
@@ -61,6 +61,7 @@ if ($action == 'add') {
 
     $project->ref               = $refProjectMod->getNextValue(null, $project);
     $project->title             = GETPOST('title');
+    $project->description       = GETPOST('description', 'restricthtml');
     $project->opp_status        = getDolGlobalInt('EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE');
     $project->opp_amount        = getDolGlobalInt('EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE');
     $project->date_c            = dol_now();
@@ -124,9 +125,30 @@ if ($action == 'add') {
     }
 
     if (!$error) {
+        setEventMessage($langs->transnoentities('QuickCreationFrontendSuccess', $project->ref));
         header('Location: ' . $_SERVER["PHP_SELF"]);
         exit;
     } else {
         $action = '';
+    }
+}
+
+if ($subaction == 'unlinkFile') {
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    $filePath = $data['filepath'];
+    $fileName = $data['filename'];
+    $fullPath = $filePath . '/' . $fileName;
+
+    if (is_file($fullPath)) {
+        unlink($fullPath);
+    }
+
+    $sizesArray = ['mini', 'small', 'medium', 'large'];
+    foreach($sizesArray as $size) {
+        $thumbName = $filePath . '/thumbs/' . saturne_get_thumb_name($fileName, $size);
+        if (is_file($thumbName)) {
+            unlink($thumbName);
+        }
     }
 }

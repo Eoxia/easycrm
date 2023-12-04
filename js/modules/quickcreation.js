@@ -212,7 +212,7 @@ window.easycrm.quickcreation.drawImageOnCanvas = function(event) {
  */
 window.easycrm.quickcreation.createImg = function() {
   let canvas = $(this).closest('.wpeo-modal').find('canvas')[0];
-  let img    = canvas.toDataURL('image/png');
+  let img    = canvas.toDataURL('image/jpeg');
 
   let token          = window.saturne.toolbox.getToken();
   let querySeparator = window.saturne.toolbox.getQuerySeparator(document.URL);

@@ -52,7 +52,7 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
         <?php if ($conf->global->EASYCRM_PROJECT_DESCRIPTION_VISIBLE > 0) : ?>
             <label for="description">
                 <?php echo $langs->trans('Description'); ?>
-                <textarea id="description"><?php echo dol_escape_htmltag((GETPOSTISSET('description') ? GETPOST('description', 'restricthtml') : '')); ?></textarea>
+                <textarea name="description" id="description"><?php echo dol_escape_htmltag((GETPOSTISSET('description') ? GETPOST('description', 'restricthtml') : '')); ?></textarea>
             </label>
         <?php endif; ?>
 
@@ -67,9 +67,10 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
 
         <!-- Images -->
         <input hidden multiple id="upload-image" type="file" name="userfile[]" capture="environment" accept="image/*">
-        <label class="linked-medias" for="upload-image">
+        <label class="linked-medias project" for="upload-image">
             <div class="linked-medias-list">
                 <div class="wpeo-button button-square-50">
+                    <input type="hidden" class="modal-options" data-photo-class="project"/>
                     <i class="fas fa-camera"></i><i class="fas fa-plus-circle button-add"></i>
                 </div>
                 <?php print saturne_show_medias_linked('easycrm', $conf->easycrm->multidir_output[$conf->entity] . '/project/tmp/0/project_photos', 'small', '', 0, 0, 0, 50, 50, 0, 0, 0, 'project/tmp/0/project_photos', $project, '', 0); ?>
