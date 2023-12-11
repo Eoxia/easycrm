@@ -1,6 +1,6 @@
 .quickcreation-frontend form {
     input, select, textarea {
-        background: #fff;
+      background: #fff;
     }
 
     select.widthcentpercentminusx, span.widthcentpercentminusx:not(.select2-selection):not(.select2-dropdown), input.widthcentpercentminusx {
@@ -21,15 +21,25 @@
     }
 
     input[type=range] {
-      width: 75%;
-      -webkit-appearance: none;
-      cursor: -webkit-grab;
-      -webkit-transition: border 1000ms ease;
-      transition: border 1000ms ease;
+      width: 70%;
+      background: #f7f7f7;
+      height: 0;
+    }
 
-      /* Add this gradient background property */
-      background: -webkit-linear-gradient(left, rgba(198, 40, 40, 1) 0%, rgba(56, 142, 60, 1) 100%);
-      background: -moz-linear-gradient(left, rgba(198, 40, 40, 1) 0%, rgba(56, 142, 60, 1) 100%);
-      background: linear-gradient(to right, rgba(198, 40, 40, 1) 0%, rgba(56, 142, 60, 1) 100%);
+    input[type=range]::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 15px;
+      background: linear-gradient(to right,
+        rgba(255, 94, 94, 1) 0%,
+        rgba(255, 120, 120, 1) 15%,
+        rgba(255, 148, 120, 1) 30%,
+        rgba(200, 220, 120, 1) 45%,
+        rgba(120, 200, 110, 1) 60%,
+        rgba(52, 160, 72, 1) 100%
+      );
     }
 }
