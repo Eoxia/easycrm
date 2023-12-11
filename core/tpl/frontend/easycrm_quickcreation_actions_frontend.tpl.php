@@ -43,12 +43,7 @@ if ($action == 'add_img') {
     if (!dol_is_dir($uploadDir)) {
         dol_mkdir($uploadDir);
     }
-    file_put_contents($uploadDir . generate_random_id(8) . '_img.jpg', $decodedImage);
-
-    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_MINI, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_MINI, '_mini');
-    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_SMALL, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_SMALL);
-    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_MEDIUM, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_MEDIUM, '_medium');
-    vignette($uploadDir . generate_random_id(8) . '_img.jpg', $conf->global->EASYCRM_MEDIA_MAX_WIDTH_LARGE, $conf->global->EASYCRM_MEDIA_MAX_HEIGHT_LARGE, '_large');
+    file_put_contents($uploadDir . dol_print_date(dol_now(), 'dayhourlog') . '_img.jpg', $decodedImage);
 }
 
 if ($action == 'add') {
@@ -62,8 +57,8 @@ if ($action == 'add') {
     $project->ref               = $refProjectMod->getNextValue(null, $project);
     $project->title             = GETPOST('title');
     $project->description       = GETPOST('description', 'restricthtml');
-    $project->opp_status        = getDolGlobalInt('EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE');
-    $project->opp_amount        = getDolGlobalInt('EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VALUE');
+    $project->opp_status        = GETPOST('opp_status');
+    $project->opp_amount        = GETPOST('opp_amount', 'int');
     $project->date_c            = dol_now();
     $project->date_start        = dol_now();
     $project->statut            = 1;
@@ -113,7 +108,7 @@ if ($action == 'add') {
         if ($taskID > 0) {
             $task->add_contact($user->id, 'TASKEXECUTIVE', 'internal');
             $project->array_options['commtask'] = $taskID;
-            $project->update($user);
+            $project->updateExtraField('commtask');
         } else {
             setEventMessages($task->error, $task->errors, 'errors');
             $error++;

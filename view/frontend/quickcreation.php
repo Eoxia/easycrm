@@ -32,6 +32,7 @@ if (file_exists('../easycrm.main.inc.php')) {
 
 // Load Dolibarr libraries
 if (isModEnabled('project')) {
+    require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
     require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
     require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
 }
@@ -58,7 +59,10 @@ if (isModEnabled('project')) {
 }
 
 // Initialize view objects
-$form = new Form($db);
+$form        = new Form($db);
+if (isModEnabled('project')) {
+    $formProject = new FormProjets($db);
+}
 
 $hookmanager->initHooks(['easycrm_quickcreation_frontend']); // Note that conf->hooks_modules contains array
 

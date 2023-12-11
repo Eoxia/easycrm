@@ -1,4 +1,4 @@
-.wpeo-modal {
+.quickcreation-frontend .wpeo-modal {
     .modal-container {
         max-height: none;
         padding-left: 0;
@@ -16,7 +16,7 @@
             object-fit: contain;
             width: 600px;
             height: 800px;
-            
+
             @media ( max-width: $media__small ) {
                 width: 300px;
                 height: 400px;

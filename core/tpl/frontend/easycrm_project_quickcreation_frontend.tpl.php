@@ -52,9 +52,28 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
         <?php if ($conf->global->EASYCRM_PROJECT_DESCRIPTION_VISIBLE > 0) : ?>
             <label for="description">
                 <?php echo $langs->trans('Description'); ?>
-                <textarea name="description" id="description"><?php echo dol_escape_htmltag((GETPOSTISSET('description') ? GETPOST('description', 'restricthtml') : '')); ?></textarea>
+                <textarea name="description" id="description" rows="6"><?php echo dol_escape_htmltag((GETPOSTISSET('description') ? GETPOST('description', 'restricthtml') : '')); ?></textarea>
             </label>
         <?php endif; ?>
+
+        <!-- Opportunity option -->
+        <?php if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) :
+            // Opportunity status
+            if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VISIBLE > 0) : ?>
+                <label for="opp_status">
+                    <?php echo $langs->trans('OpportunityStatus'); ?>
+                    <?php echo $formProject->selectOpportunityStatus('opp_status', GETPOSTISSET('opp_status') ? GETPOST('opp_status') : $conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE, 1, 0, 0, 0, '', 0, 1); ?>
+                </label>
+            <?php endif;
+
+            // Opportunity amount
+            if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE > 0) : ?>
+                <label for="opp_amount">
+                    <?php echo $langs->trans('OpportunityAmount'); ?>
+                    <input type="text" name="opp_amount" id="opp_amount" value="<?php echo dol_escape_htmltag((GETPOSTISSET('opp_amount') ? GETPOST('opp_amount', 'int') : '')); ?>">
+                </label>
+            <?php endif;
+        endif; ?>
 
         <!-- Categories -->
         <?php if (isModEnabled('categorie') && $conf->global->EASYCRM_PROJECT_CATEGORIES_VISIBLE > 0) : ?>

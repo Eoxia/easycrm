@@ -176,7 +176,7 @@ window.easycrm.quickcreation.drawImageOnCanvas = function(event) {
   window.easycrm.quickcreation.canvas = document.querySelector('#modal-upload-image0 canvas');
 
   window.easycrm.quickcreation.canvas.signaturePad = new SignaturePad(window.easycrm.quickcreation.canvas, {
-    penColor: 'rgb(175, 175, 175)'
+    penColor: 'rgb(255, 0, 0)'
   });
 
   window.easycrm.quickcreation.canvas.signaturePad.clear();
