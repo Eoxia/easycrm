@@ -19,4 +19,17 @@
             }
         }
     }
+
+    input[type=range] {
+      width: 75%;
+      -webkit-appearance: none;
+      cursor: -webkit-grab;
+      -webkit-transition: border 1000ms ease;
+      transition: border 1000ms ease;
+
+      /* Add this gradient background property */
+      background: -webkit-linear-gradient(left, rgba(198, 40, 40, 1) 0%, rgba(56, 142, 60, 1) 100%);
+      background: -moz-linear-gradient(left, rgba(198, 40, 40, 1) 0%, rgba(56, 142, 60, 1) 100%);
+      background: linear-gradient(to right, rgba(198, 40, 40, 1) 0%, rgba(56, 142, 60, 1) 100%);
+    }
 }

@@ -57,17 +57,16 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
         <?php endif; ?>
 
         <!-- Opportunity option -->
-        <?php if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) :
-            // Opportunity status
-            if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VISIBLE > 0) : ?>
-                <label for="opp_status">
-                    <?php echo $langs->trans('OpportunityStatus'); ?>
-                    <?php echo $formProject->selectOpportunityStatus('opp_status', GETPOSTISSET('opp_status') ? GETPOST('opp_status') : $conf->global->EASYCRM_PROJECT_OPPORTUNITY_STATUS_VALUE, 1, 0, 0, 0, '', 0, 1); ?>
-                </label>
-            <?php endif;
-
-            // Opportunity amount
-            if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE > 0) : ?>
+        <?php if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) : ?>
+            <!-- Opportunity percent -->
+            <label for="opp_percent">
+                <?php echo $langs->trans('OpportunityStatus'); ?>
+                <?php echo '<br>' . img_picto('', 'fontawesome_fa-frown-open_fas_#c62828_2em', 'class="paddingright"'); ?>
+                <input type="range" class="range" name="opp_percent" id="opp_percent" min="0" max="100" step="10" value="0">
+                <?php echo img_picto('', 'fontawesome_fa-laugh-beam_fas_#388e3c_2em'); ?>
+            </label>
+            <!-- Opportunity amount -->
+            <?php if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE > 0) : ?>
                 <label for="opp_amount">
                     <?php echo $langs->trans('OpportunityAmount'); ?>
                     <input type="number" name="opp_amount" id="opp_amount" min="0" value="<?php echo dol_escape_htmltag((GETPOSTISSET('opp_amount') ? GETPOST('opp_amount', 'int') : '')); ?>">
@@ -76,13 +75,13 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
         endif; ?>
 
         <!-- Categories -->
-        <?php if (isModEnabled('categorie') && $conf->global->EASYCRM_PROJECT_CATEGORIES_VISIBLE > 0) : ?>
-            <label for="categories-project">
-                <?php echo $langs->trans('Categories'); ?>
-                <?php $cateArbo = $form->select_all_categories(Categorie::TYPE_PROJECT, '', 'parent', 64, 0, 1); ?>
-                <?php print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories_project', $cateArbo, GETPOST('categories_project', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx'); ?>
-            </label>
-        <?php endif; ?>
+<!--        --><?php //if (isModEnabled('categorie') && $conf->global->EASYCRM_PROJECT_CATEGORIES_VISIBLE > 0) : ?>
+<!--            <label for="categories-project">-->
+<!--                --><?php //echo $langs->trans('Categories'); ?>
+<!--                --><?php //$cateArbo = $form->select_all_categories(Categorie::TYPE_PROJECT, '', 'parent', 64, 0, 1); ?>
+<!--                --><?php //print img_picto('', 'category', 'class="pictofixedwidth"') . $form->multiselectarray('categories_project', $cateArbo, GETPOST('categories_project', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx'); ?>
+<!--            </label>-->
+<!--        --><?php //endif; ?>
 
         <!-- Images -->
         <input hidden multiple id="upload-image" type="file" name="userfile[]" capture="environment" accept="image/*">

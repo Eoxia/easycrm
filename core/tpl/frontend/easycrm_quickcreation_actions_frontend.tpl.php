@@ -57,23 +57,23 @@ if ($action == 'add') {
     $project->ref         = $refProjectMod->getNextValue(null, $project);
     $project->title       = GETPOST('title');
     $project->description = GETPOST('description', 'restricthtml');
-    $project->opp_status  = GETPOST('opp_status','int');
+    $project->opp_percent = GETPOST('opp_percent','int');
 
-    switch ($project->opp_status) {
-        case 2:
-            $project->opp_percent = 20;
+    switch ($project->opp_percent) {
+        case 20 < 40:
+            $project->opp_status = 2;
             break;
-        case 3:
-            $project->opp_percent = 40;
+        case 40 < 60:
+            $project->opp_status = 3;
             break;
-        case 4:
-            $project->opp_percent = 60;
+        case 60 < 100:
+            $project->opp_status = 4;
             break;
-        case 5:
-            $project->opp_percent = 100;
+        case 100:
+            $project->opp_status = 5;
             break;
         default:
-            $project->opp_percent = 0;
+            $project->opp_status = 1;
             break;
     }
 
@@ -86,15 +86,15 @@ if ($action == 'add') {
 
     $projectID = $project->create($user);
     if ($projectID > 0) {
-        // Category association
-        $categories = GETPOST('categories_project', 'array');
-        if (count($categories) > 0) {
-            $result = $project->setCategories($categories);
-            if ($result < 0) {
-                setEventMessages($project->error, $project->errors, 'errors');
-                $error++;
-            }
-        }
+//        // Category association
+//        $categories = GETPOST('categories_project', 'array');
+//        if (count($categories) > 0) {
+//            $result = $project->setCategories($categories);
+//            if ($result < 0) {
+//                setEventMessages($project->error, $project->errors, 'errors');
+//                $error++;
+//            }
+//        }
 
         $pathToProjectImg = $conf->project->multidir_output[$conf->entity] . '/' . $project->ref;
         $pathToTmpImg     = $conf->easycrm->multidir_output[$conf->entity] . '/project/tmp/0/project_photos/';
