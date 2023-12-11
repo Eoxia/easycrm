@@ -70,7 +70,7 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
             if ($conf->global->EASYCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE > 0) : ?>
                 <label for="opp_amount">
                     <?php echo $langs->trans('OpportunityAmount'); ?>
-                    <input type="text" name="opp_amount" id="opp_amount" value="<?php echo dol_escape_htmltag((GETPOSTISSET('opp_amount') ? GETPOST('opp_amount', 'int') : '')); ?>">
+                    <input type="number" name="opp_amount" id="opp_amount" min="0" value="<?php echo dol_escape_htmltag((GETPOSTISSET('opp_amount') ? GETPOST('opp_amount', 'int') : '')); ?>">
                 </label>
             <?php endif;
         endif; ?>

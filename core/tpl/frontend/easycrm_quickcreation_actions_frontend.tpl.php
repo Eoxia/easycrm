@@ -54,11 +54,30 @@ if ($action == 'add') {
 
     list ($refProjectMod, $refTaskMod) = saturne_require_objects_mod($numberingModules);
 
-    $project->ref               = $refProjectMod->getNextValue(null, $project);
-    $project->title             = GETPOST('title');
-    $project->description       = GETPOST('description', 'restricthtml');
-    $project->opp_status        = GETPOST('opp_status');
-    $project->opp_amount        = GETPOST('opp_amount', 'int');
+    $project->ref         = $refProjectMod->getNextValue(null, $project);
+    $project->title       = GETPOST('title');
+    $project->description = GETPOST('description', 'restricthtml');
+    $project->opp_status  = GETPOST('opp_status','int');
+
+    switch ($project->opp_status) {
+        case 2:
+            $project->opp_percent = 20;
+            break;
+        case 3:
+            $project->opp_percent = 40;
+            break;
+        case 4:
+            $project->opp_percent = 60;
+            break;
+        case 5:
+            $project->opp_percent = 100;
+            break;
+        default:
+            $project->opp_percent = 0;
+            break;
+    }
+
+    $project->opp_amount        = price2num(GETPOST('opp_amount', 'int'));
     $project->date_c            = dol_now();
     $project->date_start        = dol_now();
     $project->statut            = 1;
