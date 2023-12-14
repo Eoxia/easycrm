@@ -16,18 +16,18 @@
  */
 
 /**
- *	\file       view/map.php
- *	\ingroup    map
- *	\brief      Page to show map of object's address
+ * \file    view/map.php
+ * \ingroup map
+ * \brief   Page to show map of object
  */
 
 // Load EasyCRM environment
 if (file_exists('../easycrm.main.inc.php')) {
-	require_once __DIR__ . '/../easycrm.main.inc.php';
+    require_once __DIR__ . '/../easycrm.main.inc.php';
 } elseif (file_exists('../../easycrm.main.inc.php')) {
-	require_once __DIR__ . '/../../easycrm.main.inc.php';
+    require_once __DIR__ . '/../../easycrm.main.inc.php';
 } else {
-	die('Include of easycrm main fails');
+    die('Include of easycrm main fails');
 }
 
 // Load Dolibarr libraries
@@ -43,7 +43,7 @@ if (isModEnabled('categorie')) {
 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
 // Load EasyCRM librairies
-require_once __DIR__ . '/../class/address.class.php';
+require_once __DIR__ . '/../class/geolocation.php';
 
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
@@ -54,8 +54,8 @@ saturne_load_langs(['categories']);
 // Get map filters parameters
 $filterType    = GETPOST('filter_type','aZ');
 $fromId        = GETPOST('from_id');
-$filterId      = GETPOST('filter_id');
 $objectType    = GETPOST('from_type', 'alpha');
+$filterId      = GETPOST('filter_id');
 $filterCountry = GETPOST('filter_country');
 $filterRegion  = GETPOST('filter_region');
 $filterState   = GETPOST('filter_state');
@@ -63,10 +63,11 @@ $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
 
 // Initialize technical object
-$objectInfos  = saturne_get_objects_metadata($objectType);
-$className    = $objectInfos['class_name'];
-$objectLinked = new $className($db);
-$object       = new Address($db);
+$objectInfos    = saturne_get_objects_metadata($objectType);
+$className      = $objectInfos['class_name'];
+$objectLinked   = new $className($db);
+//$object         = new Address($db);
+$geolocation = new Geolocation($db);
 
 // Initialize view objects
 $form        = new Form($db);
@@ -92,34 +93,34 @@ saturne_check_access($permissiontoread);
 $parameters = [];
 $resHook    = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $objectLinked may have been modified by some hooks
 if ($resHook < 0) {
-	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+    setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 }
 
 if (empty($resHook)) {
-	// Purge search criteria
-	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) // All tests are required to be compatible with all browsers
-	{
-		$filterCat     = [];
-		$filterId      = 0;
-		$filterCountry = 0;
-		$filterRegion  = 0;
-		$filterState   = 0;
-		$filterTown    = '';
-		$filterType    = '';
-	}
+    // Purge search criteria
+    if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) // All tests are required to be compatible with all browsers
+    {
+        $filterCat     = [];
+        $filterId      = 0;
+        $filterCountry = 0;
+        $filterRegion  = 0;
+        $filterState   = 0;
+        $filterTown    = '';
+        $filterType    = '';
+    }
 }
 
 /*
  * View
  */
 
-$title   = $langs->trans("Map");
+$title   = $langs->trans('Map');
 $helpUrl = 'FR:Module_EasyCRM';
 
 saturne_header(0, '', $title, $helpUrl);
 
 /**
- * Build geoJSON datas.
+ * Build geoJSON datas
  */
 
 // Filter on address
@@ -195,40 +196,57 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 		}
 	}
 } else {
-	$addresses = $object->fetchAll('', '', 0, 0, $filter, 'AND', !empty($filterCat), $objectType, 't.element_id');
-	if (is_array($addresses) && !empty($addresses)) {
-		foreach($addresses as $object) {
-			if ($object->longitude != 0 && $object->latitude != 0) {
-				$object->convertCoordinates();
-				$num++;
-			} else {
-				continue;
-			}
+    $geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => 't.element_type = ' . "'" . GETPOST('from_type') . "'"]);
+    if (is_array($geolocations) && !empty($geolocations)) {
+        foreach($geolocations as $geolocation) {
+            $geolocation->convertCoordinates();
+            $objectLinked->fetch($geolocation->fk_element);
 
-			$objectLinked->fetch($object->element_id);
+            $objectLinkedInfo  = $objectLinked->getNomUrl(1, '', 0, '', ' - ', 1) . '</br>';
+            $objectLinkedInfo .= $langs->transnoentities('ProjectLabel') . ' : ' . $objectLinked->title . '</br>';
+            $objectLinkedInfo .= $langs->transnoentities('Description') . ' : ' . $objectLinked->description . '</br>';
+            $code = dol_getIdFromCode($db, $objectLinked->opp_status, 'c_lead_status', 'rowid', 'code');
+            if ($code) {
+                $objectLinkedInfo .= $langs->transnoentities('OpportunityStatus')  . ' : ' . $langs->trans('OppStatus' . $code) . '</br>';
+            }
+            if (strcmp($objectLinked->opp_amount, '')) {
+                $objectLinkedInfo .= $langs->transnoentities('OpportunityAmount') . ' : ' . price($objectLinked->opp_amount, 0, $langs, 1, 0, -1, $conf->currency) . '</br>';
+                if (strcmp($objectLinked->opp_percent, '')) {
+                    $objectLinkedInfo .= $langs->transnoentities('OpportunityWeightedAmountShort')  . ' : ' . price($objectLinked->opp_amount * $objectLinked->opp_percent / 100, 0, $langs, 1, 0, -1, $conf->currency);
+                }
+            }
 
-			$locationID   = $object->id ?? 0;
-			$description  = $objectLinked->getNomUrl(1) . '</br>';
-			$description .= $langs->trans($object->type) . ' : ' . $object->name;
-			$description .= dol_strlen($object->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $object->town : '';
-			$color        = randomColor();
+            $num++;
+            $objectList[$num]['color']  = '#' . randomColor();
+            switch ($objectLinked->opp_percent) {
+                case 40 < 60:
+                    $objectList[$num]['scale'] = 1.5;
+                    break;
+                case 60 < 100:
+                    $objectList[$num]['scale'] = 1.75;
+                    break;
+                case 100:
+                    $objectList[$num]['scale'] = 2;
+                    break;
+                default:
+                    $objectList[$num]['scale'] = 1;
+                    break;
+            }
 
-			$objectList[$locationID] = !empty($object->fields['color']) ? $object->fields['color'] : '#' . $color;
-
-			// Add geoJSON point
-			$features[] = [
-				'type' => 'Feature',
-				'geometry' => [
-					'type' => 'Point',
-					'coordinates' => [$object->longitude, $object->latitude],
-				],
-				'properties' => [
-					'desc'    => $description,
-					'address' => $locationID,
-				],
-			];
-		}
-	}
+            // Add geoJSON point
+            $features[] = [
+                'type'     => 'Feature',
+                'geometry' => [
+                    'type'        => 'Point',
+                    'coordinates' => [$geolocation->longitude, $geolocation->latitude]
+                ],
+                'properties' => [
+                    'desc'    => $objectLinkedInfo,
+                    'address' => $num
+                ]
+            ];
+        }
+    }
 }
 
 if ($fromId > 0) {
@@ -369,7 +387,7 @@ print '</form>';
 			"features": []
 		};
 		<?php
-		$result = $object->injectMapFeatures($features, 500);
+		$result = $geolocation->injectMapFeatures($features, 500);
 		if ($result < 0) {
 			setEventMessage($langs->trans('ErrorMapFeatureEncoding'), 'errors');
 		}
@@ -386,8 +404,9 @@ print '</form>';
 				markerStyles[key] = new ol.style.Style({
 					image: new ol.style.Icon(/** @type {module:ol/style/Icon~Options} */ ({
 						anchor: [0.5, 1],
-						color: value,
+						color: value.color,
 						crossOrigin: 'anonymous',
+						scale: value.scale,
 						src: '<?php print $icon ?>'
 					}))
 				});

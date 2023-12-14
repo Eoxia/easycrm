@@ -60,7 +60,7 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
         <?php if (!empty($conf->global->PROJECT_USE_OPPORTUNITIES)) : ?>
             <!-- Opportunity percent -->
             <label for="opp_percent">
-                <?php echo $langs->trans('OpportunityStatus'); ?>
+                <?php echo $langs->trans('OpportunityProbability'); ?>
                 <?php echo '<br>' . img_picto('', 'fontawesome_fa-frown-open_fas_#c62828_2em', 'class="paddingright"'); ?>
                 <input type="range" class="range" name="opp_percent" id="opp_percent" min="0" max="100" step="10" value="0">
                 <?php echo img_picto('', 'fontawesome_fa-laugh-beam_fas_#388e3c_2em'); ?>
@@ -94,6 +94,11 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
                 <?php print saturne_show_medias_linked('easycrm', $conf->easycrm->multidir_output[$conf->entity] . '/project/tmp/0/project_photos', 'small', '', 0, 0, 0, 50, 50, 0, 0, 0, 'project/tmp/0/project_photos', $project, '', 0); ?>
             </div>
         </label>
+
+        <!-- GPS -->
+        <input type="hidden" id="latitude"  name="latitude" value="">
+        <input type="hidden" id="longitude" name="longitude" value="">
+        <input type="hidden" id="geolocation-error" name="geolocation-error" value="">
     </div>
 
     <div class="page-footer">

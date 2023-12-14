@@ -25,7 +25,7 @@
  * The following vars must be defined :
  * Global     : $conf, $langs, $user
  * Parameters : $action, $subaction
- * Objects    : $project, $task
+ * Objects    : $project, $geolocation, $task
  * Variable   : $error, $permissionToAddProject
  */
 
@@ -117,6 +117,17 @@ if ($action == 'add') {
         }
 
         $project->add_contact($user->id, 'PROJECTLEADER', 'internal');
+
+        if (empty(GETPOST('geolocation-error'))) {
+            $geolocation->latitude = GETPOST('latitude');
+            $geolocation->longitude = GETPOST('longitude');
+            $geolocation->element_type = $project->element;
+            $geolocation->fk_element = $projectID;
+
+            $geolocation->create($user);
+        } else {
+            setEventMessage($langs->transnoentities('GeolocationError', GETPOST('geolocation-error')));
+        }
 
         $task->fk_project = $projectID;
         $task->ref        = $refTaskMod->getNextValue(null, $task);
