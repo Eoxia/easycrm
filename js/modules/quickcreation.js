@@ -106,6 +106,7 @@ window.easycrm.quickcreation.event = function() {
   $(document).on('click', '.image-erase', window.easycrm.quickcreation.clearCanvas);
   $(document).on('click', '.image-validate', window.easycrm.quickcreation.createImg);
   window.easycrm.quickcreation.getCurrentPosition();
+  $(document).on('submit', '.quickcreation-form', window.easycrm.quickcreation.vibratePhone);
 };
 
 window.easycrm.quickcreation.uploadImage = function() {
@@ -289,5 +290,25 @@ window.easycrm.quickcreation.getCurrentPosition = function() {
     );
   } else {
     $('.project-container #geolocation-error').val('Geolocation is not supported by this browser.');
+  }
+};
+
+/**
+ * Do vibrate phone after submit quick creation
+ *
+ * @memberof EasyCRM_QuickCreation
+ *
+ * @since   1.3.0
+ * @version 1.3.0
+ *
+ * @return {void}
+ */
+window.easycrm.quickcreation.vibratePhone = function() {
+  if ('vibrate' in navigator) {
+    // Trigger a vibration in the form of a pattern
+    // Vibrate for 1 second, pause for 0.5 seconds,
+    // Vibrate for 0.2 seconds, pause for 0.2 seconds,
+    // Vibrate for 0.5 seconds, pause for 1 second
+    navigator.vibrate([1000, 500, 200, 200, 500, 1000]);
   }
 };
