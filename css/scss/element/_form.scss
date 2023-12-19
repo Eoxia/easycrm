@@ -1,0 +1,45 @@
+.quickcreation-frontend form {
+    input, select, textarea {
+      background: #fff;
+    }
+
+    select.widthcentpercentminusx, span.widthcentpercentminusx:not(.select2-selection):not(.select2-dropdown), input.widthcentpercentminusx {
+        width: 100% !important;
+        margin-bottom: 2em;
+
+        .select2-container--default, .select2-selection--multiple {
+            --border-color: var(--form-element-border-color);
+            width: 100%;
+            border:var(--border-width) solid var(--border-color);
+            border-radius:var(--border-radius);
+            outline:0;
+
+            input {
+                margin: 0;
+            }
+        }
+    }
+
+    input[type=range] {
+      width: 70%;
+      background: #f7f7f7;
+      height: 0;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 15px;
+      background: linear-gradient(to right,
+        rgba(255, 94, 94, 1) 0%,
+        rgba(255, 120, 120, 1) 15%,
+        rgba(255, 148, 120, 1) 30%,
+        rgba(200, 220, 120, 1) 45%,
+        rgba(120, 200, 110, 1) 60%,
+        rgba(52, 160, 72, 1) 100%
+      );
+    }
+}

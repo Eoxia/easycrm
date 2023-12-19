@@ -41,6 +41,9 @@ CommercialFollowUp       = SC
 CommercialTask           = Tâche commerciale
 ProjectPhone             = Téléphone projet
 
+# Frontend - Frontend
+QuickCreationFrontendSuccess = Ajout rapide d'opportunité effectué avec succès : %s
+
 
 
 #

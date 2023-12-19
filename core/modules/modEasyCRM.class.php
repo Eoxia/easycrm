@@ -225,7 +225,16 @@ class modEasyCRM extends DolibarrModules
 			$i++ => ['EASYCRM_VERSION','chaine', $this->version, '', 0, 'current'],
 			$i++ => ['EASYCRM_DB_VERSION', 'chaine', $this->version, '', 0, 'current'],
             $i++ => ['EASYCRM_SHOW_PATCH_NOTE', 'integer', 1, '', 0, 'current'],
-            $i   => ['EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG', 'integer', 0, '', 0, 'current'],
+            $i++ => ['EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG', 'integer', 0, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_WIDTH_MINI', 'integer', 128, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_HEIGHT_MINI', 'integer', 72, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_WIDTH_SMALL', 'integer', 480, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_HEIGHT_SMALL', 'integer', 270, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_WIDTH_MEDIUM', 'integer', 854, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_HEIGHT_MEDIUM', 'integer', 480, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_WIDTH_LARGE', 'integer', 1280, '', 0, 'current'],
+            $i++ => ['EASYCRM_MEDIA_MAX_HEIGHT_LARGE', 'integer', 720, '', 0, 'current'],
+            $i   => ['EASYCRM_DISPLAY_NUMBER_MEDIA_GALLERY', 'integer', 8, '', 0, 'current'],
         ];
 
 		// Some keys to add into the overwriting translation tables
@@ -446,6 +455,24 @@ class modEasyCRM extends DolibarrModules
             'langs'    => 'easycrm@easycrm',
             'position' => 1000 + $r,
             'enabled'  => '$conf->easycrm->enabled', // Define condition to show or hide menu entry. Use '$conf->easycrm->enabled' if entry must be visible if module is enabled.
+            'perms'    => '$user->rights->easycrm->read', // Use 'perms'=>'$user->rights->easycrm->myobject->read' if you want your menu with a permission rules
+            'target'   => '',
+            'user'     => 0, // 0=Menu for internal users, 1=external users, 2=both
+        ];
+
+        $menuEnabled = ($conf->browser->layout != 'classic') ? 1 : 0;
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=easycrm', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type'     => 'left', // This is a Top menu entry
+            'titre'    => $langs->transnoentities('QuickCreation'),
+            'prefix'   => '<i class="fas fa-plus-circle pictofixedwidth"></i>',
+            'mainmenu' => 'easycrm',
+            'leftmenu' => 'quickcreationfrontend',
+            'url'      => '/easycrm/view/frontend/quickcreation.php', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'langs'    => 'easycrm@easycrm',
+            'position' => 1000 + $r,
+            'enabled'  => $menuEnabled, // Define condition to show or hide menu entry. Use '$conf->easycrm->enabled' if entry must be visible if module is enabled.
             'perms'    => '$user->rights->easycrm->read', // Use 'perms'=>'$user->rights->easycrm->myobject->read' if you want your menu with a permission rules
             'target'   => '',
             'user'     => 0, // 0=Menu for internal users, 1=external users, 2=both
