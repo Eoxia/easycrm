@@ -312,6 +312,7 @@ window.easycrm.quickcreation.vibratePhone = function() {
     // Vibrate for 0.5 seconds, pause for 1 second
     navigator.vibrate([1000, 500, 200, 200, 500, 1000]);
   }
+  window.saturne.loader.display($('.page-footer button'));
 };
 
 /**
