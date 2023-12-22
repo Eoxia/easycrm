@@ -123,7 +123,7 @@ class Geolocation extends SaturneObject
     /**
      * @var int Fk_element
      */
-    public int $fk_element;
+    public $fk_element;
 
     /**
      * Constructor
