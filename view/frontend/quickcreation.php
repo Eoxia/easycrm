@@ -40,6 +40,9 @@ if (isModEnabled('categorie')) {
     require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 }
 
+// load EasyCRM libraries
+require_once __DIR__ . '/../../class/geolocation.php';
+
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
 
@@ -53,13 +56,14 @@ $backtopage  = GETPOST('backtopage', 'alpha');
 $subaction   = GETPOST('subaction', 'alpha');
 
 // Initialize technical objects
+$geolocation = new Geolocation($db);
 if (isModEnabled('project')) {
     $project = new Project($db);
     $task    = new Task($db);
 }
 
 // Initialize view objects
-$form        = new Form($db);
+$form = new Form($db);
 if (isModEnabled('project')) {
     $formProject = new FormProjets($db);
 }

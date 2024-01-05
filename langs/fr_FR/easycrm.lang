@@ -126,6 +126,16 @@ DisplayAllAddressDescription = Afficher l'adresse principale sur la carte au lie
 AddressesList                = Liste des adresses
 
 
+
+#
+# Geolocation - Géolocalisation
+#
+
+# Data - Donnée
+GeolocationError = Erreur possible lors la géolocalisation : %s
+
+
+
 #
 # Other - Autre
 #

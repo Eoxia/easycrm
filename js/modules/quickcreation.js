@@ -35,16 +35,6 @@
 window.easycrm.quickcreation = {};
 
 /**
- * Init quickcreation canvas
- *
- * @memberof EasyCRM_QuickCreation
- *
- * @since   1.3.0
- * @version 1.3.0
- */
-window.easycrm.quickcreation.canvas;
-
-/**
  * Init rotation value of img on canvas
  *
  * @memberof EasyCRM_QuickCreation
@@ -63,6 +53,26 @@ window.easycrm.quickcreation.rotation = 0;
  * @version 1.3.0
  */
 window.easycrm.quickcreation.img;
+
+/**
+ * Init latitude GPS
+ *
+ * @memberof EasyCRM_QuickCreation
+ *
+ * @since   1.3.0
+ * @version 1.3.0
+ */
+window.easycrm.quickcreation.latitude;
+
+/**
+ * Init longitude GPS
+ *
+ * @memberof EasyCRM_QuickCreation
+ *
+ * @since   1.3.0
+ * @version 1.3.0
+ */
+window.easycrm.quickcreation.longitude;
 
 /**
  * QuickCreation init
@@ -95,6 +105,7 @@ window.easycrm.quickcreation.event = function() {
   $(document).on('click', '.image-undo', window.easycrm.quickcreation.undoLastDraw);
   $(document).on('click', '.image-erase', window.easycrm.quickcreation.clearCanvas);
   $(document).on('click', '.image-validate', window.easycrm.quickcreation.createImg);
+  window.easycrm.quickcreation.getCurrentPosition();
 };
 
 window.easycrm.quickcreation.uploadImage = function() {
@@ -232,4 +243,51 @@ window.easycrm.quickcreation.createImg = function() {
     },
     error: function () {}
   });
+};
+
+/**
+ * Get current GPS position of navigator user
+ *
+ * @memberof EasyCRM_QuickCreation
+ *
+ * @since   1.3.0
+ * @version 1.3.0
+ *
+ * @return {void}
+ */
+window.easycrm.quickcreation.getCurrentPosition = function() {
+  // Check if geolocation is supported by the browser
+  if (navigator.geolocation) {
+    // Get the current position
+    navigator.geolocation.getCurrentPosition(
+      // Success callback function
+      function (position) {
+        // Access the latitude and longitude from the position object
+        window.easycrm.quickcreation.latitude  = position.coords.latitude;
+        window.easycrm.quickcreation.longitude = position.coords.longitude;
+        $('.project-container #latitude').val(window.easycrm.quickcreation.latitude);
+        $('.project-container #longitude').val(window.easycrm.quickcreation.longitude);
+      },
+      // Error callback function
+      function (error) {
+        // Handle errors
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            $('.project-container #geolocation-error').val('User denied the request for geolocation.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            $('.project-container #geolocation-error').val('Location information is unavailable.');
+            break;
+          case error.TIMEOUT:
+            $('.project-container #geolocation-error').val('The request to get user location timed out.');
+            break;
+          case error.UNKNOWN_ERROR:
+            $('.project-container #geolocation-error').val('An unknown error occurred.');
+            break;
+        }
+      }
+    );
+  } else {
+    $('.project-container #geolocation-error').val('Geolocation is not supported by this browser.');
+  }
 };
