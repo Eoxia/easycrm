@@ -107,6 +107,7 @@ window.easycrm.quickcreation.event = function() {
   $(document).on('click', '.image-validate', window.easycrm.quickcreation.createImg);
   window.easycrm.quickcreation.getCurrentPosition();
   $(document).on('submit', '.quickcreation-form', window.easycrm.quickcreation.vibratePhone);
+  $(document).on('input', '#opp_percent', window.easycrm.quickcreation.showOppPercentValue);
 };
 
 window.easycrm.quickcreation.uploadImage = function() {
@@ -311,4 +312,18 @@ window.easycrm.quickcreation.vibratePhone = function() {
     // Vibrate for 0.5 seconds, pause for 1 second
     navigator.vibrate([1000, 500, 200, 200, 500, 1000]);
   }
+};
+
+/**
+ * Show opp percent value on range input
+ *
+ * @memberof EasyCRM_QuickCreation
+ *
+ * @since   1.3.0
+ * @version 1.3.0
+ *
+ * @return {void}
+ */
+window.easycrm.quickcreation.showOppPercentValue = function() {
+  $('.opp_percent-value').text($('#opp_percent').val());
 };
