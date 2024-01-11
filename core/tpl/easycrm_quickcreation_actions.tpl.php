@@ -22,7 +22,7 @@ if ($action == 'add') {
 			$thirdparty->client       = GETPOST('client');
 			$thirdparty->name         = GETPOST('name');
 			$thirdparty->phone        = GETPOST('phone', 'alpha');
-			$thirdparty->email        = !empty(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL)) ? trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL)) : 'nomail@nomail.com';
+			$thirdparty->email        = !empty(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL)) ? trim(GETPOST('email_thirdparty', 'custom', 0, FILTER_SANITIZE_EMAIL)) : 'nomail@nomail.com-' .  dol_print_date(dol_now(), 'dayhourlog');
 			$thirdparty->url          = trim(GETPOST('url', 'custom', 0, FILTER_SANITIZE_URL));
 			$thirdparty->note_private = GETPOST('note_private');
             $thirdparty->country_id   = $mysoc->country_id;
