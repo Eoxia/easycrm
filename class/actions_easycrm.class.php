@@ -392,7 +392,7 @@ class ActionsEasycrm
         if (strpos($_SERVER['PHP_SELF'], 'easycrm') !== false) {
             ?>
             <script>
-                console.log($('link[rel="manifest"]').remove());
+                $('link[rel="manifest"]').remove();
             </script>
             <?php
 
