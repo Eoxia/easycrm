@@ -50,4 +50,4 @@ INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, 
 ALTER TABLE llx_notify_def ADD UNIQUE INDEX uk_notify_def_asct (fk_action, fk_soc, fk_contact, type);
 
 -- 1.3.0
-INSERT INTO llx_c_actioncomm (id, code, type, libelle, module, active, todo, color, picto, position) VALUES (80, 'AC_PHYSICAL_SALES_RELAUCH', 'system', 'Physical sales relaunch', 'easycrm@easycrm', 1, NULL, NULL, NULL, 12);
+INSERT INTO llx_c_actioncomm (id, code, type, libelle, module, active, todo, color, picto, position) VALUES (80, 'AC_PHYSICAL_SALES_RELAUCH', 'module', 'Physical sales relaunch', 'easycrm@easycrm', 1, NULL, NULL, NULL, 80);
