@@ -147,55 +147,55 @@ $features      = [];
 $num           = 0;
 $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
 
-if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
-	if (is_array($allObjects) && !empty($allObjects)) {
-		foreach ($allObjects as $objectLinked) {
-			$objectLinked->fetch_optionals();
-
-			if (!isset($objectLinked->array_options['options_' . $objectType . 'address']) || dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) <= 0) {
-				continue;
-			} else {
-				$addressId = $objectLinked->array_options['options_' . $objectType . 'address'];
-			}
-
-			$object->fetch($addressId);
-
-			if (($filterId > 0 && $filterId != $objectLinked->id) || (dol_strlen($filterType) > 0 && $filterType != $object->type) || (dol_strlen($filterTown) > 0 && $filterTown != $object->town) ||
-				($filterCountry > 0 && $filterCountry != $object->fk_country) || ($filterRegion > 0 && $filterRegion != $object->fk_region) || ($filterState > 0 && $filterState != $object->fk_department)) {
-                continue;
-			}
-
-			if ($object->longitude != 0 && $object->latitude != 0) {
-				$object->convertCoordinates();
-				$num++;
-			} else {
-				continue;
-			}
-
-			$locationID   = $addressId;
-
-			$description  = $objectLinked->getNomUrl(1) . '</br>';
-			$description .= $langs->trans($object->type) . ' : ' . $object->name;
-			$description .= dol_strlen($object->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $object->town : '';
-			$color        = randomColor();
-
-			$objectList[$locationID] = !empty($object->fields['color']) ? $object->fields['color'] : '#' . $color;
-
-			// Add geoJSON point
-			$features[] = [
-				'type' => 'Feature',
-				'geometry' => [
-					'type' => 'Point',
-					'coordinates' => [$object->longitude, $object->latitude],
-				],
-				'properties' => [
-					'desc'    => $description,
-					'address' => $locationID,
-				],
-			];
-		}
-	}
-} else {
+//if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
+//	if (is_array($allObjects) && !empty($allObjects)) {
+//		foreach ($allObjects as $objectLinked) {
+//			$objectLinked->fetch_optionals();
+//
+//			if (!isset($objectLinked->array_options['options_' . $objectType . 'address']) || dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) <= 0) {
+//				continue;
+//			} else {
+//				$addressId = $objectLinked->array_options['options_' . $objectType . 'address'];
+//			}
+//
+//			$object->fetch($addressId);
+//
+//			if (($filterId > 0 && $filterId != $objectLinked->id) || (dol_strlen($filterType) > 0 && $filterType != $object->type) || (dol_strlen($filterTown) > 0 && $filterTown != $object->town) ||
+//				($filterCountry > 0 && $filterCountry != $object->fk_country) || ($filterRegion > 0 && $filterRegion != $object->fk_region) || ($filterState > 0 && $filterState != $object->fk_department)) {
+//                continue;
+//			}
+//
+//			if ($object->longitude != 0 && $object->latitude != 0) {
+//				$object->convertCoordinates();
+//				$num++;
+//			} else {
+//				continue;
+//			}
+//
+//			$locationID   = $addressId;
+//
+//			$description  = $objectLinked->getNomUrl(1) . '</br>';
+//			$description .= $langs->trans($object->type) . ' : ' . $object->name;
+//			$description .= dol_strlen($object->town) > 0 ? '</br>' . $langs->trans('Town') . ' : ' . $object->town : '';
+//			$color        = randomColor();
+//
+//			$objectList[$locationID] = !empty($object->fields['color']) ? $object->fields['color'] : '#' . $color;
+//
+//			// Add geoJSON point
+//			$features[] = [
+//				'type' => 'Feature',
+//				'geometry' => [
+//					'type' => 'Point',
+//					'coordinates' => [$object->longitude, $object->latitude],
+//				],
+//				'properties' => [
+//					'desc'    => $description,
+//					'address' => $locationID,
+//				],
+//			];
+//		}
+//	}
+//} else {
     $geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => 't.element_type = ' . "'" . GETPOST('from_type') . "'"]);
     if (is_array($geolocations) && !empty($geolocations)) {
         foreach($geolocations as $geolocation) {
@@ -247,7 +247,7 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
             ];
         }
     }
-}
+//}
 
 if ($fromId > 0) {
     $objectLinked->fetch($fromId);
