@@ -127,6 +127,29 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 $actioncomm->label  = $langs->transnoentities('AddContactNotificationTrigger');
                 $actioncomm->create($user);
                 break;
+            case 'LINEPROPAL_INSERT' :
+                if (!empty($object->fk_product)) {
+                    $product        = new Product($this->db);
+                    $product->id    = $object->fk_product;
+                    $product->get_sousproduits_arbo();
+                    if (!empty($product->sousprods) && is_array($product->sousprods) && count($product->sousprods)) {
+                        $libelleproduitservice='';
+                        $tmparrayofsubproducts = reset($product->sousprods);
+                        foreach ($tmparrayofsubproducts as $subprodval) {
+                            $productChild = new Product($this->db);
+                            $productChild->fetch($subprodval[0]);
+                            $libelleproduitservice = dol_concatdesc($libelleproduitservice,dol_concatdesc($productChild->label,$productChild->description));
+                        }
+                        $result = $object->setValueFrom('description', $libelleproduitservice, '', '', '', '', $user, '', '');
+                        if ($result<0) {
+                            $this->error    .= $object->error;
+                            $this->errors[] = $object->error;
+                            $this->errors   = array_merge($this->errors, $object->errors);
+                            return -1;
+                        }
+                    }
+                }
+                break;
         }
         return 0;
     }
