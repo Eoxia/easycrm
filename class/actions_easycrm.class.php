@@ -75,7 +75,7 @@ class ActionsEasycrm
         global $conf, $langs, $user;
 
         // Do something only for the current context
-        if ($parameters['currentcontext'] == 'thirdpartycomm') {
+        if (strpos($parameters['context'], 'thirdpartycomm') !== false) {
             if (isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
                 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
@@ -129,7 +129,7 @@ class ActionsEasycrm
         global $conf, $db, $langs, $user;
 
         // Do something only for the current context
-        if ($parameters['currentcontext'] == 'thirdpartycomm') {
+        if (strpos($parameters['context'], 'thirdpartycomm') !== false) {
             if (isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
                 require_once __DIR__ . '/../../saturne/lib/object.lib.php';
@@ -217,9 +217,9 @@ class ActionsEasycrm
         global $langs, $user;
 
         // Do something only for the current context
-        if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
+        if (preg_match('/thirdpartycomm|projectcard/', $parameters['context'])) {
             if (empty(GETPOST('action')) || GETPOST('action') == 'update') {
-                if ($parameters['currentcontext'] == 'thirdpartycomm') {
+                if (strpos($parameters['context'], 'thirdpartycomm') !== false) {
                     $socid = $object->id;
                     $moreparam = '';
                 } else {
@@ -245,7 +245,7 @@ class ActionsEasycrm
      */
     public function doActions(array $parameters, $object, string $action): int
     {
-        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
+        if (preg_match('/invoicecard|invoicereccard|thirdpartycomm|thirdpartycard/', $parameters['context'])) {
             if ($action == 'set_notation_object_contact') {
                 require_once __DIR__ . '/../lib/easycrm_function.lib.php';
 
@@ -271,7 +271,7 @@ class ActionsEasycrm
         global $conf, $db, $langs , $object;
 
         // Do something only for the current context
-        if (in_array($parameters['currentcontext'], ['thirdpartycomm', 'projectcard'])) {
+        if (preg_match('/thirdpartycomm|projectcard/', $parameters['context'])) {
             if (isModEnabled('agenda')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
 
@@ -281,7 +281,7 @@ class ActionsEasycrm
                 $actiomcomm = new ActionComm($db);
 
                 $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
-                $actiomcomms = $actiomcomm->getActions(GETPOST('socid'), ($parameters['currentcontext'] != 'thirdpartycomm' ? GETPOST('id') : ''), ($parameters['currentcontext'] != 'thirdpartycomm' ? 'project' : ''), $filter, 'a.datec');
+                $actiomcomms = $actiomcomm->getActions(GETPOST('socid'), ((strpos($parameters['context'], 'thirdpartycomm') !== false) ? '' : GETPOST('id')), ((strpos($parameters['context'], 'thirdpartycomm') !== false) ? '' : 'project'), $filter, 'a.datec');
                 if (is_array($actiomcomms) && !empty($actiomcomms)) {
                     $nbActiomcomms  = count($actiomcomms);
                     $lastActiomcomm = array_shift($actiomcomms);
@@ -306,7 +306,7 @@ class ActionsEasycrm
         }
 
         // Do something only for the current context
-        if ($parameters['currentcontext'] == 'projectcard') {
+        if (strpos($parameters['context'], 'projectcard') !== false) {
             if (empty(GETPOST('action')) || GETPOST('action') == 'update') {
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
@@ -329,7 +329,7 @@ class ActionsEasycrm
             }
         }
 
-        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist', 'thirdpartylist'])) {
+        if (preg_match('/invoicelist|invoicereclist|thirdpartylist/', $parameters['context'])) {
             $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
             print '<link href="' . $cssPath . '" rel="stylesheet">';
 
@@ -346,7 +346,7 @@ class ActionsEasycrm
             <?php
         }
 
-        if (in_array($parameters['currentcontext'], ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
+        if (preg_match('/invoicecard|invoicereccard|thirdpartycomm|thirdpartycard/', $parameters['context'])) {
             $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
             print '<link href="' . $cssPath . '" rel="stylesheet">';
 
@@ -368,7 +368,7 @@ class ActionsEasycrm
             <?php
         }
 
-        if ($parameters['currentcontext'] == 'contactcard') {
+        if (strpos($parameters['context'], 'contactcard') !== false) {
             if (in_array(GETPOST('action'), ['create', 'edit'])) {
                 $out = img_picto('', 'fontawesome_fa-id-card-alt_fas', 'class="pictofixedwidth"'); ?>
                 <script>
@@ -379,6 +379,27 @@ class ActionsEasycrm
         }
 
         return 0; // or return 1 to replace standard code
+    }
+
+    /**
+     * Overloading the addHtmlHeader function : replacing the parent's function with the one below
+     *
+     * @param  array $parameters Hook metadata (context, etc...)
+     * @return int               0 < on error, 0 on success, 1 to replace standard code
+     */
+    public function addHtmlHeader(array $parameters): int
+    {
+        if (strpos($_SERVER['PHP_SELF'], 'easycrm') !== false) {
+            ?>
+            <script>
+                $('link[rel="manifest"]').remove();
+            </script>
+            <?php
+
+            $this->resprints = '<link rel="manifest" href="' . DOL_URL_ROOT . '/custom/easycrm/manifest.json.php' . '" />';
+        }
+
+        return 0; // or return 1 to replace standard code-->
     }
 
     /**
@@ -393,7 +414,7 @@ class ActionsEasycrm
         global $conf, $db, $langs, $object, $user;
 
         // Do something only for the current context
-        if ($parameters['currentcontext'] == 'projectlist') {
+        if (strpos($parameters['context'], 'projectlist') !== false) {
             if (isModEnabled('agenda') && isModEnabled('project') && $user->hasRight('projet', 'lire') && isModEnabled('saturne')) {
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
@@ -436,7 +457,7 @@ class ActionsEasycrm
             }
         }
 
-        if (in_array($parameters['currentcontext'], ['invoicelist', 'invoicereclist', 'thirdpartylist'])) {
+        if (preg_match('/invoicelist|invoicereclist|thirdpartylist/', $parameters['context'])) {
             if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
                 $extrafieldName = 'options_notation_' . $object->element . '_contact';
                 if ($object->element == 'facturerec') {
@@ -472,7 +493,7 @@ class ActionsEasycrm
      */
     public function formConfirm(array $parameters, CommonObject $object): int
     {
-        if ($parameters['currentcontext'] == 'propalcard') {
+        if (strpos($parameters['context'], 'propalcard') !== false) {
             if (empty($object->thirdparty->id)) {
                 $object->fetch_thirdparty();
             }
@@ -491,7 +512,7 @@ class ActionsEasycrm
     {
         global $langs;
 
-        if (in_array($parameters['currentcontext'], ['invoicereccard', 'invoicereccontact'])) {
+        if (preg_match('/invoicereccard|invoicereccontact/', $parameters['context'])) {
             $nbContact = 0;
             // Enable caching of thirdrparty count Contacts
             require_once DOL_DOCUMENT_ROOT . '/core/lib/memory.lib.php';

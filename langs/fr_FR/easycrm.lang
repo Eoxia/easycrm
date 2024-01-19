@@ -41,6 +41,9 @@ CommercialFollowUp       = SC
 CommercialTask           = Tâche commerciale
 ProjectPhone             = Téléphone projet
 
+# Frontend - Frontend
+QuickCreationFrontendSuccess = Ajout rapide d'opportunité effectué avec succès : %s
+
 
 
 #
@@ -123,6 +126,16 @@ DisplayAllAddressDescription = Afficher l'adresse principale sur la carte au lie
 AddressesList                = Liste des adresses
 
 
+
+#
+# Geolocation - Géolocalisation
+#
+
+# Data - Donnée
+GeolocationError = Erreur possible lors la géolocalisation : %s
+
+
+
 #
 # Other - Autre
 #
@@ -165,3 +178,4 @@ ObjectAddContactTrigger                = Contact ajouté
 UpdateObjectContactTrigger             = Mise à jour du rôle "contacts facturation" des factures
 NoContact                              = Aucun contact
 AddContactNotificationTrigger          = Ajout d'une notification contact "action Facture client validée" des tiers
+ActionAC_PHYSICAL_SALES_RELAUCH        = Relance commercial physique
