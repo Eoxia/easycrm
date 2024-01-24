@@ -158,8 +158,8 @@ if (empty($reshook)) {
 
         $objectLinked->fetch($fromId);
 
-        if (isset($objectLinked->array_options['options_' . $objectType . 'address']) && dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) > 0) {
-            $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $favoriteAddressId ? 0 : $favoriteAddressId;
+        if (isset($objectLinked->array_options['options_projectaddress']) && dol_strlen($objectLinked->array_options['options_projectaddress']) > 0) {
+            $objectLinked->array_options['options_projectaddress'] = $objectLinked->array_options['options_projectaddress'] == $favoriteAddressId ? 0 : $favoriteAddressId;
             $objectLinked->update($user);
         }
     }

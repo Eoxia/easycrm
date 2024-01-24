@@ -527,14 +527,12 @@ class modEasyCRM extends DolibarrModules
         $extrafields->update('notation_facturerec_contact', 'NotationObjectContact', 'text', '', 'facture_rec', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
         $extrafields->addExtraField('notation_facturerec_contact', 'NotationObjectContact', 'text', 100, '', 'facture_rec', 0, 0, '', '', '', '', 5, 'NotationObjectContactHelp', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);
 
-        if (is_array($objectsMetadata) && !empty($objectsMetadata)) {
-            foreach ($objectsMetadata as $objectType => $objectMetadata) {
-                $extrafieldParam     = 'easycrm_address:name:rowid::element_id=$ID$ AND element_type="' . $objectType . '" AND status>0';
-                $extrafieldParamSize = dol_strlen($extrafieldParam);
-                $extrafields->update($objectType . 'address', 'FavoriteAddress', 'sellist', 255, $objectMetadata['table_element'], 0, 0, 101, 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '$user->rights->easycrm->address->write', 1, '', '', '', '', 'easycrm@easycrm', '1', 0, 0, ['css => minwidth100 maxwidth300 widthcentpercentminusx']);
-                $extrafields->addExtraField($objectType . 'address', 'FavoriteAddress', 'sellist', 101, 255, $objectMetadata['table_element'], 0, 0, '', 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '$user->rights->easycrm->address->write', 1, '', '', '', 'easycrm@easycrm', '1', 0, 0, ['css => minwidth100 maxwidth300 widthcentpercentminusx']);
-            }
-        }
+        // Favorite address extrafields
+        $extrafieldParam     = 'easycrm_address:name:rowid::element_id=$ID$ AND element_type="project" AND status>0';
+        $extrafieldParamSize = dol_strlen($extrafieldParam);
+        $extrafields->update('projectaddress', 'FavoriteAddress', 'sellist', 255, 'projet', 0, 0, 101, 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '$user->rights->easycrm->address->write', 1, '', '', '', '', 'easycrm@easycrm', '1', 0, 0, ['css => minwidth100 maxwidth300 widthcentpercentminusx']);
+        $extrafields->addExtraField('projectaddress', 'FavoriteAddress', 'sellist', 101, 255, 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:' . $extrafieldParamSize . ':"' . $extrafieldParam .'";N;}}', 1, '$user->rights->easycrm->address->write', 1, '', '', '', 'easycrm@easycrm', '1', 0, 0, ['css => minwidth100 maxwidth300 widthcentpercentminusx']);
+
         if (empty($conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG)) {
             require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
