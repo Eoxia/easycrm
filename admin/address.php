@@ -78,7 +78,7 @@ print load_fiche_titre($title, $linkback, 'easycrm_color@easycrm');
 
 // Configuration header
 $head = easycrm_admin_prepare_head();
-print dol_get_fiche_head($head, 'object', $title, -1, 'easycrm_color@easycrm');
+print dol_get_fiche_head($head, 'address', $title, -1, 'easycrm_color@easycrm');
 
 require_once __DIR__ . '/../../saturne/core/tpl/admin/object/object_numbering_module_view.tpl.php';
 

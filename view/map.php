@@ -151,7 +151,7 @@ if ($conf->global->EASYCRM_DISPLAY_MAIN_ADDRESS) {
 		foreach ($allObjects as $objectLinked) {
 			$objectLinked->fetch_optionals();
 
-			if (!isset($objectLinked->array_options['options_' . $objectType . 'address']) || dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) <= 0) {
+			if (!isset($objectLinked->array_options['options_' . $objectType . 'address']) || $objectLinked->array_options['options_' . $objectType . 'address'] <= 0) {
 				continue;
 			} else {
 				$addressId = $objectLinked->array_options['options_' . $objectType . 'address'];

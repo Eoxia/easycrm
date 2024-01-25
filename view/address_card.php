@@ -145,7 +145,12 @@ if (empty($reshook)) {
 			$result = $object->delete($user);
 
 			if ($result > 0) {
-				setEventMessages($langs->trans('AddressDeleted'), []);
+                $objectLinked->fetch($fromId);
+                if ($objectLinked->array_options['options_projectaddress'] == $addressID) {
+                    $objectLinked->array_options['options_projectaddress'] = 0;
+                    $objectLinked->update($user);
+                }
+                setEventMessages($langs->trans('AddressDeleted'), []);
 			} else {
 				setEventMessages($langs->trans('ErrorDeleteAddress'), [], 'errors');
 			}
@@ -158,7 +163,7 @@ if (empty($reshook)) {
 
         $objectLinked->fetch($fromId);
 
-        if (isset($objectLinked->array_options['options_projectaddress']) && dol_strlen($objectLinked->array_options['options_projectaddress']) > 0) {
+        if (!empty($objectLinked) && $favoriteAddressId > 0) {
             $objectLinked->array_options['options_projectaddress'] = $objectLinked->array_options['options_projectaddress'] == $favoriteAddressId ? 0 : $favoriteAddressId;
             $objectLinked->update($user);
         }
