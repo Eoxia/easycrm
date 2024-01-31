@@ -219,13 +219,13 @@ $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
             $num++;
             $objectList[$num]['color']  = '#' . randomColor();
             switch ($objectLinked->opp_percent) {
-                case 40 < 60:
+                case $objectLinked->opp_percent >= 40 && $objectLinked->opp_percent < 60:
                     $objectList[$num]['scale'] = 1.5;
                     break;
-                case 60 < 100:
+                case $objectLinked->opp_percent >= 60 && $objectLinked->opp_percent < 100:
                     $objectList[$num]['scale'] = 1.75;
                     break;
-                case 100:
+                case $objectLinked->opp_percent == 100:
                     $objectList[$num]['scale'] = 2;
                     break;
                 default:

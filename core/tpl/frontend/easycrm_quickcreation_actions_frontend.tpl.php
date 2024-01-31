@@ -58,22 +58,23 @@ if ($action == 'add') {
     $project->title       = GETPOST('title');
     $project->description = GETPOST('description', 'restricthtml');
     $project->opp_percent = GETPOST('opp_percent','int');
-
     switch ($project->opp_percent) {
-        case 20 < 40:
+        case $project->opp_percent < 20:
+            $project->opp_status = 1;
+            break;
+        case $project->opp_percent < 40:
             $project->opp_status = 2;
             break;
-        case 40 < 60:
+        case $project->opp_percent < 60:
             $project->opp_status = 3;
             break;
-        case 60 < 100:
+        case $project->opp_percent < 100:
             $project->opp_status = 4;
             break;
-        case 100:
+        case $project->opp_percent == 100:
             $project->opp_status = 5;
             break;
         default:
-            $project->opp_status = 1;
             break;
     }
 
