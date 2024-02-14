@@ -545,4 +545,124 @@ class ActionsEasycrm
 
         return 0; // or return 1 to replace standard code
     }
+
+    /**
+	 * Overloading the addMoreMassActions function
+	 *
+	 * @param   array $parameters Hook metadatas (context, etc...)
+	 * @return  int               < 0 on error, 0 on success, 1 to replace standard code
+	 */
+    public function addMoreMassActions($parameters)
+    {
+        global $user, $langs;
+
+        if (strpos($parameters['context'], 'projectlist') && $user->hasRight('projet', 'creer')) {
+            $selected = '';
+            $ret      = '';
+
+            if (GETPOST('massaction') == 'assignOppStatus') {
+                $selected = ' selected="selected" ';
+            }
+            $ret .= '<option value="assignOppStatus"' . $selected . '>' . $langs->trans('AddAssignOppStatus') . '</option>';
+
+            $this->resprints = $ret;
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
+
+    /**
+     * Overloading the doPreMassActions function
+     *
+     * @param   array $parameters Hook metadatas (context, etc...)
+     * @return  int               < 0 on error, 0 on success, 1 to replace standard code
+     */
+    public function doPreMassActions($parameters)
+    {
+        global $user, $langs;
+
+        $massAction = GETPOST('massaction');
+
+        if (strpos($parameters['context'], 'projectlist') && $user->hasRight('projet', 'creer') && $massAction == 'assignOppStatus') {
+            require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
+
+            $formproject = new FormProjets($this->db);
+
+            $this->resprints  = '<div style="padding: 10px 0 20px 0;" >';
+            $this->resprints .= '<fieldset >';
+            $this->resprints .= '<legend>'.$langs->trans('SelectOppStatus').'</legend>';
+            $this->resprints .= '<table>';
+
+            $this->resprints .= '<tr>';
+            $this->resprints .= '	<td><label>'.$langs->trans('OpportunityStatus').'</label></td>';
+            $this->resprints .= '	<td>' . $formproject->selectOpportunityStatus('opp_status', '', 1, 0, 0, 0, '', 0, 1) . '</td>';
+            $this->resprints .= '</tr>';
+
+            $this->resprints .= '</table>';
+
+            $this->resprints .= '<input type="hidden" name="oppStatus" value="projet" />';
+            $this->resprints .= '<input type="hidden" name="massaction" value="assignOppStatus" />';
+
+            $this->resprints .= '<div style="margin-top: 20px;" >';
+            $this->resprints .= '	<button class="button" type="submit" name="massaction_confirm" value="assignOppStatus">' . $langs->trans('Apply') . '</button>';
+            $this->resprints .= '	<button class="button" type="submit" name="massaction" value="">' . $langs->trans('Cancel') . '</button>';
+            $this->resprints .= '</div>';
+
+            $this->resprints .= '</fieldset>';
+            $this->resprints .= '</div>';
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
+
+    /**
+     * Overloading the doMassActions function
+     *
+     * @param  array  $parameters Hook metadatas (context, etc...)
+     * @param  Object $object
+     * @return int                < 0 on error, 0 on success, 1 to replace standard code
+     */
+    public function doMassActions($parameters, $object)
+    {
+        global $user, $langs;
+
+        $massActionConfirm = GETPOST('massaction_confirm');
+        $oppStatus         = GETPOST('opp_status');
+
+        // MASS ACTION
+        if (preg_match('/projectlist/', $parameters['context']) && $user->hasRight('projet', 'creer') && $massActionConfirm == 'assignOppStatus') {
+
+            $toSelect = $parameters['toselect'];
+
+            if (empty($toSelect)) {
+                $this->error = $langs->trans('ErrorSelectAtLeastOne');
+                return 0;
+            }
+
+            if ($toSelect > 0) {
+                $count = 0;
+                $res   = 0;
+
+                foreach ($toSelect as $selectedId) {
+                    $object->fetch($selectedId);
+                    $object->fk_opp_status = $oppStatus;
+
+                    $res = $object->setValueFrom('fk_opp_status', $oppStatus, 'projet');
+
+                    if ($res<=0) {
+                        $this->errors[] = $object->errorsToString();
+                        return -1;
+                    } else {
+                        $count++;
+                    }
+                }
+
+                if ($res > 0) {
+                    setEventMessages($langs->trans('OppStatusAssignedTo', $count), []);
+                }
+            }
+        }
+
+        return 0; // or return 1 to replace standard code
+    }
 }
