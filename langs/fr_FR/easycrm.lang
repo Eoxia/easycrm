@@ -179,3 +179,6 @@ UpdateObjectContactTrigger             = Mise à jour du rôle "contacts factura
 NoContact                              = Aucun contact
 AddContactNotificationTrigger          = Ajout d'une notification contact "action Facture client validée" des tiers
 ActionAC_PHYSICAL_SALES_RELAUCH        = Relance commercial physique
+AddAssignOppStatus                     = Ajouter un statut d'opportunité
+SelectOppStatus                        = Sélectionner un statut d'opportunité
+OppStatusAssignedTo                    = Statut d'opportunité assigné à %s projet(s)
