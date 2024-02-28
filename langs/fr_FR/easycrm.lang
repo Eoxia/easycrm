@@ -179,3 +179,4 @@ UpdateObjectContactTrigger             = Mise à jour du rôle "contacts factura
 NoContact                              = Aucun contact
 AddContactNotificationTrigger          = Ajout d'une notification contact "action Facture client validée" des tiers
 ActionAC_PHYSICAL_SALES_RELAUCH        = Relance commercial physique
+OpportunityOrigin                      = origine de l'opportunitée
