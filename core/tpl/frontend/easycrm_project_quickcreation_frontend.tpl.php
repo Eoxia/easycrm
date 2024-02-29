@@ -62,7 +62,7 @@ require_once __DIR__ . '/easycrm_media_editor_frontend.tpl.php'; ?>
             <label for="opp_percent">
                 <div class="opp-percent-label">
                     <span class="label"><?php echo $langs->trans('OpportunityProbability'); ?></span>
-                    <span class="opp_percent-value">0</span><span>%</span>
+                    <span class="opp_percent-value">0 %</span>
                 </div>
                 <div class="opp-percent">
                     <?php echo img_picto('', 'fontawesome_fa-frown-open_fas_#c62828_2em', 'class="percent-image"'); ?>
