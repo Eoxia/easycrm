@@ -326,5 +326,5 @@ window.easycrm.quickcreation.vibratePhone = function() {
  * @return {void}
  */
 window.easycrm.quickcreation.showOppPercentValue = function() {
-  $('.opp_percent-value').text($('#opp_percent').val());
+  $('.opp_percent-value').text($('#opp_percent').val() + ' %');
 };
