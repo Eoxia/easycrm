@@ -49,7 +49,7 @@ class ActionsEasycrm
     /**
      * @var string String displayed by executeHook() immediately after return
      */
-    public string $resprints;
+    public $resprints;
 
     /**
      * Constructor
