@@ -128,7 +128,7 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 $actioncomm->create($user);
                 break;
             case 'LINEPROPAL_INSERT' :
-                if (!empty($object->fk_product)) {
+                if (!empty($object->fk_product) && getDolGlobalInt('EASYCRM_PRODUCTKIT_DESC_ADD_LINE_PROPAL') > 0) {
                     $product     = new Product($this->db);
                     $product->id = $object->fk_product;
                     $product->get_sousproduits_arbo();
