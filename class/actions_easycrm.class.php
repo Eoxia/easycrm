@@ -659,6 +659,7 @@ class ActionsEasycrm
 
                 if ($res > 0) {
                     setEventMessages($langs->trans('OppStatusAssignedTo', $count), []);
+                    header('Location:' . $_SERVER['PHP_SELF']);
                 }
             }
         }
