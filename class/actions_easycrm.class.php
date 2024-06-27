@@ -491,7 +491,7 @@ class ActionsEasycrm
      * @return int                      0 < on error, 0 on success, 1 to replace standard code
      * @throws Exception
      */
-    public function formConfirm(array $parameters, CommonObject $object): int
+    public function formConfirm(array $parameters, $object): int
     {
         if (strpos($parameters['context'], 'propalcard') !== false) {
             if (empty($object->thirdparty->id)) {
