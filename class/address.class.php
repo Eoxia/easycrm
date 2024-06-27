@@ -56,7 +56,7 @@ class Address extends SaturneObject
     /**
      * @var int  Does object support extrafields ? 0=No, 1=Yes
      */
-    public int $isextrafieldmanaged = 0;
+    public $isextrafieldmanaged = 0;
 
     /**
      * @var string String with name of icon for signature. Must be the part after the 'object_' into object_signature.png
@@ -254,12 +254,12 @@ class Address extends SaturneObject
     /**
      * @var int User ID.
      */
-    public int $fk_user_creat;
+    public $fk_user_creat;
 
     /**
      * @var int|null User ID.
      */
-    public ?int $fk_user_modif;
+    public $fk_user_modif;
 
     /**
      * Constructor.
