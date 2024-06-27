@@ -435,11 +435,16 @@ class ActionsEasycrm
                             $nbActiomcomms = 0;
                         }
 
+                        if ($parameters['obj']->options_commrelaunch != $nbActiomcomms) {
+                            $project = new Project($db);
+                            $project->setValueFrom('commrelaunch', $nbActiomcomms, 'projet_extrafields', $parameters['obj']->id, '', 'fk_object', null, '', '');
+                        }
+
                         $out = $picto . $langs->trans('CommercialsRelaunching');
                         $out .= ' <span class="badge badge-info">' . $nbActiomcomms . '</span>';
                         if ($nbActiomcomms > 0) {
                             $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
-                            $out .= ' ' . $lastActiomcomm->getNomUrl(1);
+                            $out .= '&nbsp' . $lastActiomcomm->getNomUrl(1);
                         }
                         $url = '?socid=' . $parameters['obj']->socid . '&fromtype=project' . '&project_id=' . $parameters['obj']->id . '&action=create&token=' . newToken();
                         if ($user->hasRight('agenda', 'myactions', 'create')) {
@@ -450,7 +455,7 @@ class ActionsEasycrm
                         var outJS = <?php echo json_encode($out); ?>;
                         var commRelauchCell = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commrelaunch"]').last();
                         commRelauchCell.addClass('minwidth300');
-                        commRelauchCell.append(outJS);
+                        commRelauchCell.replaceWith(outJS);
                     </script>
                     <?php
                 }
