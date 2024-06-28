@@ -420,7 +420,7 @@ class ActionsEasycrm
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
 
                 $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
-                $picto     = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+                $picto     = img_picto($langs->trans('CommercialsRelaunching'), 'fontawesome_fa-headset_fas');
 
                 $actiomcomm = new ActionComm($db);
 
@@ -435,23 +435,37 @@ class ActionsEasycrm
                             $nbActiomcomms = 0;
                         }
 
-                        $out = $picto . $langs->trans('CommercialsRelaunching');
-                        $out .= ' <span class="badge badge-info">' . $nbActiomcomms . '</span>';
-                        if ($nbActiomcomms > 0) {
-                            $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
-                            $out .= ' ' . $lastActiomcomm->getNomUrl(1);
+                        if ($parameters['obj']->options_commrelaunch != $nbActiomcomms) {
+                            $project = new Project($db);
+                            $project->setValueFrom('commrelaunch', $nbActiomcomms, 'projet_extrafields', $parameters['obj']->id, '', 'fk_object', null, '', '');
                         }
+
+                        if ($nbActiomcomms == 0) {
+                            $badgeClass = 'badge-primary';
+                        } else if ($nbActiomcomms == 1 || $nbActiomcomms == 2) {
+                            $badgeClass = 'badge-success';
+                        } else {
+                            $badgeClass = 'badge-danger';
+                        }
+
+                        $out = ' <span class="badge '. $badgeClass .'">' . $picto . '</span>';
+                        $out .= '&nbsp <span class="badge badge-info">' . $nbActiomcomms . '</span> &nbsp';
+
                         $url = '?socid=' . $parameters['obj']->socid . '&fromtype=project' . '&project_id=' . $parameters['obj']->id . '&action=create&token=' . newToken();
                         if ($user->hasRight('agenda', 'myactions', 'create')) {
                             $out .= dolButtonToOpenUrlInDialogPopup('quickEventCreation' . $parameters['obj']->id, $langs->transnoentities('QuickEventCreation'), '<span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span>', '/custom/easycrm/view/quickevent.php' . $url);
                             //$out .= '<a href="' . dol_buildpath('/easycrm/view/quickevent.php', 1) . $url . '" target="_blank"><span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span></a>';
+                        }
+                        if ($nbActiomcomms > 0) {
+                            $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
+                            $out .= '&nbsp' . $lastActiomcomm->getNomUrl(1);
                         }
                     } ?>
                     <script>
                         var outJS = <?php echo json_encode($out); ?>;
                         var commRelauchCell = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commrelaunch"]').last();
                         commRelauchCell.addClass('minwidth300');
-                        commRelauchCell.append(outJS);
+                        commRelauchCell.replaceWith(outJS);
                     </script>
                     <?php
                 }
