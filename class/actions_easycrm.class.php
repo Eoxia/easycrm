@@ -439,28 +439,33 @@ class ActionsEasycrm
                         }
 
                         if ($nbActiomcomms == 0) {
-                            $badgeClass = 'badge-primary';
+                            $badgeClass = 'badge-warning';
                         } else if ($nbActiomcomms == 1 || $nbActiomcomms == 2) {
                             $badgeClass = 'badge-success';
                         } else {
                             $badgeClass = 'badge-danger';
                         }
 
-                        $out = ' <span class="badge '. $badgeClass .'">' . $picto . ' : ' . $nbActiomcomms . '</span>';
+                        $url = '?socid=' . $parameters['obj']->socid . '&fromtype=project' . '&project_id=' . $parameters['obj']->id . '&action=create&token=' . newToken();
+                        $out = '<td class="tdoverflowmax200"> <span class="badge '. $badgeClass .'">' . $picto . ' : ' . $nbActiomcomms . '</span>';
                         // -- Old design --
                         //$out .= '<span class="badge badge-info" title="' . $langs->trans('CommercialsRelaunching') . '">' . $nbActiomcomms . '</span> &nbsp';
 
-                        $url = '?socid=' . $parameters['obj']->socid . '&fromtype=project' . '&project_id=' . $parameters['obj']->id . '&action=create&token=' . newToken();
+                        if ($nbActiomcomms > 0) {
+                            $out .= '<span> ' . dol_print_date($lastActiomcomm->datec, '%d/%m/%y %H:%M', 'tzuser') . '</span>';
+                        }
+
                         if ($user->hasRight('agenda', 'myactions', 'create')) {
                             $out .= dolButtonToOpenUrlInDialogPopup('quickEventCreation' . $parameters['obj']->id, $langs->transnoentities('QuickEventCreation'), '<span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span>', '/custom/easycrm/view/quickevent.php' . $url);
                             // @todo find somewhere to add a user->conf to choose between popup dialog or open in current tab
                             //$out .= '<a href="' . dol_buildpath('/easycrm/view/quickevent.php', 1) . $url . '" target="_blank"><span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span></a>';
                         }
-                        if ($nbActiomcomms > 0) {
-                            $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
-                            $out .= '&nbsp' . dolButtonToOpenUrlInDialogPopup('lastActionComm' . $parameters['obj']->id, $langs->transnoentities('LastEvent'), img_picto('', $lastActiomcomm->picto) . ' ' . $lastActiomcomm->label, '/comm/action/card.php?id=' . $lastActiomcomm->id);
+
+                        if (!empty($lastActiomcomm)) {
+                            $out .= '<br>' . dolButtonToOpenUrlInDialogPopup('lastActionComm' . $parameters['obj']->id, $langs->transnoentities('LastEvent') . ' : ' . $lastActiomcomm->label, img_picto('', $lastActiomcomm->picto) . ' ' . $lastActiomcomm->label, '/comm/action/card.php?id=' . $lastActiomcomm->id);
                             //$out .= '&nbsp' . $lastActiomcomm->getNomUrl(1);
                         }
+                        $out .= '</td>';
                     } ?>
                     <script>
                         var outJS = <?php echo json_encode($out); ?>;
