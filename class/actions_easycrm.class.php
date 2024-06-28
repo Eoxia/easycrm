@@ -419,12 +419,10 @@ class ActionsEasycrm
                 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
                 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
 
-                $pictopath = dol_buildpath('/easycrm/img/easycrm_color.png', 1);
-                $picto     = img_picto($langs->trans('CommercialsRelaunching'), 'fontawesome_fa-headset_fas');
-
                 $actiomcomm = new ActionComm($db);
 
-                $filter   = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
+                $picto  = img_picto($langs->trans('CommercialsRelaunching'), 'fontawesome_fa-headset_fas');
+                $filter = ' AND a.id IN (SELECT c.fk_actioncomm FROM '  . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->EASYCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
                 if (is_object($parameters['obj']) && !empty($parameters['obj'])) {
                     if (!empty($parameters['obj']->id)) {
                         $actiomcomms = $actiomcomm->getActions($parameters['obj']->socid, $parameters['obj']->id, 'project', $filter, 'a.datec');
@@ -448,17 +446,20 @@ class ActionsEasycrm
                             $badgeClass = 'badge-danger';
                         }
 
-                        $out = ' <span class="badge '. $badgeClass .'">' . $picto . '</span>';
-                        $out .= '&nbsp <span class="badge badge-info">' . $nbActiomcomms . '</span> &nbsp';
+                        $out = ' <span class="badge '. $badgeClass .'">' . $picto . ' : ' . $nbActiomcomms . '</span>';
+                        // -- Old design --
+                        //$out .= '<span class="badge badge-info" title="' . $langs->trans('CommercialsRelaunching') . '">' . $nbActiomcomms . '</span> &nbsp';
 
                         $url = '?socid=' . $parameters['obj']->socid . '&fromtype=project' . '&project_id=' . $parameters['obj']->id . '&action=create&token=' . newToken();
                         if ($user->hasRight('agenda', 'myactions', 'create')) {
                             $out .= dolButtonToOpenUrlInDialogPopup('quickEventCreation' . $parameters['obj']->id, $langs->transnoentities('QuickEventCreation'), '<span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span>', '/custom/easycrm/view/quickevent.php' . $url);
+                            // @todo find somewhere to add a user->conf to choose between popup dialog or open in current tab
                             //$out .= '<a href="' . dol_buildpath('/easycrm/view/quickevent.php', 1) . $url . '" target="_blank"><span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span></a>';
                         }
                         if ($nbActiomcomms > 0) {
                             $out .= '<br><span>' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
-                            $out .= '&nbsp' . $lastActiomcomm->getNomUrl(1);
+                            $out .= '&nbsp' . dolButtonToOpenUrlInDialogPopup('lastActionComm' . $parameters['obj']->id, $langs->transnoentities('LastEvent'), img_picto('', $lastActiomcomm->picto) . ' ' . $lastActiomcomm->label, '/comm/action/card.php?id=' . $lastActiomcomm->id);
+                            //$out .= '&nbsp' . $lastActiomcomm->getNomUrl(1);
                         }
                     } ?>
                     <script>
