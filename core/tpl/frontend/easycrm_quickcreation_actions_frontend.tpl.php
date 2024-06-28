@@ -81,7 +81,7 @@ if ($action == 'add') {
     $project->opp_amount        = price2num(GETPOST('opp_amount', 'int'));
     $project->date_c            = dol_now();
     $project->date_start        = dol_now();
-    $project->statut            = 1;
+    $project->statut            = getDolGlobalInt('EASYCRM_PWA_CLOSE_PROJECT_WHEN_OPPORTUNITY_ZERO') > 0 ? 2 : 1;
     $project->usage_opportunity = 1;
     $project->usage_task        = 1;
 
