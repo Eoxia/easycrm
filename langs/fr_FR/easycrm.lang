@@ -196,3 +196,4 @@ SRC_PARTNER                            = Partenaire
 SRC_EMPLOYEE                           = Employé
 SRC_SPONSORING                         = Parrainage/Sponsoring
 SRC_CUSTOMER                           = Contact entrant d'un client
+ReloadOppPercent                       = Calculer les probabilités d'opportunité non définies
