@@ -545,4 +545,37 @@ class ActionsEasycrm
 
         return 0; // or return 1 to replace standard code
     }
+
+    public function saturnePWAAdditionalConfig(array $parameters): int {
+        global $langs;
+
+        if (strpos($parameters['context'], 'pwaadditionalconfig') !== false) {
+            // PWA general configuration
+            $out = load_fiche_titre($langs->trans('Configs', $langs->trans('QuickCreations')), '', '');
+
+            $out .= '<table class="noborder centpercent">';
+            $out .= '<tr class="liste_titre">';
+            $out .= '<td>' . $langs->trans('Name') . '</td>';
+            $out .= '<td>' . $langs->trans('Description') . '</td>';
+            $out .= '<td class="center">' . $langs->trans('Visible') . '</td>';
+            $out .= '<td>' . $langs->trans('Value') . '</td>';
+            $out .= '</tr>';
+
+            // PWA close project when probability zero
+            $out .= '<tr class="oddeven"><td>';
+            $out .= $langs->trans('PWACloseProject');
+            $out .= '</td><td>';
+            $out .= $langs->trans('PWACloseProjectOpportunityZero');
+            $out .= '</td>';
+
+            $out .= '<td class="center">';
+            $out .= ajax_constantonoff('EASYCRM_PWA_CLOSE_PROJECT_WHEN_OPPORTUNITY_ZERO');
+            $out .= '</td></td><td></td></tr>';
+
+            $out .= '</table>';
+
+            $this->results = [$out];
+        }
+        return 0;
+    }
 }

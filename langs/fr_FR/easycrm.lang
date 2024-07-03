@@ -28,18 +28,20 @@ EasyCRMDescriptionLong = Simplification de la CRM
 #
 
 # Data - Donnée
-QuickCreation            = Ajout rapide
-QuickCreations           = ajouts rapides
-QuickThirdPartyCreation  = Ajout rapide de tiers
-QuickThirdPartyCreations = ajouts rapides de tiers
-QuickProjectCreation     = Ajout rapide d'opportunité ou de projet
-QuickProjectCreations    = ajouts rapides d'opportunité ou de projet
-QuickContactCreation     = Ajout rapide de contact/adresse
-QuickContactCreations    = ajouts rapides de contact/adresse
-QuickTaskCreations       = ajouts rapides de tâche
-CommercialFollowUp       = SC
-CommercialTask           = Tâche commerciale
-ProjectPhone             = Téléphone projet
+QuickCreation                  = Ajout rapide
+QuickCreations                 = ajouts rapides
+QuickThirdPartyCreation        = Ajout rapide de tiers
+QuickThirdPartyCreations       = ajouts rapides de tiers
+QuickProjectCreation           = Ajout rapide d'opportunité ou de projet
+QuickProjectCreations          = ajouts rapides d'opportunité ou de projet
+QuickContactCreation           = Ajout rapide de contact/adresse
+QuickContactCreations          = ajouts rapides de contact/adresse
+QuickTaskCreations             = ajouts rapides de tâche
+CommercialFollowUp             = SC
+CommercialTask                 = Tâche commerciale
+ProjectPhone                   = Téléphone projet
+PWACloseProject                = Clôturer le projet
+PWACloseProjectOpportunityZero = Clôturer le projet quand l'opportunité est à 0
 
 # Frontend - Frontend
 QuickCreationFrontendSuccess = Ajout rapide d'opportunité effectué avec succès : %s
