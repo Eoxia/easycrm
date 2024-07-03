@@ -556,7 +556,7 @@ class ActionsEasycrm
     {
         global $user, $langs;
 
-        if (strpos($parameters['context'], 'projectlist') && $user->hasRight('projet', 'creer')) {
+        if (strpos($parameters['context'], 'projectlist') !== false && $user->hasRight('projet', 'creer')) {
             $selected = '';
             $ret      = '';
 
@@ -583,33 +583,35 @@ class ActionsEasycrm
 
         $massAction = GETPOST('massaction');
 
-        if (strpos($parameters['context'], 'projectlist') && $user->hasRight('projet', 'creer') && $massAction == 'assignOppStatus') {
+        if (strpos($parameters['context'], 'projectlist') !== false && $user->hasRight('projet', 'creer') && $massAction == 'assignOppStatus') {
             require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
 
             $formproject = new FormProjets($this->db);
 
-            $this->resprints  = '<div style="padding: 10px 0 20px 0;" >';
-            $this->resprints .= '<fieldset >';
-            $this->resprints .= '<legend>'.$langs->trans('SelectOppStatus').'</legend>';
-            $this->resprints .= '<table>';
+            $out  = '<div style="padding: 10px 0 20px 0;">';
+            $out .= '<fieldset>';
+            $out .= '<legend>' . $langs->trans('SelectOppStatus') . '</legend>';
+            $out .= '<table>';
 
-            $this->resprints .= '<tr>';
-            $this->resprints .= '	<td><label>'.$langs->trans('OpportunityStatus').'</label></td>';
-            $this->resprints .= '	<td>' . $formproject->selectOpportunityStatus('opp_status', '', 1, 0, 0, 0, '', 0, 1) . '</td>';
-            $this->resprints .= '</tr>';
+            $out .= '<tr>';
+            $out .= '<td><label>' . $langs->trans('OpportunityStatus') . '</label></td>';
+            $out .= '<td>' . $formproject->selectOpportunityStatus('opp_status', '', 1, 0, 0, 0, '', 0, 1) . '</td>';
+            $out .= '</tr>';
 
-            $this->resprints .= '</table>';
+            $out .= '</table>';
 
-            $this->resprints .= '<input type="hidden" name="oppStatus" value="projet" />';
-            $this->resprints .= '<input type="hidden" name="massaction" value="assignOppStatus" />';
+            $out .= '<input type="hidden" name="oppStatus" value="projet" />';
+            $out .= '<input type="hidden" name="massaction" value="assignOppStatus" />';
 
-            $this->resprints .= '<div style="margin-top: 20px;" >';
-            $this->resprints .= '	<button class="button" type="submit" name="massaction_confirm" value="assignOppStatus">' . $langs->trans('Apply') . '</button>';
-            $this->resprints .= '	<button class="button" type="submit" name="massaction" value="">' . $langs->trans('Cancel') . '</button>';
-            $this->resprints .= '</div>';
+            $out .= '<div style="margin-top: 20px;">';
+            $out .= '<button class="button" type="submit" name="massaction_confirm" value="assignOppStatus">' . $langs->trans('Apply') . '</button>';
+            $out .= '<button class="button" type="submit" name="massaction" value="">' . $langs->trans('Cancel') . '</button>';
+            $out .= '</div>';
 
-            $this->resprints .= '</fieldset>';
-            $this->resprints .= '</div>';
+            $out .= '</fieldset>';
+            $out .= '</div>';
+
+            $this->resprints = $out;
         }
 
         return 0; // or return 1 to replace standard code
@@ -630,7 +632,7 @@ class ActionsEasycrm
         $oppStatus         = GETPOST('opp_status');
 
         // MASS ACTION
-        if (preg_match('/projectlist/', $parameters['context']) && $user->hasRight('projet', 'creer') && $massActionConfirm == 'assignOppStatus') {
+        if (strpos($parameters['context'], 'projectlist') !== false && $user->hasRight('projet', 'creer') && $massActionConfirm == 'assignOppStatus') {
 
             $toSelect = $parameters['toselect'];
 
@@ -649,7 +651,7 @@ class ActionsEasycrm
 
                     $res = $object->setValueFrom('fk_opp_status', $oppStatus, 'projet');
 
-                    if ($res<=0) {
+                    if ($res <= 0) {
                         $this->errors[] = $object->errorsToString();
                         return -1;
                     } else {
