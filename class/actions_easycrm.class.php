@@ -319,7 +319,7 @@ class ActionsEasycrm
 
                 if (!empty($project->array_options['options_commtask'])) {
                     $task->fetch($project->array_options['options_commtask']);
-                    $out2 = $task->getNomUrl(1);
+                    $out2 = $task->getNomUrl(1, '', 'task', 1);
                 } ?>
 
                 <script>
@@ -469,12 +469,24 @@ class ActionsEasycrm
                             //$out .= '&nbsp' . $lastActiomcomm->getNomUrl(1);
                         }
                         $out .= '</td>';
+
+                        $out2 = '<td class="tdoverflowmax200">';
+                        if (!empty($parameters['obj']->options_commtask)) {
+                            $task = new Task($this->db);
+                            $task->fetch($parameters['obj']->options_commtask);
+                            $out2 .= $task->getNomUrl(1, '', 'task', 1);
+                        }
+                        $out2 .= '</td>';
                     } ?>
                     <script>
-                        var outJS = <?php echo json_encode($out); ?>;
+                        var outJS  = <?php echo json_encode($out); ?>;
+                        var outJS2 = <?php echo json_encode($out2); ?>;
+
                         var commRelauchCell = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commrelaunch"]').last();
-                        commRelauchCell.addClass('minwidth300');
+                        var commTaskCell    = $('.liste > tbody > tr.oddeven').find('td[data-key="projet.commtask"]').last();
+
                         commRelauchCell.replaceWith(outJS);
+                        commTaskCell.replaceWith(outJS2);
                     </script>
                     <?php
                 }
