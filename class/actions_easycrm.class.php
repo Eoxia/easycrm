@@ -433,9 +433,12 @@ class ActionsEasycrm
                             $nbActiomcomms = 0;
                         }
 
+                        // @todo is a backward, should be removed one day when corrupted tools repair is added in saturne
                         if ($parameters['obj']->options_commrelaunch != $nbActiomcomms) {
                             $project = new Project($db);
-                            $project->setValueFrom('commrelaunch', $nbActiomcomms, 'projet_extrafields', $parameters['obj']->id, '', 'fk_object', null, '', '');
+                            $project->fetch($parameters['obj']->id);
+                            $project->array_options['options_commrelaunch'] = $nbActiomcomms;
+                            $project->updateExtrafield('commrelaunch');
                         }
 
                         if ($nbActiomcomms == 0) {
