@@ -196,4 +196,7 @@ SRC_PARTNER                            = Partenaire
 SRC_EMPLOYEE                           = Employé
 SRC_SPONSORING                         = Parrainage/Sponsoring
 SRC_CUSTOMER                           = Contact entrant d'un client
+AddAssignOppStatus                     = Ajouter un statut d'opportunité
+SelectOppStatus                        = Sélectionner un statut d'opportunité
+OppStatusAssignedTo                    = Statut d'opportunité assigné à %s projet(s)
 ReloadOppPercent                       = Calculer les probabilités d'opportunité non définies
