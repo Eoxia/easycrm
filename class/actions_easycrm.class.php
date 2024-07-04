@@ -271,7 +271,7 @@ class ActionsEasycrm
                         $actiomcomms = $actiomcomm->getActions($project->socid, $project->id, 'project');
                         $oppPercent  = (100 - (count($actiomcomms) * 20)) < 0 ? 0 : count($actiomcomms) * 20;
                     } else {
-                        break;
+                        continue;
                     }
                     $project->setValueFrom('opp_percent', $oppPercent);
                 }
@@ -461,7 +461,7 @@ class ActionsEasycrm
                  <script>
                         var outJS = <?php echo json_encode($out); ?>;
 
-                        var probCell = $('.liste > tbody > tr.liste_titre').find("th.right").first();
+                        var probCell = $('.liste > tbody > tr.liste_titre').find('th.right').has('a[href*="opp_percent"]');
 
                         probCell.replaceWith(outJS);
                     </script>
