@@ -290,7 +290,7 @@ class ActionsEasycrm
      */
     public function printCommonFooter(array $parameters): int
     {
-        global $conf, $db, $langs , $object;
+        global $conf, $db, $langs, $object, $user;
 
         // Do something only for the current context
         if (preg_match('/thirdpartycomm|projectcard/', $parameters['context'])) {
@@ -311,11 +311,28 @@ class ActionsEasycrm
                     $nbActiomcomms = 0;
                 }
 
+                if ($nbActiomcomms == 0) {
+                    $badgeClass = 1;
+                } else if ($nbActiomcomms == 1 || $nbActiomcomms == 2) {
+                    $badgeClass = 4;
+                } else {
+                    $badgeClass = 8;
+                }
+
+                $url = '?socid=' . $object->socid . '&fromtype=project' . '&project_id=' . $object->id . '&action=create&token=' . newToken();
                 $out = '<tr><td class="titlefield">' . $picto . $langs->trans('CommercialsRelaunching') . '</td>';
-                $out .= '<td>' .'<span class="badge badge-info">' . $nbActiomcomms . '</span>';
+
+                $picto = img_picto($langs->trans('CommercialsRelaunching'), 'fontawesome_fa-headset_fas');
+
+                $out .= '<td>' . dolGetBadge($picto . ' : ' . $nbActiomcomms, '', 'status' . $badgeClass);
                 if ($nbActiomcomms > 0) {
                     $out .= ' - ' . '<span>' . $langs->trans('LastCommercialReminderDate') . ' : ' . dol_print_date($lastActiomcomm->datec, 'dayhourtext', 'tzuser') . '</span>';
-                    $out .= ' ' . $lastActiomcomm->getNomUrl(1);
+                }
+                if ($user->hasRight('agenda', 'myactions', 'create')) {
+                    $out .= dolButtonToOpenUrlInDialogPopup('quickEventCreation' . $object->id, $langs->transnoentities('QuickEventCreation'), '<span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span>', '/custom/easycrm/view/quickevent.php' . $url);
+                }
+                if (!empty($lastActiomcomm)) {
+                    $out .= '<br>' . dolButtonToOpenUrlInDialogPopup('lastActionComm' . $object->id, $langs->transnoentities('LastEvent') . ' : ' . $lastActiomcomm->label, img_picto('', $lastActiomcomm->picto) . ' ' . $lastActiomcomm->label, '/comm/action/card.php?id=' . $lastActiomcomm->id);
                 }
                 $out .= '</td></tr>';
 
