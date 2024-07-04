@@ -542,8 +542,8 @@ class modEasyCRM extends DolibarrModules
         $objectsMetadata = saturne_get_objects_metadata();
 
         $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', 0, '', 2);
-        $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
-        $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
+        $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:21:"projet_task:ref:rowid";N;}}', 1, '', 4);
+        $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:21:"projet_task:ref:rowid";N;}}', 1, '', 4);
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
 		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
 		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
