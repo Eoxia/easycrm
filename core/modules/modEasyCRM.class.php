@@ -130,7 +130,8 @@ class modEasyCRM extends DolibarrModules
                 'contactcard',
                 'thirdpartycard',
                 'thirdpartylist',
-                'main'
+                'main',
+                'pwaadmin'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -217,6 +218,9 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_EVENT_STATUS_VALUE', 'integer', -1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_DESCRIPTION_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
+
+            // CONST PWA
+            $i++ => ['EASYCRM_PWA_CLOSE_PROJECT_WHEN_OPPORTUNITY_ZERO', 'integer', 0, '', 0, 'current'],
 
 			// CONST ADDRESS
 			$i++ => ['EASYCRM_DISPLAY_MAIN_ADDRESS', 'integer', 0, '', 0, 'current'],
