@@ -546,36 +546,41 @@ class ActionsEasycrm
         return 0; // or return 1 to replace standard code
     }
 
-    public function saturnePWAAdditionalConfig(array $parameters): int {
+    /**
+     * Overloading the saturneAdminPWAAdditionalConfig function : replacing the parent's function with the one below
+     *
+     * @param  array $parameters Hook metadatas (context, etc...)
+     * @return int               0 < on error, 0 on success, 1 to replace standard code
+     */
+    public function saturneAdminPWAAdditionalConfig(array $parameters): int
+    {
         global $langs;
 
-        if (strpos($parameters['context'], 'pwaadditionalconfig') !== false) {
-            // PWA general configuration
-            $out = load_fiche_titre($langs->trans('Configs', $langs->trans('QuickCreations')), '', '');
+        if (strpos($parameters['context'], 'pwaadmin') !== false) {
+            // PWA configuration
+            $out = load_fiche_titre($langs->trans('Config'), '', '');
 
             $out .= '<table class="noborder centpercent">';
             $out .= '<tr class="liste_titre">';
-            $out .= '<td>' . $langs->trans('Name') . '</td>';
+            $out .= '<td>' . $langs->trans('Parameters') . '</td>';
             $out .= '<td>' . $langs->trans('Description') . '</td>';
-            $out .= '<td class="center">' . $langs->trans('Visible') . '</td>';
-            $out .= '<td>' . $langs->trans('Value') . '</td>';
+            $out .= '<td class="center">' . $langs->trans('Status') . '</td>';
             $out .= '</tr>';
 
             // PWA close project when probability zero
             $out .= '<tr class="oddeven"><td>';
-            $out .= $langs->trans('PWACloseProject');
-            $out .= '</td><td>';
             $out .= $langs->trans('PWACloseProjectOpportunityZero');
-            $out .= '</td>';
-
-            $out .= '<td class="center">';
+            $out .= '</td><td>';
+            $out .= $langs->trans('PWACloseProjectOpportunityZeroDescription');
+            $out .= '</td><td class="center">';
             $out .= ajax_constantonoff('EASYCRM_PWA_CLOSE_PROJECT_WHEN_OPPORTUNITY_ZERO');
-            $out .= '</td></td><td></td></tr>';
+            $out .= '</td></tr>';
 
             $out .= '</table>';
 
-            $this->results = [$out];
+            $this->resprints = $out;
         }
-        return 0;
+
+        return 0; // or return 1 to replace standard code
     }
 }

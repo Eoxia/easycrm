@@ -130,7 +130,8 @@ class modEasyCRM extends DolibarrModules
                 'contactcard',
                 'thirdpartycard',
                 'thirdpartylist',
-                'main'
+                'main',
+                'pwaadmin'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,

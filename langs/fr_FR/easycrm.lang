@@ -28,20 +28,18 @@ EasyCRMDescriptionLong = Simplification de la CRM
 #
 
 # Data - Donnée
-QuickCreation                  = Ajout rapide
-QuickCreations                 = ajouts rapides
-QuickThirdPartyCreation        = Ajout rapide de tiers
-QuickThirdPartyCreations       = ajouts rapides de tiers
-QuickProjectCreation           = Ajout rapide d'opportunité ou de projet
-QuickProjectCreations          = ajouts rapides d'opportunité ou de projet
-QuickContactCreation           = Ajout rapide de contact/adresse
-QuickContactCreations          = ajouts rapides de contact/adresse
-QuickTaskCreations             = ajouts rapides de tâche
-CommercialFollowUp             = SC
-CommercialTask                 = Tâche commerciale
-ProjectPhone                   = Téléphone projet
-PWACloseProject                = Clôturer le projet
-PWACloseProjectOpportunityZero = Clôturer le projet quand l'opportunité est à 0
+QuickCreation            = Ajout rapide
+QuickCreations           = ajouts rapides
+QuickThirdPartyCreation  = Ajout rapide de tiers
+QuickThirdPartyCreations = ajouts rapides de tiers
+QuickProjectCreation     = Ajout rapide d'opportunité ou de projet
+QuickProjectCreations    = ajouts rapides d'opportunité ou de projet
+QuickContactCreation     = Ajout rapide de contact/adresse
+QuickContactCreations    = ajouts rapides de contact/adresse
+QuickTaskCreations       = ajouts rapides de tâche
+CommercialFollowUp       = SC
+CommercialTask           = Tâche commerciale
+ProjectPhone             = Téléphone projet
 
 # Frontend - Frontend
 QuickCreationFrontendSuccess = Ajout rapide d'opportunité effectué avec succès : %s
@@ -71,9 +69,14 @@ OpportunityStatusDescription = Selection du statut d'opportunité <br> Valeur pa
 OpportunityAmountDescription = Selection du montant d'opportunité <br> Valeur par défaut : <b> 3000 € </b>
 ProspectCustomerDescription  = Selection de la nature des tiers <br> Valeur par défaut : <b> Prospect </b>
 
+# PWA - Progressive Web App
+PWACloseProjectOpportunityZero            = Clôturer le projet
+PWACloseProjectOpportunityZeroDescription = Clôturer le projet quand l'opportunité est à 0
+
 # Product Kit - Produit Kit
 ProductKitConf     = Compléter la description d'une ligne de devis avec la composition du kit
 ProductKitConfDesc = Indépendemment du paramètre du module produit sur la complétion de la description. <br> A l'ajout d'un produit/service, ayant un kit, sur une ligne de devis, la description de la ligne sera remplacée par le libellé et la description des produits composants.
+
 
 
 #

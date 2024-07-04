@@ -21,9 +21,3 @@ ModuleEasyCRMName      = EasyCRM
 ModuleEasyCRMDesc      = Simplification of CRM
 EasyCRMDescription     = Simplification of CRM
 EasyCRMDescriptionLong = Simplification of CRM
-
-#
-# Quick Creation
-#
-PWACloseProject                = Clôturer le projet
-PWACloseProjectOpportunityZero = Clôturer le projet quand l'opportunité est à 0
