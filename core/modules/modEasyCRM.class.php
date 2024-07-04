@@ -238,11 +238,12 @@ class modEasyCRM extends DolibarrModules
             $i   => ['EASYCRM_DISPLAY_NUMBER_MEDIA_GALLERY', 'integer', 8, '', 0, 'current'],
         ];
 
-		// Some keys to add into the overwriting translation tables
-		/*$this->overwrite_translation = array(
-			'en_US:ParentCompany'=>'Parent company or reseller',
-			'fr_FR:ParentCompany'=>'Maison mère ou revendeur'
-		)*/
+        // Some keys to add into the overwriting translation tables
+        $this->overwrite_translation = [
+            'fr_FR:ActionAC_EMAIL_IN' => 'Email entrant',
+            'fr_FR:ActionAC_EMAIL'    => 'Email sortant',
+            'fr_FR:ActionAC_RDV'      => 'Rendez-vous physique ou visioconférence'
+        ];
 
 		if (!isset($conf->easycrm) || !isset($conf->easycrm->enabled)) {
 			$conf->easycrm = new stdClass();

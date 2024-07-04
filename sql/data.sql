@@ -49,5 +49,8 @@ INSERT INTO llx_c_address_type (rowid, entity, ref, label, description, active, 
 -- 1.2.0
 ALTER TABLE llx_notify_def ADD UNIQUE INDEX uk_notify_def_asct (fk_action, fk_soc, fk_contact, type);
 
--- 1.3.0
-INSERT INTO llx_c_actioncomm (id, code, type, libelle, module, active, todo, color, picto, position) VALUES (80, 'AC_PHYSICAL_SALES_RELAUCH', 'module', 'Physical sales relaunch', 'easycrm@easycrm', 1, NULL, NULL, NULL, 80);
+-- 1.4.0
+DELETE FROM llx_c_actioncomm WHERE code = 'AC_PHYSICAL_SALES_RELAUCH';
+INSERT INTO llx_overwrite_trans (entity, lang, transkey, transvalue) VALUES (0, 'fr_FR', 'ActionAC_EMAIL_IN', 'Email entrant');
+INSERT INTO llx_overwrite_trans (entity, lang, transkey, transvalue) VALUES (0, 'fr_FR', 'ActionAC_EMAIL', 'Email sortant');
+INSERT INTO llx_overwrite_trans (entity, lang, transkey, transvalue) VALUES (0, 'fr_FR', 'ActionAC_RDV', 'Rendez-vous physique ou visioconférence');
