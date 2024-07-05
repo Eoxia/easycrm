@@ -49,7 +49,7 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
         $this->name        = preg_replace('/^Interface/i', '', get_class($this));
         $this->family      = 'demo';
         $this->description = 'EasyCRM triggers';
-        $this->version     = '1.3.0';
+        $this->version     = '1.4.0';
         $this->picto       = 'easycrm@easycrm';
     }
 
@@ -126,6 +126,30 @@ class InterfaceEasyCRMTriggers extends DolibarrTriggers
                 $actioncomm->code   = 'AC_USER_ADD_CONTACT_NOTIFICATION';
                 $actioncomm->label  = $langs->transnoentities('AddContactNotificationTrigger');
                 $actioncomm->create($user);
+                break;
+            case 'LINEPROPAL_INSERT' :
+                if (!empty($object->fk_product) && getDolGlobalInt('EASYCRM_PRODUCTKIT_DESC_ADD_LINE_PROPAL') > 0) {
+                    $product     = new Product($this->db);
+                    $product->id = $object->fk_product;
+                    $product->get_sousproduits_arbo();
+                    if (!empty($product->sousprods) && is_array($product->sousprods) && count($product->sousprods)) {
+                        $labelProductService   = '';
+                        $tmpArrayOfSubProducts = reset($product->sousprods);
+                        foreach ($tmpArrayOfSubProducts as $subProdVal) {
+                            $productChild = new Product($this->db);
+                            $productChild->fetch($subProdVal[0]);
+                            $concatDesc          = dol_concatdesc('<b>' . $productChild->label . '</b>',$productChild->description);
+                            $labelProductService = dol_concatdesc($labelProductService, $concatDesc);
+                        }
+                        $result = $object->setValueFrom('description', $labelProductService, '', '', '', '', $user, '', '');
+                        if ($result < 0) {
+                            $this->error   .= $object->error;
+                            $this->errors[] = $object->error;
+                            $this->errors   = array_merge($this->errors, $object->errors);
+                            return -1;
+                        }
+                    }
+                }
                 break;
         }
         return 0;

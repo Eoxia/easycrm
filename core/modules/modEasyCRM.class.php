@@ -78,7 +78,7 @@ class modEasyCRM extends DolibarrModules
 		$this->editor_url = 'https://www.eoxia.com';
 
         // Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.3.0';
+		$this->version = '1.4.0';
 
         // Url to the file with your last numberversion of this module
         //$this->url_last_version = 'http://www.example.com/versionmodule.txt';
@@ -130,7 +130,8 @@ class modEasyCRM extends DolibarrModules
                 'contactcard',
                 'thirdpartycard',
                 'thirdpartylist',
-                'main'
+                'main',
+                'pwaadmin'
             ],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -218,6 +219,9 @@ class modEasyCRM extends DolibarrModules
             $i++ => ['EASYCRM_EVENT_DESCRIPTION_VISIBLE', 'integer', 1, '', 0, 'current'],
             $i++ => ['EASYCRM_EVENT_CATEGORIES_VISIBLE', 'integer', 1, '', 0, 'current'],
 
+            // CONST PWA
+            $i++ => ['EASYCRM_PWA_CLOSE_PROJECT_WHEN_OPPORTUNITY_ZERO', 'integer', 0, '', 0, 'current'],
+
 			// CONST ADDRESS
 			$i++ => ['EASYCRM_DISPLAY_MAIN_ADDRESS', 'integer', 0, '', 0, 'current'],
             $i++ => ['EASYCRM_ADDRESS_ADDON', 'chaine', 'mod_address_standard', '', 0, 'current'],
@@ -238,11 +242,12 @@ class modEasyCRM extends DolibarrModules
             $i   => ['EASYCRM_DISPLAY_NUMBER_MEDIA_GALLERY', 'integer', 8, '', 0, 'current'],
         ];
 
-		// Some keys to add into the overwriting translation tables
-		/*$this->overwrite_translation = array(
-			'en_US:ParentCompany'=>'Parent company or reseller',
-			'fr_FR:ParentCompany'=>'Maison mère ou revendeur'
-		)*/
+        // Some keys to add into the overwriting translation tables
+        $this->overwrite_translation = [
+            'fr_FR:ActionAC_EMAIL_IN' => 'Email entrant',
+            'fr_FR:ActionAC_EMAIL'    => 'Email sortant',
+            'fr_FR:ActionAC_RDV'      => 'Rendez-vous physique ou visioconférence'
+        ];
 
 		if (!isset($conf->easycrm) || !isset($conf->easycrm->enabled)) {
 			$conf->easycrm = new stdClass();
@@ -538,11 +543,12 @@ class modEasyCRM extends DolibarrModules
         $objectsMetadata = saturne_get_objects_metadata();
 
         $extrafields->addExtraField('commrelaunch', $langs->transnoentities('CommercialsRelaunching'), 'text', 100, 2000, 'projet', 0, 0, '', '', 0, '', 2);
-        $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
-        $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:39:"projet_task:ref:rowid::fk_projet = $ID$";N;}}', 1, '', 4);
+        $extrafields->update('commtask', $langs->transnoentities('CommercialTask'), 'sellist', '', 'projet', 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:21:"projet_task:ref:rowid";N;}}', 1, '', 4);
+        $extrafields->addExtraField('commtask', $langs->transnoentities('CommercialTask'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:21:"projet_task:ref:rowid";N;}}', 1, '', 4);
         $extrafields->addExtraField('projectphone', $langs->transnoentities('ProjectPhone'), 'phone', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1);
 		$extrafields->addExtraField('commstatus', $langs->transnoentities('CommercialStatus'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:34:"c_commercial_status:label:rowid::1";N;}}', 1, '', 1, 'CommercialStatusHelp');
 		$extrafields->addExtraField('commrefusal', $langs->transnoentities('RefusalReason'), 'sellist', 100, '', 'propal', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:31:"c_refusal_reason:label:rowid::1";N;}}', 1, '', 1, 'RefusalReasonHelp');
+        $extrafields->addExtraField('opporigin', $langs->transnoentities('OpportunityOrigin'), 'sellist', 100, '', 'projet', 0, 0, '', 'a:1:{s:7:"options";a:1:{s:19:"c_input_reason:code";N;}}', 1, '', 1);
 
         // Societe extrafields
         $extrafields->update('notation_societe_contact', 'NotationObjectContact', 'text', '', 'societe', 0, 0, 100, '', '', '', 5, 'NotationObjectContactHelp', '', '', 0, 'easycrm@easycrm', 1, 0, 0, ['csslist' => 'center']);

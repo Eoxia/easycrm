@@ -58,29 +58,30 @@ if ($action == 'add') {
     $project->title       = GETPOST('title');
     $project->description = GETPOST('description', 'restricthtml');
     $project->opp_percent = GETPOST('opp_percent','int');
-
     switch ($project->opp_percent) {
-        case 20 < 40:
+        case $project->opp_percent < 20:
+            $project->opp_status = 1;
+            break;
+        case $project->opp_percent < 40:
             $project->opp_status = 2;
             break;
-        case 40 < 60:
+        case $project->opp_percent < 60:
             $project->opp_status = 3;
             break;
-        case 60 < 100:
+        case $project->opp_percent < 100:
             $project->opp_status = 4;
             break;
-        case 100:
+        case $project->opp_percent == 100:
             $project->opp_status = 5;
             break;
         default:
-            $project->opp_status = 1;
             break;
     }
 
     $project->opp_amount        = price2num(GETPOST('opp_amount', 'int'));
     $project->date_c            = dol_now();
     $project->date_start        = dol_now();
-    $project->statut            = 1;
+    $project->statut            = getDolGlobalInt('EASYCRM_PWA_CLOSE_PROJECT_WHEN_OPPORTUNITY_ZERO') > 0 && $project->opp_percent == 0 ? Project::STATUS_CLOSED : Project::STATUS_VALIDATED;
     $project->usage_opportunity = 1;
     $project->usage_task        = 1;
 

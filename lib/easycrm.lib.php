@@ -32,7 +32,7 @@ function easycrm_admin_prepare_head(): array
     global $conf, $langs;
 
     // Load translation files required by the page
-    saturne_load_langs();
+    saturne_load_langs(['products']);
 
     // Initialize values
     $h = 0;
@@ -51,6 +51,11 @@ function easycrm_admin_prepare_head(): array
     $head[$h][0] = dol_buildpath('/easycrm/admin/address.php', 1);
     $head[$h][1] = $conf->browser->layout != 'phone' ? '<i class="fas fa-map-marker-alt pictofixedwidth"></i>' . $langs->trans('Addresses') : '<i class="fas fa-map-marker-alt"></i>';
     $head[$h][2] = 'address';
+    $h++;
+
+    $head[$h][0] = dol_buildpath('/easycrm/admin/product.php', 1);
+    $head[$h][1] = $conf->browser->layout != 'phone' ? '<i class="fas fa-cube pictofixedwidth"></i>' . $langs->trans('Product') : '<i class="fas fa-cube"></i>';
+    $head[$h][2] = 'product';
     $h++;
 
     $head[$h][0] = dol_buildpath('/saturne/admin/about.php', 1) . '?module_name=EasyCRM';
