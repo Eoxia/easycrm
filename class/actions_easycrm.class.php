@@ -755,7 +755,7 @@ class ActionsEasycrm
 
         return 0; // or return 1 to replace standard code
     }
-  
+
     /**
      * Overloading the doMassActions function
      *
@@ -807,7 +807,7 @@ class ActionsEasycrm
 
         return 0; // or return 1 to replace standard code
     }
-  
+
     /**
      * Overloading the saturneAdminPWAAdditionalConfig function : replacing the parent's function with the one below
      *
@@ -839,8 +839,10 @@ class ActionsEasycrm
             $out .= '</td></tr>';
 
             $out .= '</table>';
+
+            $this->resprints = $out;
         }
-          
+
         return 0; // or return 1 to replace standard code
     }
 }
