@@ -125,6 +125,14 @@ if (empty($reshook)) {
 				if ($object->status == $object::STATUS_NOT_FOUND) {
 					setEventMessages($langs->trans('CouldntFindDataOnOSM'), [], 'errors');
 				} else if ($object->status == $object::STATUS_ACTIVE) {
+                    require_once __DIR__ . '/../class/geolocation.class.php';
+                    $geolocation = new Geolocation($db);
+
+                    $geolocation->latitude     = $object->latitude;
+                    $geolocation->longitude    = $object->longitude;
+                    $geolocation->element_type = $object->element_type;
+                    $geolocation->fk_element   = $result;
+                    $geolocation->create($user);
 					setEventMessages($langs->trans('DataSuccessfullyRetrieved'), []);
 				}
 				setEventMessages($langs->trans('AddressCreated'), []);
@@ -145,7 +153,19 @@ if (empty($reshook)) {
 			$result = $object->delete($user);
 
 			if ($result > 0) {
-				setEventMessages($langs->trans('AddressDeleted'), []);
+                $objectLinked->fetch($fromId);
+                if ($objectLinked->array_options['options_projectaddress'] == $addressID) {
+                    $objectLinked->array_options['options_projectaddress'] = 0;
+                    $objectLinked->update($user);
+                }
+
+                require_once __DIR__ . '/../class/geolocation.class.php';
+                $geolocation  = new Geolocation($db);
+                $geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => 'fk_element = ' . $addressID]);
+                $geolocation  = array_shift($geolocations);
+                $geolocation->delete($user, false, false);
+
+                setEventMessages($langs->trans('AddressDeleted'), []);
 			} else {
 				setEventMessages($langs->trans('ErrorDeleteAddress'), [], 'errors');
 			}
@@ -157,8 +177,7 @@ if (empty($reshook)) {
         $favoriteAddressId = GETPOST('favorite_id');
 
         $objectLinked->fetch($fromId);
-
-        if (isset($objectLinked->array_options['options_' . $objectType . 'address']) && dol_strlen($objectLinked->array_options['options_' . $objectType . 'address']) > 0) {
+        if (!empty($objectLinked) && $favoriteAddressId > 0) {
             $objectLinked->array_options['options_' . $objectType . 'address'] = $objectLinked->array_options['options_' . $objectType . 'address'] == $favoriteAddressId ? 0 : $favoriteAddressId;
             $objectLinked->update($user);
         }

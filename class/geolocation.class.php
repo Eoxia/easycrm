@@ -51,6 +51,11 @@ class Geolocation extends SaturneObject
     public $ismultientitymanaged = 0;
 
     /**
+     * @var int  Does object support extrafields ? 0=No, 1=Yes
+     */
+    public $isextrafieldmanaged = 0;
+
+    /**
      * 'type' field format:
      *      'integer', 'integer:ObjectClass:PathToClass[:AddCreateButtonOrNot[:Filter[:Sortfield]]]',
      *      'select' (list of values are in 'options'),
