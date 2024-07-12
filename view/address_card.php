@@ -243,7 +243,7 @@ if ($action == 'create' && $fromId > 0) {
 
     print dol_get_fiche_end();
 
-    print $form->buttonsSaveCancel('Create');
+    print $form->buttonsSaveCancel('Create', 'Cancel', [], false, 'wpeo-button');
 } else if ($fromId > 0 || !empty($ref) && empty($action)) {
     $objectLinked->fetch($fromId);
 
