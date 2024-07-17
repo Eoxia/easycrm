@@ -44,6 +44,7 @@ require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
 // Load EasyCRM librairies
 require_once __DIR__ . '/../class/geolocation.php';
+//require_once __DIR__ . '/../class/address.class.php';
 
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
@@ -66,8 +67,8 @@ $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
 $objectInfos    = saturne_get_objects_metadata($objectType);
 $className      = $objectInfos['class_name'];
 $objectLinked   = new $className($db);
-//$object         = new Address($db);
-$geolocation = new Geolocation($db);
+//$address        = new Address($db);
+$geolocation    = new Geolocation($db);
 
 // Initialize view objects
 $form        = new Form($db);
@@ -201,6 +202,9 @@ $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
         foreach($geolocations as $geolocation) {
             $geolocation->convertCoordinates();
             $objectLinked->fetch($geolocation->fk_element);
+            if ($objectLinked->entity != $conf->entity) {
+                continue;
+            }
 
             $objectLinkedInfo  = $objectLinked->getNomUrl(1, '', 0, '', ' - ', 1) . '</br>';
             $objectLinkedInfo .= $langs->transnoentities('ProjectLabel') . ' : ' . $objectLinked->title . '</br>';
