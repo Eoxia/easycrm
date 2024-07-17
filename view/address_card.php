@@ -39,6 +39,7 @@ require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
 // Load EasyCRM librairies
 require_once __DIR__ . '/../class/address.class.php';
+require_once __DIR__ . '/../class/geolocation.class.php';
 
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
@@ -70,6 +71,7 @@ $objectInfos  = saturne_get_objects_metadata($objectType);
 $className    = $objectInfos['class_name'];
 $objectLinked = new $className($db);
 $object       = new Address($db);
+$geolocation  = new Geolocation($db);
 
 // Initialize view objects
 $form        = new Form($db);
@@ -125,13 +127,11 @@ if (empty($reshook)) {
 				if ($object->status == $object::STATUS_NOT_FOUND) {
 					setEventMessages($langs->trans('CouldntFindDataOnOSM'), [], 'errors');
 				} else if ($object->status == $object::STATUS_ACTIVE) {
-                    require_once __DIR__ . '/../class/geolocation.class.php';
-                    $geolocation = new Geolocation($db);
-
                     $geolocation->latitude     = $object->latitude;
                     $geolocation->longitude    = $object->longitude;
                     $geolocation->element_type = $object->element_type;
-                    $geolocation->fk_element   = $result;
+                    $geolocation->fk_element   = $fromId;
+                    $geolocation->fk_address   = $result;
                     $geolocation->create($user);
 					setEventMessages($langs->trans('DataSuccessfullyRetrieved'), []);
 				}
@@ -159,9 +159,7 @@ if (empty($reshook)) {
                     $objectLinked->update($user);
                 }
 
-                require_once __DIR__ . '/../class/geolocation.class.php';
-                $geolocation  = new Geolocation($db);
-                $geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => 'fk_element = ' . $addressID]);
+                $geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => 'fk_address = ' . $addressID]);
                 $geolocation  = array_shift($geolocations);
                 $geolocation->delete($user, false, false);
 
