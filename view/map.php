@@ -62,6 +62,7 @@ $filterRegion  = GETPOST('filter_region');
 $filterState   = GETPOST('filter_state');
 $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
+$mode          = GETPOSTISSET('mode') ? GETPOST('mode') : '';
 
 // Initialize technical object
 $objectInfos    = saturne_get_objects_metadata($objectType);
@@ -117,6 +118,11 @@ if (empty($resHook)) {
 
 $title   = $langs->trans('Map');
 $helpUrl = 'FR:Module_EasyCRM';
+
+if ($mode == 'pwa') {
+    $conf->dol_hide_topmenu  = 1;
+    $conf->dol_hide_leftmenu = 1;
+}
 
 saturne_header(0, '', $title, $helpUrl);
 
@@ -197,61 +203,64 @@ $allObjects    = saturne_fetch_all_object_type($objectInfos['class_name']);
 //		}
 //	}
 //} else {
-    $geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => 't.element_type = ' . "'" . GETPOST('from_type') . "'"]);
-    if (is_array($geolocations) && !empty($geolocations)) {
-        foreach($geolocations as $geolocation) {
-            $geolocation->convertCoordinates();
-            $objectLinked->fetch($geolocation->fk_element);
-            if ($objectLinked->entity != $conf->entity) {
-                continue;
-            }
+$filterSQL  = 't.element_type = ' . "'" . GETPOST('from_type') . "'";
+$filterSQL .= ($fromId > 0 ? ' AND t.fk_element = ' . $fromId : ($filterId > 0 ? ' AND t.fk_element = ' . $filterId : ''));
 
-            $objectLinkedInfo  = $objectLinked->getNomUrl(1, '', 0, '', ' - ', 1) . '</br>';
-            $objectLinkedInfo .= $langs->transnoentities('ProjectLabel') . ' : ' . $objectLinked->title . '</br>';
-            $objectLinkedInfo .= $langs->transnoentities('Description') . ' : ' . $objectLinked->description . '</br>';
-            $code = dol_getIdFromCode($db, $objectLinked->opp_status, 'c_lead_status', 'rowid', 'code');
-            if ($code) {
-                $objectLinkedInfo .= $langs->transnoentities('OpportunityStatus')  . ' : ' . $langs->trans('OppStatus' . $code) . '</br>';
-            }
-            if (strcmp($objectLinked->opp_amount, '')) {
-                $objectLinkedInfo .= $langs->transnoentities('OpportunityAmount') . ' : ' . price($objectLinked->opp_amount, 0, $langs, 1, 0, -1, $conf->currency) . '</br>';
-                if (strcmp($objectLinked->opp_percent, '')) {
-                    $objectLinkedInfo .= $langs->transnoentities('OpportunityWeightedAmountShort')  . ' : ' . price($objectLinked->opp_amount * $objectLinked->opp_percent / 100, 0, $langs, 1, 0, -1, $conf->currency);
-                }
-            }
+$geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => $filterSQL]);
+if (is_array($geolocations) && !empty($geolocations)) {
+    foreach($geolocations as $geolocation) {
+        $geolocation->convertCoordinates();
+        $objectLinked->fetch($geolocation->fk_element);
 
-            $num++;
-            $objectList[$num]['color']  = '#' . randomColor();
-            switch ($objectLinked->opp_percent) {
-                case $objectLinked->opp_percent >= 40 && $objectLinked->opp_percent < 60:
-                    $objectList[$num]['scale'] = 1.5;
-                    break;
-                case $objectLinked->opp_percent >= 60 && $objectLinked->opp_percent < 100:
-                    $objectList[$num]['scale'] = 1.75;
-                    break;
-                case $objectLinked->opp_percent == 100:
-                    $objectList[$num]['scale'] = 2;
-                    break;
-                default:
-                    $objectList[$num]['scale'] = 1;
-                    break;
-            }
-
-            // Add geoJSON point
-            $features[] = [
-                'type'     => 'Feature',
-                'geometry' => [
-                    'type'        => 'Point',
-                    'coordinates' => [$geolocation->longitude, $geolocation->latitude]
-                ],
-                'properties' => [
-                    'desc'    => $objectLinkedInfo,
-                    'address' => $num
-                ]
-            ];
+        if ($objectLinked->entity != $conf->entity || ($mode == 'pwa' && empty($objectLinked->opp_status))) {
+            continue;
         }
+
+        $objectLinkedInfo  = $objectLinked->getNomUrl(1, '', 0, '', ' - ', 1) . '</br>';
+        $objectLinkedInfo .= $langs->transnoentities('ProjectLabel') . ' : ' . $objectLinked->title . '</br>';
+        $objectLinkedInfo .= $langs->transnoentities('Description') . ' : ' . $objectLinked->description . '</br>';
+        $code = dol_getIdFromCode($db, $objectLinked->opp_status, 'c_lead_status', 'rowid', 'code');
+        if ($code) {
+            $objectLinkedInfo .= $langs->transnoentities('OpportunityStatus')  . ' : ' . $langs->trans('OppStatus' . $code) . '</br>';
+        }
+        if (strcmp($objectLinked->opp_amount, '')) {
+            $objectLinkedInfo .= $langs->transnoentities('OpportunityAmount') . ' : ' . price($objectLinked->opp_amount, 0, $langs, 1, 0, -1, $conf->currency) . '</br>';
+            if (strcmp($objectLinked->opp_percent, '')) {
+                $objectLinkedInfo .= $langs->transnoentities('OpportunityWeightedAmountShort')  . ' : ' . price($objectLinked->opp_amount * $objectLinked->opp_percent / 100, 0, $langs, 1, 0, -1, $conf->currency);
+            }
+        }
+
+        $num++;
+        $objectList[$num]['color']  = '#' . randomColor();
+        switch ($objectLinked->opp_percent) {
+            case $objectLinked->opp_percent >= 40 && $objectLinked->opp_percent < 60:
+                $objectList[$num]['scale'] = 1.5;
+                break;
+            case $objectLinked->opp_percent >= 60 && $objectLinked->opp_percent < 100:
+                $objectList[$num]['scale'] = 1.75;
+                break;
+            case $objectLinked->opp_percent == 100:
+                $objectList[$num]['scale'] = 2;
+                break;
+            default:
+                $objectList[$num]['scale'] = 1;
+                break;
+        }
+
+        // Add geoJSON point
+        $features[] = [
+            'type'     => 'Feature',
+            'geometry' => [
+                'type'        => 'Point',
+                'coordinates' => [$geolocation->longitude, $geolocation->latitude]
+            ],
+            'properties' => [
+                'desc'    => $objectLinkedInfo,
+                'address' => $num
+            ]
+        ];
     }
-//}
+}
 
 if ($fromId > 0) {
     $objectLinked->fetch($fromId);
@@ -264,55 +273,56 @@ if ($fromId > 0) {
 
 print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
 
-print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?from_type=' . $objectType . '" name="formfilter">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
+if ($mode != 'pwa') {
+    print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?from_type=' . $objectType . '" name="formfilter">';
+    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 
-// Filter box
-print '<div class="liste_titre liste_titre_bydiv centpercent">';
+    // Filter box
+    print '<div class="liste_titre liste_titre_bydiv centpercent">';
 
-$selectArray = [];
-foreach ($allObjects as $singleObject) {
-    $selectArray[$singleObject->id] = $singleObject->ref;
-}
-// Object
-print '<div class="divsearchfield">' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
-print $form->selectarray('filter_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $fromId > 0) . '</div>';
-
-// Type
-print '<div class="divsearchfield">' . $langs->trans('Type'). ': ';
-print saturne_select_dictionary('filter_type', 'c_address_type', 'ref', 'label', $filterType, 1) . '</div>';
-
-// Country
-print '<div class="divsearchfield">' . $langs->trans('Country'). ': ';
-print $form->select_country($filterCountry, 'filter_country', '', 0, 'maxwidth100') . '</div>';
-
-// Region
-print '<div class="divsearchfield">' . $langs->trans('Region'). ': ';
-print $formCompany->select_region($filterRegion, 'filter_region') . '</div>';
-
-// Department
-print '<div class="divsearchfield">' . $langs->trans('State'). ': ';
-print $formCompany->select_state($filterState, 0, 'filter_state', 'maxwidth100') . '</div>';
-
-// City
-print '<div class="divsearchfield">' . $langs->trans('Town'). ': ';
-print '<input class="flat searchstring maxwidth200" type="text" name="filter_town" value="' . dol_escape_htmltag($filterTown) . '"></div>';
-
-//Categories project
-if (isModEnabled('categorie') && $user->rights->categorie->lire && $fromId <= 0) {
-    if (in_array($objectType, Categorie::$MAP_ID_TO_CODE)) {
-        print '<div class="divsearchfield">';
-        print $langs->trans(ucfirst($objectInfos['langfile']) . 'CategoriesShort') . '</br>' . $formCategory->getFilterBox($objectType, $filterCat) . '</div>';
+    $selectArray = [];
+    foreach ($allObjects as $singleObject) {
+        $selectArray[$singleObject->id] = $singleObject->ref;
     }
+    // Object
+    print '<div class="divsearchfield">' . img_picto('', $objectInfos['picto']) . ' ' . $langs->trans($objectInfos['langs']). ': ';
+    print $form->selectarray('filter_id', $selectArray, $filterId, 1, 0, 0, '', 0, 0, $fromId > 0) . '</div>';
+
+    // Type
+    print '<div class="divsearchfield">' . $langs->trans('Type'). ': ';
+    print saturne_select_dictionary('filter_type', 'c_address_type', 'ref', 'label', $filterType, 1) . '</div>';
+
+    // Country
+    print '<div class="divsearchfield">' . $langs->trans('Country'). ': ';
+    print $form->select_country($filterCountry, 'filter_country', '', 0, 'maxwidth100') . '</div>';
+
+    // Region
+    print '<div class="divsearchfield">' . $langs->trans('Region'). ': ';
+    print $formCompany->select_region($filterRegion, 'filter_region') . '</div>';
+
+    // Department
+    print '<div class="divsearchfield">' . $langs->trans('State'). ': ';
+    print $formCompany->select_state($filterState, 0, 'filter_state', 'maxwidth100') . '</div>';
+
+    // City
+    print '<div class="divsearchfield">' . $langs->trans('Town'). ': ';
+    print '<input class="flat searchstring maxwidth200" type="text" name="filter_town" value="' . dol_escape_htmltag($filterTown) . '"></div>';
+
+    //Categories project
+    if (isModEnabled('categorie') && $user->rights->categorie->lire && $fromId <= 0) {
+        if (in_array($objectType, Categorie::$MAP_ID_TO_CODE)) {
+            print '<div class="divsearchfield">';
+            print $langs->trans(ucfirst($objectInfos['langfile']) . 'CategoriesShort') . '</br>' . $formCategory->getFilterBox($objectType, $filterCat) . '</div>';
+        }
+    }
+
+    // Morefilter buttons
+    print '<div class="divsearchfield">';
+    print $form->showFilterButtons() . '</div></div>';
+
+    print '</form>';
 }
-
-// Morefilter buttons
-print '<div class="divsearchfield">';
-print $form->showFilterButtons() . '</div></div>';
-
-print '</form>';
-
 ?>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/css/ol.css" type="text/css">
 	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList"></script>
