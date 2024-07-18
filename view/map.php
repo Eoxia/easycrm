@@ -62,7 +62,7 @@ $filterRegion  = GETPOST('filter_region');
 $filterState   = GETPOST('filter_state');
 $filterTown    = trim(GETPOST('filter_town', 'alpha'));
 $filterCat     = GETPOST("search_category_" . $objectType ."_list", 'array');
-$mode          = GETPOSTISSET('mode') ? GETPOST('mode') : '';
+$source        = GETPOSTISSET('source') ? GETPOST('source') : '';
 
 // Initialize technical object
 $objectInfos    = saturne_get_objects_metadata($objectType);
@@ -119,7 +119,7 @@ if (empty($resHook)) {
 $title   = $langs->trans('Map');
 $helpUrl = 'FR:Module_EasyCRM';
 
-if ($mode == 'pwa') {
+if ($source == 'pwa') {
     $conf->dol_hide_topmenu  = 1;
     $conf->dol_hide_leftmenu = 1;
 }
@@ -212,7 +212,7 @@ if (is_array($geolocations) && !empty($geolocations)) {
         $geolocation->convertCoordinates();
         $objectLinked->fetch($geolocation->fk_element);
 
-        if ($objectLinked->entity != $conf->entity || ($mode == 'pwa' && empty($objectLinked->opp_status))) {
+        if ($objectLinked->entity != $conf->entity || ($source == 'pwa' && empty($objectLinked->opp_status))) {
             continue;
         }
 
@@ -271,9 +271,17 @@ if ($fromId > 0) {
     saturne_banner_tab($objectLinked, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($objectLinked->photo));
 }
 
-print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
+if ($source == 'pwa') {
+    $backToMap = img_picto('project', 'fontawesome_project-diagram_fas_#ffffff') . ' ' . img_picto('create', 'fontawesome_plus_fas_#ffffff');
+    print '<div class="page-header">';
+    print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
+    print '<a href="' . dol_buildpath('/custom/easycrm/view/frontend/quickcreation.php?source=pwa', 1) . '" class="page-action">' . $backToMap . '</a>';
+    print '</div>';
+} else {
+    print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
+}
 
-if ($mode != 'pwa') {
+if ($source != 'pwa') {
     print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?from_type=' . $objectType . '" name="formfilter">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
