@@ -15,3 +15,4 @@
 
 ALTER TABLE llx_element_geolocation ADD INDEX idx_element_geolocation_rowid (rowid);
 ALTER TABLE llx_element_geolocation ADD INDEX idx_element_geolocation_fk_element (fk_element);
+ALTER TABLE llx_element_geolocation ADD INDEX idx_element_geolocation_fk_address (fk_address);

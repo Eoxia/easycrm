@@ -1,4 +1,4 @@
--- Copyright (C) 2023 EVARISK <technique@evarisk.com>
+-- Copyright (C) 2024 EVARISK <technique@evarisk.com>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -13,11 +13,5 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
-CREATE TABLE llx_element_geolocation(
-  rowid        integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
-  latitude     double(24,8) DEFAULT 0 NOT NULL,
-  longitude    double(24,8) DEFAULT 0 NOT NULL,
-  element_type varchar(255) NOT NULL,
-  fk_element   integer NOT NULL
-  fk_address   integer
-) ENGINE=innodb;
+-- 1.5.0
+ALTER TABLE `llx_element_geolocation` ADD `fk_address` integer NULL AFTER `fk_element`;
