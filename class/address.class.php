@@ -289,7 +289,7 @@ class Address extends SaturneObject
         $parameters     = dol_sanitizeFileName($parameters);
         $parameters     = str_replace(' ', '+', $parameters);
 
-        $context  = stream_context_create(["http" => ["header" => "Referer:" . $_SERVER['HTTP_USER_AGENT']]]);
+        $context  = stream_context_create(["http" => ["header" => "Referer:" . $_SERVER['HTTP_REFERER']]]);
         $response = file_get_contents('https://nominatim.openstreetmap.org/search?q='. $parameters .'&format=json&polygon=1&addressdetails=1', false, $context);
         $data     = json_decode($response, false);
 
