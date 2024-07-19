@@ -44,7 +44,6 @@ require_once __DIR__ . '/../../saturne/lib/object.lib.php';
 
 // Load EasyCRM librairies
 require_once __DIR__ . '/../class/geolocation.php';
-//require_once __DIR__ . '/../class/address.class.php';
 
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
@@ -68,7 +67,6 @@ $source        = GETPOSTISSET('source') ? GETPOST('source') : '';
 $objectInfos    = saturne_get_objects_metadata($objectType);
 $className      = $objectInfos['class_name'];
 $objectLinked   = new $className($db);
-//$address        = new Address($db);
 $geolocation    = new Geolocation($db);
 
 // Initialize view objects
@@ -271,15 +269,9 @@ if ($fromId > 0) {
     saturne_banner_tab($objectLinked, 'ref', $morehtml, 1, 'ref', 'ref', '', !empty($objectLinked->photo));
 }
 
-if ($source == 'pwa') {
-    $backToMap = img_picto('project', 'fontawesome_project-diagram_fas_#ffffff') . ' ' . img_picto('create', 'fontawesome_plus_fas_#ffffff');
-    print '<div class="page-header">';
-    print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
-    print '<a href="' . dol_buildpath('/custom/easycrm/view/frontend/quickcreation.php?source=pwa', 1) . '" class="page-action">' . $backToMap . '</a>';
-    print '</div>';
-} else {
-    print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt');
-}
+$backToMap = img_picto('project', 'fontawesome_project-diagram_fas_#ffffff') . ' ' . img_picto('create', 'fontawesome_plus_fas_#ffffff');
+$iconBTM   = '<a class="wpeo-button" href="' . dol_buildpath('custom/easycrm/view/frontend/quickcreation.php?source=pwa', 1) . '">' . $backToMap . '</a>';
+print_barre_liste($title, '', $_SERVER["PHP_SELF"], '', '', '', '', '', $num, 'fa-map-marked-alt', 0, ($source == 'pwa' ? $iconBTM : ''));
 
 if ($source != 'pwa') {
     print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '?from_type=' . $objectType . '" name="formfilter">';
