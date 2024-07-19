@@ -18,6 +18,6 @@ CREATE TABLE llx_element_geolocation(
   latitude     double(24,8) DEFAULT 0 NOT NULL,
   longitude    double(24,8) DEFAULT 0 NOT NULL,
   element_type varchar(255) NOT NULL,
-  fk_element   integer NOT NULL
+  fk_element   integer NOT NULL,
   fk_address   integer
 ) ENGINE=innodb;
