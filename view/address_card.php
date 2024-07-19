@@ -156,11 +156,10 @@ if (empty($reshook)) {
                 $objectLinked->fetch($fromId);
                 if ($objectLinked->array_options['options_projectaddress'] == $addressID) {
                     $objectLinked->array_options['options_projectaddress'] = 0;
-                    $objectLinked->update($user);
+                    $objectLinked->updateExtrafield('projectaddress');
                 }
 
-                $geolocations = $geolocation->fetchAll('', '', 0, 0, ['customsql' => 'fk_address = ' . $addressID]);
-                $geolocation  = array_shift($geolocations);
+                $geolocations = $geolocation->fetch('', '', ' AND fk_address = ' . $addressID);
                 $geolocation->delete($user, false, false);
 
                 setEventMessages($langs->trans('AddressDeleted'), []);
