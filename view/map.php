@@ -323,6 +323,10 @@ if ($source != 'pwa') {
 
     print '</form>';
 }
+
+$picto = img_picto('location', 'fontawesome_search-location_fas_#007BFF');
+print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</button>';
+
 ?>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/css/ol.css" type="text/css">
 	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList"></script>
@@ -370,7 +374,18 @@ if ($source != 'pwa') {
 		.ol-popup-closer:after {
 			content: "✖";
 		}
-	</style>
+        .geolocate-button {
+            position: absolute;
+            bottom: 180px;
+            right: 20px;
+            padding: 10px 10px;
+            border: solid #007BFF;
+            color: white;
+            border-radius: 100px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+    </style>
 
 	<div id="display_map" class="display_map"></div>
 	<div id="popup" class="ol-popup">
@@ -536,22 +551,152 @@ if ($source != 'pwa') {
 			return extent;
 		}
 
-		/**
-		 * Add a click handler to the map to render the popup.
-		 */
-		map.on('singleclick', function(evt) {
-			var feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-				return feature;
-			});
+        /**
+         * Initialize geolocation control.
+         */
+        var geolocation = new ol.Geolocation({
+            trackingOptions: {
+                enableHighAccuracy: true
+            },
+            projection: mapView.getProjection()
+        });
 
-			if (feature) {
-				var coordinates = feature.getGeometry().getCoordinates();
-				popupContent.innerHTML = feature.get('desc');
-				popupOverlay.setPosition(coordinates);
-			} else {
-				popupCloser.click();
-			}
-		});
+        // Enable geolocation tracking
+        geolocation.setTracking(true);
+
+        /**
+         * Handle geolocation error.
+         */
+        geolocation.on('error', function(error) {
+            console.error('Geolocation error: ' + error.message);
+        });
+
+        /**
+         * Geolocation marker style.
+         */
+        var positionFeature = new ol.Feature();
+        var directionFeature = new ol.Feature();
+        var radiusFeature = new ol.Feature();
+
+        // Set custom properties
+        positionFeature.setProperties({
+            customText: '<?php print $langs->trans('MyPosition') ?>'
+        });
+
+        var geolocationSource = new ol.source.Vector({
+            features: [positionFeature, directionFeature, radiusFeature]
+        });
+
+        var geolocationLayer = new ol.layer.Vector({
+            source: geolocationSource
+        });
+
+        map.addLayer(geolocationLayer);
+        var firstGeolocationUpdate = true;
+
+        geolocation.on('change:position', function() {
+            var coordinates = geolocation.getPosition();
+            positionFeature.setGeometry(coordinates ? new ol.geom.Point(coordinates) : null);
+
+            // Create a 1km radius circle around the user's location
+            var radius = 1000; // 1 km radius
+            var circle = new ol.geom.Circle(coordinates, radius);
+            radiusFeature.setGeometry(circle);
+
+            // Create the cone for direction
+            var heading = geolocation.getHeading() || 0;
+            var coneLength = 500; // Length of the direction cone
+            var endPoint = [
+                coordinates[0] + Math.cos(heading) * coneLength,
+                coordinates[1] + Math.sin(heading) * coneLength
+            ];
+
+            var cone = new ol.geom.Polygon([[
+                coordinates,
+                [
+                    coordinates[0] + Math.cos(heading - Math.PI / 8) * coneLength,
+                    coordinates[1] + Math.sin(heading - Math.PI / 8) * coneLength
+                ],
+                endPoint,
+                [
+                    coordinates[0] + Math.cos(heading + Math.PI / 8) * coneLength,
+                    coordinates[1] + Math.sin(heading + Math.PI / 8) * coneLength
+                ],
+                coordinates
+            ]]);
+            directionFeature.setGeometry(cone);
+
+            if (firstGeolocationUpdate) {
+                mapView.setCenter(coordinates); // Center the map on the user's position
+                mapView.setZoom(14); // Adjust the zoom level as needed
+                firstGeolocationUpdate = false;
+            }
+        });
+
+        // Style for the circle
+        radiusFeature.setStyle(new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'rgba(0, 0, 255, 0.5)',
+                width: 2
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(0, 0, 255, 0.1)'
+            })
+        }));
+
+        // Style for the position circle
+        positionFeature.setStyle(new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({
+                    color: '#3399CC'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 2
+                })
+            })
+        }));
+
+        // Style for the direction cone
+        directionFeature.setStyle(new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'rgba(255, 0, 0, 0.8)',
+                width: 2
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(255, 0, 0, 0.3)'
+            })
+        }));
+
+        /**
+         * Add a click handler to the map to render the popup.
+         */
+        map.on('singleclick', function(evt) {
+            var feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+                return feature;
+            });
+
+            if (feature) {
+                var coordinates = feature.getGeometry().getCoordinates();
+                var customText = feature.get('customText') || feature.get('desc');
+                popupContent.innerHTML = customText;
+                popupOverlay.setPosition(coordinates);
+            } else {
+                popupCloser.click();
+            }
+        });
+
+        // Center and zoom the map on geolocation when the button is clicked
+        document.getElementById('geolocate-button').addEventListener('click', function() {
+            var coordinates = geolocation.getPosition();
+            if (coordinates) {
+                mapView.setCenter(coordinates);
+                mapView.setZoom(14); // Adjust the zoom level as needed
+            } else {
+                console.error('Geolocation position is not available.');
+            }
+        });
 	</script>
 <?php
 
