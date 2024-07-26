@@ -582,6 +582,8 @@ print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</bu
         positionFeature.setProperties({
             customText: '<?php print $langs->trans('MyPosition') ?>'
         });
+        directionFeature.setProperties({ unclickable: true });
+        radiusFeature.setProperties({ unclickable: true });
 
         var geolocationSource = new ol.source.Vector({
             features: [positionFeature, directionFeature, radiusFeature]
