@@ -575,18 +575,15 @@ print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</bu
          * Geolocation marker style.
          */
         var positionFeature = new ol.Feature();
-        var directionFeature = new ol.Feature();
         var radiusFeature = new ol.Feature();
 
         // Set custom properties
         positionFeature.setProperties({
             customText: '<?php print $langs->trans('MyPosition') ?>'
         });
-        directionFeature.setProperties({ unclickable: true });
-        radiusFeature.setProperties({ unclickable: true });
 
         var geolocationSource = new ol.source.Vector({
-            features: [positionFeature, directionFeature, radiusFeature]
+            features: [positionFeature, radiusFeature]
         });
 
         var geolocationLayer = new ol.layer.Vector({
@@ -594,7 +591,6 @@ print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</bu
         });
 
         map.addLayer(geolocationLayer);
-        var firstGeolocationUpdate = true;
 
         geolocation.on('change:position', function() {
             var coordinates = geolocation.getPosition();
@@ -604,35 +600,6 @@ print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</bu
             var radius = 1000; // 1 km radius
             var circle = new ol.geom.Circle(coordinates, radius);
             radiusFeature.setGeometry(circle);
-
-            // Create the cone for direction
-            var heading = geolocation.getHeading() || 0;
-            var coneLength = 500; // Length of the direction cone
-            var endPoint = [
-                coordinates[0] + Math.cos(heading) * coneLength,
-                coordinates[1] + Math.sin(heading) * coneLength
-            ];
-
-            var cone = new ol.geom.Polygon([[
-                coordinates,
-                [
-                    coordinates[0] + Math.cos(heading - Math.PI / 8) * coneLength,
-                    coordinates[1] + Math.sin(heading - Math.PI / 8) * coneLength
-                ],
-                endPoint,
-                [
-                    coordinates[0] + Math.cos(heading + Math.PI / 8) * coneLength,
-                    coordinates[1] + Math.sin(heading + Math.PI / 8) * coneLength
-                ],
-                coordinates
-            ]]);
-            directionFeature.setGeometry(cone);
-
-            if (firstGeolocationUpdate) {
-                mapView.setCenter(coordinates); // Center the map on the user's position
-                mapView.setZoom(14); // Adjust the zoom level as needed
-                firstGeolocationUpdate = false;
-            }
         });
 
         // Style for the circle
@@ -641,9 +608,6 @@ print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</bu
                 color: 'rgba(0, 0, 255, 0.5)',
                 width: 2
             }),
-            fill: new ol.style.Fill({
-                color: 'rgba(0, 0, 255, 0.1)'
-            })
         }));
 
         // Style for the position circle
@@ -657,17 +621,6 @@ print '<button id="geolocate-button" class="geolocate-button">' . $picto . '</bu
                     color: '#fff',
                     width: 2
                 })
-            })
-        }));
-
-        // Style for the direction cone
-        directionFeature.setStyle(new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: 'rgba(255, 0, 0, 0.8)',
-                width: 2
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(255, 0, 0, 0.3)'
             })
         }));
 
