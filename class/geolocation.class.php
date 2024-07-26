@@ -103,7 +103,6 @@ class Geolocation extends SaturneObject
         'longitude'    => ['type' => 'double(24,8)', 'label' => 'Longitude',   'enabled' => 1, 'position' => 20, 'notnull' => 1, 'visible' => 0, 'default' => 0],
         'element_type' => ['type' => 'varchar(255)', 'label' => 'ElementType', 'enabled' => 1, 'position' => 30, 'notnull' => 1, 'visible' => 0],
         'fk_element'   => ['type' => 'integer',      'label' => 'FkElement',   'enabled' => 1, 'position' => 40, 'notnull' => 1, 'visible' => 0, 'index' => 1],
-        'fk_address'   => ['type' => 'integer',      'label' => 'FkAddress',   'enabled' => 1, 'position' => 50, 'notnull' => 0, 'visible' => 0, 'index' => 1],
     ];
 
     /**
@@ -130,11 +129,6 @@ class Geolocation extends SaturneObject
      * @var int Fk_element
      */
     public $fk_element;
-
-    /**
-     * @var int|null Fk_element
-     */
-    public ?int $fk_address;
 
     /**
      * Constructor
