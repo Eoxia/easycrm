@@ -142,7 +142,7 @@ AddressesList                = Liste des adresses
 
 # Data - Donnée
 GeolocationError = Erreur possible lors la géolocalisation : %s
-
+MyPosition       = Ma position
 
 
 #
