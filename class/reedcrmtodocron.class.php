@@ -24,6 +24,7 @@
 // dol_time_plus_duree() is not loaded by default, the cron runner would fatal on it
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 
+require_once __DIR__ . '/../lib/reedcrm_function.lib.php';
 require_once __DIR__ . '/../lib/reedcrm_todo.lib.php';
 
 /**
@@ -92,18 +93,21 @@ class ReedcrmTodoCron
                 continue;
             }
 
+            $ownerId     = $this->relaunchOwnerId($row);
+            $outputLangs = reedcrm_get_output_langs($ownerId, ['reedcrm@reedcrm', 'agenda', 'propal']);
+
             $referenceDate = $this->db->jdate($row->date_reference);
-            $label         = $langs->transnoentities('TodoPropalRelaunchLabel', $row->ref);
+            $label         = $outputLangs->transnoentities('TodoPropalRelaunchLabel', $row->ref);
             if (!empty($row->soc_name)) {
                 $label .= ' - ' . $row->soc_name;
             }
-            $note = $langs->transnoentities(
+            $note = $outputLangs->transnoentities(
                 'TodoPropalRelaunchNote',
                 $referenceDate ? dol_print_date($referenceDate, 'day') : '?',
-                price($row->total_ttc, 0, $langs, 1, -1, -1, $conf->currency)
+                price($row->total_ttc, 0, $outputLangs, 1, -1, -1, $conf->currency)
             );
 
-            if ($this->createRelaunchEvent(REEDCRM_TODO_CODE_PROPAL_RELAUNCH, 'propal', $row, $label, $note)) {
+            if ($this->createRelaunchEvent(REEDCRM_TODO_CODE_PROPAL_RELAUNCH, 'propal', $row, $label, $note, $ownerId)) {
                 $created++;
             }
         }
@@ -152,18 +156,21 @@ class ReedcrmTodoCron
                 continue;
             }
 
+            $ownerId     = $this->relaunchOwnerId($row);
+            $outputLangs = reedcrm_get_output_langs($ownerId, ['reedcrm@reedcrm', 'agenda', 'bills']);
+
             $referenceDate = $this->db->jdate($row->date_reference);
-            $label         = $langs->transnoentities('TodoInvoiceRelaunchLabel', $row->ref);
+            $label         = $outputLangs->transnoentities('TodoInvoiceRelaunchLabel', $row->ref);
             if (!empty($row->soc_name)) {
                 $label .= ' - ' . $row->soc_name;
             }
-            $note = $langs->transnoentities(
+            $note = $outputLangs->transnoentities(
                 'TodoInvoiceRelaunchNote',
                 $referenceDate ? dol_print_date($referenceDate, 'day') : '?',
-                price($row->total_ttc, 0, $langs, 1, -1, -1, $conf->currency)
+                price($row->total_ttc, 0, $outputLangs, 1, -1, -1, $conf->currency)
             );
 
-            if ($this->createRelaunchEvent(REEDCRM_TODO_CODE_INVOICE_RELAUNCH, 'invoice', $row, $label, $note)) {
+            if ($this->createRelaunchEvent(REEDCRM_TODO_CODE_INVOICE_RELAUNCH, 'invoice', $row, $label, $note, $ownerId)) {
                 $created++;
             }
         }
@@ -212,6 +219,30 @@ class ReedcrmTodoCron
     }
 
     /**
+     * Tell which user owns the relaunch of an object.
+     *
+     * The one who validated it comes first, its author otherwise. The owner also carries the
+     * language the label of the relaunch has to be written in.
+     *
+     * @param  object $row Row of the proposal or the invoice
+     * @return int         Row ID of the owner
+     */
+    protected function relaunchOwnerId($row): int
+    {
+        global $user;
+
+        $ownerId = (int) $row->fk_user_valid;
+        if (empty($ownerId)) {
+            $ownerId = (int) $row->fk_user_author;
+        }
+        if (empty($ownerId)) {
+            $ownerId = ($user->id > 0 ? $user->id : 1);
+        }
+
+        return $ownerId;
+    }
+
+    /**
      * Create a relaunch event to do, without any date.
      *
      * ActionComm::create() always writes a start date, an event with none has to be saved
@@ -223,22 +254,14 @@ class ReedcrmTodoCron
      * @param  object $row         Row of the proposal or the invoice
      * @param  string $label       Label of the event
      * @param  string $note        Private note of the event
+     * @param  int    $ownerId     Row ID of the user owning the relaunch
      * @return bool                True when the event was created
      */
-    protected function createRelaunchEvent(string $code, string $elementType, $row, string $label, string $note): bool
+    protected function createRelaunchEvent(string $code, string $elementType, $row, string $label, string $note, int $ownerId): bool
     {
         global $user;
 
         require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
-
-        // The one who validated the object owns the relaunch, the author otherwise
-        $ownerId = (int) $row->fk_user_valid;
-        if (empty($ownerId)) {
-            $ownerId = (int) $row->fk_user_author;
-        }
-        if (empty($ownerId)) {
-            $ownerId = ($user->id > 0 ? $user->id : 1);
-        }
 
         $event               = new ActionComm($this->db);
         $event->type_code    = 'AC_OTH';
