@@ -1883,17 +1883,19 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicelist|invoicereclist|thirdpartylist/', $parameters['context'])) {
-            if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
-                $extrafieldName = 'options_notation_' . $object->element . '_contact';
+        // Anchored match : an unanchored 'invoicelist' also matches the supplier invoice list context 'supplierinvoicelist'
+        if (preg_match('/(^|:)(invoicelist|invoicereclist|thirdpartylist)(:|$)/', $parameters['context'])) {
+            $extrafieldName = 'options_notation_' . $object->element . '_contact';
+            $obj            = $parameters['obj'] ?? null;
+            if (isModEnabled('facture') && $user->hasRight('facture', 'lire') && is_object($obj) && property_exists($obj, $extrafieldName)) {
                 if ($object->element == 'facturerec') {
                     $specialName = 'facture_rec';
                 } else {
                     $specialName = $object->element;
                 }
                 $jQueryElement  = $specialName . '.notation_' . $object->element . '_contact';
-                $out            = '<div class="wpeo-button button-strong ' . (($parameters['obj']->$extrafieldName >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
-                $out           .= '<span>' . $parameters['obj']->$extrafieldName . '</span>';
+                $out            = '<div class="wpeo-button button-strong ' . (($obj->$extrafieldName >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
+                $out           .= '<span>' . $obj->$extrafieldName . '</span>';
                 $out           .= '</div>'; ?>
 
                 <script>
