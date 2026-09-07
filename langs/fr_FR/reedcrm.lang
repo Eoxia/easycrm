@@ -21,6 +21,7 @@
 ModuleReedCRMName = ReedCRM
 ModuleReedCRMDesc = Simplification de la CRM
 ReedCRMDescription = Simplification de la CRM
+ReedCRMDescriptionLong = Simplification de la CRM
 
 #
 # Quick Creation - Ajout rapide
@@ -294,7 +295,6 @@ EventType = Type d'événement
 Date = Date
 Project = Projet
 SelectProject = Sélectionner un projet
-NoContact = Aucun contact
 NoProjectAvailable = Aucun projet disponible
 ProjectModuleDisabled = Module projet désactivé
 Type = Type
@@ -1000,3 +1000,38 @@ PocketNoRecordingToLink = Tous les enregistrements disponibles sont déjà ratta
 PocketRecordingLinked = Enregistrement rattaché
 PocketRecordingUnlinked = Enregistrement détaché
 PocketRecordingLinkFailed = L'opération de rattachement a échoué
+
+#
+# Divers - libellés génériques
+#
+Calls = Appels
+NoEvents = Aucun événement
+Tag = Tag
+Visible = Visible
+Inactive = Inactif
+RecordNotFound = Enregistrement introuvable
+CommercialProposals = Propositions commerciales
+DateDeadline = Date d'échéance
+EstimatedWeight = Poids estimé
+CardPro = Fiche pro
+EventPro = Événement pro
+QuickEvent = Ajout rapide d'événement
+TicketCreated = Ticket créé
+AIAnalyseImage = Analyse de l'image %s
+ErrorMapFeatureEncoding = Encodage des données de la carte impossible
+EmptyValue = Valeur vide
+Latitude = Latitude
+Longitude = Longitude
+PermissionDenied = Permission refusée
+
+
+#
+# Liste d'appel - actions de la fiche
+#
+ValidateCallList = Valider la liste d'appel
+ConfirmValidateCallList = Êtes-vous sûr de vouloir valider cette liste d'appel ?
+ArchiveCallList = Archiver la liste d'appel
+ConfirmArchiveCallList = Êtes-vous sûr de vouloir archiver cette liste d'appel ?
+DeleteCallList = Supprimer la liste d'appel
+ConfirmDeleteCallList = Êtes-vous sûr de vouloir supprimer cette liste d'appel ?
+CallListPDF = Modèle PDF standard de liste d'appel

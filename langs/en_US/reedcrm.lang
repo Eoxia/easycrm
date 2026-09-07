@@ -58,6 +58,13 @@ ImportProjectsFromCSV = Import projects from CSV
 ImportProjectsDescription = Select a CSV file to automatically create projects.
 CSVExpectedColumns = File must contain columns: Prenom, Nom, Email, Tel, Note.
 UploadImport = Import
+ViewImportHistory = Import history
+ImportHistory = Import history
+ChooseExistingTag = Choose an existing tag
+OrCreateNewTag = Or create a new tag
+SelectOrCreate = -- Select a tag --
+TagAlreadyExistsTitle = Tag already exists
+TagAlreadyExistsQuestion = The tag "%s" already exists. Do you want to use it for this import?
 ConfirmImportProjectsTitle = Import projects
 ConfirmImportProjectsQuestion = Enter the category name to assign to the imported projects.
 CategoryName = Category name
@@ -286,6 +293,9 @@ OpportunityStatusDescription = Opportunity status selection <br> Default value: 
 OpportunityAmountDescription = Opportunity amount selection <br> Default value: <b> 3000 € </b>
 ProspectCustomerDescription = Third-party nature selection <br> Default value: <b> Prospect </b>
 
+# Propal Extrafield
+ReedCRMPropalLabel = Label
+
 # Product kit
 ProductKitConf = Fill the quote line description with the kit composition
 ProductKitConfDesc = Independently of the product module setting on description filling. <br> When adding a product/service that has a kit on a quote line, the line description will be replaced with the label and description of the component products.
@@ -497,9 +507,32 @@ PropalStatusBilled = Billed
 ShippingDateEqualsCreationDate = Set shipping date equal to creation date
 ShippingDateEqualsCreationDateHelp = When a shipment is created, if no shipping date is entered, it automatically takes the creation date.
 
+TicketTimeTaskPrefix=Task label prefix
+TicketTimeTaskPrefixDescription=Prefix used to automatically find the task the time spent on a ticket is logged into (based on its label).
+
+TicketTimeTaskSuffix=Task label suffix
+TicketTimeTaskSuffixDescription=Choose what has to be added after the prefix in the task label.
+TicketTimeTaskSuffixTicketRef=Ticket reference (e.g. TS2606-0005)
+TicketTimeTaskSuffixProjectRef=Project reference
+TicketTimeTaskSuffixProjectLabel=Project label
+TicketTimeTaskSuffixNone=Nothing (prefix only)
+
+TicketTimeTitleMaxLength=Max length of the event title
+TicketTimeTitleMaxLengthDescription=Maximum number of characters kept for the event title in the agenda (truncated automatically, recommended max: 255).
+
+TicketTimeDefaultMinutes=Default time (minutes)
+TicketTimeDefaultMinutesDescription=The default time prefilled in the quick entry block of the ticket.
+
 ReadMyCallLists=Read my call lists
 ReadSubordinatesCallLists=Read subordinates call lists
 ReadAllCallLists=Read all call lists
+
+# Proposals - List columns
+PropalList=Proposal list
+RelauchCommercial=Sales follow-up
+ContactDetails=Contact details
+
+ProjectList=Project list
 
 # Dashboard - Upcoming reminders
 UpcomingCallReminders = Upcoming reminders
@@ -659,6 +692,9 @@ FollowupAuditRenewNoInvoice = No new DU invoice for this client. Create the rene
 FollowupAuditRenewConfirm = Renew this audit? The line will move to the next cycle (next audit in a year) if a new DU invoice exists.
 FollowupChartInvoiced = Invoiced
 PleaseLinkProjectFirst=Please first link a project to the ticket
+ReedCRMLogTimeWithMessage=Log the time spent along with this message
+ReedCRMTimeEntriesLatest=Latest time entries (%s/%s):
+ReedCRMNoTimeEntries=No time logged on this task.
 
 # PWA nav
 BackToDolibarr = Back to Dolibarr
@@ -762,6 +798,49 @@ LastMessage = Last message
 TicketStaleList = The %s open tickets with no message for more than %s days
 NbOfTicketsWithTimeDescription = Number of tickets holding at least one time entry, over the number of analysed tickets: the tickets still open plus the ones created or closed over the period.
 TimeSpentOnAssignedTickets = Time on their tickets
+
+#
+# Todo - agenda event board
+#
+TodoBoard = Todo
+TodoAllUsers = Every user
+TodoAllTypes = Every type
+TodoSearchPlaceholder = Label, place or third party
+TodoFilterHideAuto = Hide the automatic events
+TodoFilterHideAutoHelp = The events traced by Dolibarr itself are not actions to carry out
+TodoFilterCount = %s event(s)
+TodoNoEvent = No event
+TodoNoLabel = No label
+TodoLateEvent = Late
+TodoUnassigned = Unassigned
+TodoAddAssigned = Assign a user
+TodoRemoveAssigned = Remove the assignment
+TodoLoadMore = Show %s more
+TodoSortByDate = Sort by start date
+TodoColumnWidth = Column width
+TodoColumnGap = Spacing
+TodoVisibleColumns = Displayed columns
+TodoColumnOptions = Column options
+TodoSortDateAsc = Sort by ascending date
+TodoSortDateDesc = Sort by descending date
+TodoGroup = Group
+TodoFreeze = Freeze
+TodoHideColumn = Hide
+TodoComingSoon = Coming soon
+
+# Todo - automatic relaunches (crons)
+TodoColumnPropalRelaunch = Quotes to follow up
+TodoColumnInvoiceRelaunch = Invoices to follow up
+TodoPropalRelaunchLabel = Follow up quote %s
+TodoPropalRelaunchNote = Quote validated on %s, amount %s, still without an answer.
+TodoInvoiceRelaunchLabel = Follow up unpaid invoice %s
+TodoInvoiceRelaunchNote = Invoice due on %s, amount %s, still unpaid.
+TodoPropalRelaunchCronLabel = ReedCRM - Follow-up of the quotes left without an answer
+TodoPropalRelaunchCronComment = Raises an event to do for every quote validated for more than 30 days (constant REEDCRM_TODO_PROPAL_RELAUNCH_DAYS) that is neither signed nor refused. The event feeds the "Quotes to follow up" column of the Todo board.
+TodoPropalRelaunchCronResult = %s quote follow-up(s) created
+TodoInvoiceRelaunchCronLabel = ReedCRM - Follow-up of the unpaid invoices
+TodoInvoiceRelaunchCronComment = Raises an event to do for every validated invoice left unpaid for more than 30 days after its due date (constant REEDCRM_TODO_INVOICE_RELAUNCH_DAYS). The event feeds the "Invoices to follow up" column of the Todo board.
+TodoInvoiceRelaunchCronResult = %s invoice follow-up(s) created
 
 # Signed quotes never invoiced
 SignedUnbilledMenu = Signed quotes not invoiced
@@ -912,3 +991,38 @@ PocketNoRecordingToLink = Every available recording is already attached
 PocketRecordingLinked = Recording attached
 PocketRecordingUnlinked = Recording detached
 PocketRecordingLinkFailed = The attach operation failed
+
+#
+# Miscellaneous - generic labels
+#
+Calls = Calls
+NoEvents = No event
+Tag = Tag
+Visible = Visible
+Inactive = Inactive
+RecordNotFound = Record not found
+CommercialProposals = Commercial proposals
+DateDeadline = Deadline
+EstimatedWeight = Estimated weight
+CardPro = Pro card
+EventPro = Pro event
+QuickEvent = Quick event creation
+TicketCreated = Ticket created
+AIAnalyseImage = Analysis of image %s
+ErrorMapFeatureEncoding = The map data could not be encoded
+EmptyValue = Empty value
+Latitude = Latitude
+Longitude = Longitude
+PermissionDenied = Permission denied
+
+
+#
+# Call list - card actions
+#
+ValidateCallList = Validate the call list
+ConfirmValidateCallList = Are you sure you want to validate this call list?
+ArchiveCallList = Archive the call list
+ConfirmArchiveCallList = Are you sure you want to archive this call list?
+DeleteCallList = Delete the call list
+ConfirmDeleteCallList = Are you sure you want to delete this call list?
+CallListPDF = Standard call list PDF template
