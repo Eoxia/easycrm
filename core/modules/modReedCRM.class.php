@@ -1059,6 +1059,22 @@ class modReedCRM extends DolibarrModules
             'user'     => 0,
         ];
 
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('DataManagementMenu'),
+            'prefix'   => '<i class="fas fa-wrench pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'reedcrmtools',
+            'url'      => '/reedcrm/view/reedcrmtools.php',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'adminpage\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
         /* SECTION ADMINISTRATION : the configuration entries themselves are declared by Saturne at position 2000 and above */
 
         $this->menu[$r++] = [
@@ -1071,22 +1087,6 @@ class modReedCRM extends DolibarrModules
             'url'      => '',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1999,
-            'enabled'  => 'isModEnabled(\'reedcrm\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'adminpage\', \'read\')',
-            'target'   => '',
-            'user'     => 0,
-        ];
-
-        $this->menu[$r++] = [
-            'fk_menu'  => 'fk_mainmenu=reedcrm',
-            'type'     => 'left',
-            'titre'    => $langs->transnoentities('DataManagementMenu'),
-            'prefix'   => '<i class="fas fa-wrench pictofixedwidth"></i>',
-            'mainmenu' => 'reedcrm',
-            'leftmenu' => 'reedcrmtools',
-            'url'      => '/reedcrm/view/reedcrmtools.php',
-            'langs'    => 'reedcrm@reedcrm',
-            'position' => 2000,
             'enabled'  => 'isModEnabled(\'reedcrm\')',
             'perms'    => '$user->hasRight(\'reedcrm\', \'adminpage\', \'read\')',
             'target'   => '',
