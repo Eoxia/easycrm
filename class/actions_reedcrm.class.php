@@ -62,6 +62,22 @@ class ActionsReedcrm
     }
 
     /**
+     * Check the hook context against exact context names
+     *
+     * The context is a colon separated list of names, so a substring test on 'invoicelist'
+     * or 'invoicereccard' also matches 'supplierinvoicelist' or 'supplierinvoicereccard'
+     * and runs the code on a supplier object.
+     *
+     * @param  array $parameters Hook metadatas (context, etc...)
+     * @param  array $names      Context names to look for
+     * @return bool              True when one of the names is one of the current contexts
+     */
+    protected function isContext(array $parameters, array $names): bool
+    {
+        return count(array_intersect(explode(':', $parameters['context'] ?? ''), $names)) > 0;
+    }
+
+    /**
      * Overload the menuLeftMenuItems hook to inject our custom menu entries
      *
      * @param array $parameters
@@ -475,7 +491,7 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicecard|invoicereccard|thirdpartycomm|thirdpartycard/', $parameters['context'])) {
+        if ($this->isContext($parameters, ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
             if ($action == 'set_notation_object_contact') {
                 require_once __DIR__ . '/../lib/reedcrm_function.lib.php';
 
@@ -748,11 +764,11 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicelist|invoicereclist|thirdpartylist|projectlist|propallist/', $parameters['context'])) {
+        if ($this->isContext($parameters, ['invoicelist', 'invoicereclist', 'thirdpartylist', 'projectlist', 'propallist'])) {
             $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
             print '<link href="' . $cssPath . '" rel="stylesheet">';
             // Load reedcrm modal CSS and JS for projectlist and propallist
-            if (preg_match('/projectlist|propallist/', $parameters['context'])) {
+            if ($this->isContext($parameters, ['projectlist', 'propallist'])) {
                 global $langs;
                 // Load main reedcrm CSS
                 $reedcrmMainCssPath = dol_buildpath('/custom/reedcrm/css/reedcrm.min.css', 1);
@@ -811,7 +827,7 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicecard|invoicereccard|thirdpartycomm|thirdpartycard/', $parameters['context'])) {
+        if ($this->isContext($parameters, ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
             $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
             print '<link href="' . $cssPath . '" rel="stylesheet">';
 
@@ -1892,17 +1908,18 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicelist|invoicereclist|thirdpartylist/', $parameters['context'])) {
-            if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
-                $extrafieldName = 'options_notation_' . $object->element . '_contact';
+        if ($this->isContext($parameters, ['invoicelist', 'invoicereclist', 'thirdpartylist'])) {
+            $extrafieldName = 'options_notation_' . $object->element . '_contact';
+            $obj            = $parameters['obj'] ?? null;
+            if (isModEnabled('facture') && $user->hasRight('facture', 'lire') && is_object($obj) && property_exists($obj, $extrafieldName)) {
                 if ($object->element == 'facturerec') {
                     $specialName = 'facture_rec';
                 } else {
                     $specialName = $object->element;
                 }
                 $jQueryElement  = $specialName . '.notation_' . $object->element . '_contact';
-                $out            = '<div class="wpeo-button button-strong ' . (($parameters['obj']->$extrafieldName >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
-                $out           .= '<span>' . $parameters['obj']->$extrafieldName . '</span>';
+                $out            = '<div class="wpeo-button button-strong ' . (($obj->$extrafieldName >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
+                $out           .= '<span>' . $obj->$extrafieldName . '</span>';
                 $out           .= '</div>'; ?>
 
                 <script>
@@ -1947,7 +1964,7 @@ class ActionsReedcrm
     {
         global $langs;
 
-        if (preg_match('/invoicereccard|invoicereccontact/', $parameters['context']) && ($parameters['mode'] ?? '') === 'add') {
+        if ($this->isContext($parameters, ['invoicereccard', 'invoicereccontact']) && ($parameters['mode'] ?? '') === 'add') {
             $nbContact = 0;
             // Enable caching of thirdrparty count Contacts
             require_once DOL_DOCUMENT_ROOT . '/core/lib/memory.lib.php';
@@ -2367,6 +2384,29 @@ class ActionsReedcrm
             'defaultorder'   => 'DESC',
             'class_path'     => 'custom/reedcrm/class/calllist.class.php',
             'lib_path'       => 'custom/reedcrm/lib/reedcrm_call_list.lib.php',
+        ];
+
+        $this->results['pocketrecording'] = [
+            'mainmenu'       => 'reedcrm',
+            'leftmenu'       => 'pocketrecording',
+            'langs'          => 'PocketRecording',
+            'langfile'       => 'reedcrm@reedcrm',
+            'picto'          => 'fontawesome_fa-microphone_fas_#63ACC9',
+            'color'          => '#63ACC9',
+            'class_name'     => 'PocketRecording',
+            'name_field'     => 'ref',
+            'post_name'      => 'fk_pocketrecording',
+            'link_name'      => 'pocketrecording',
+            'tab_type'       => 'pocketrecording',
+            'table_element'  => 'reedcrm_pocket_recording',
+            'hook_name_card' => 'pocketrecordingcard',
+            'hook_name_list' => 'pocketrecordinglist',
+            'create_url'     => 'custom/reedcrm/view/pocketrecording/pocketrecording_card.php',
+            'list_url'       => 'custom/reedcrm/view/pocketrecording/pocketrecording_list.php',
+            'defaultsort'    => 't.recording_date',
+            'defaultorder'   => 'DESC',
+            'class_path'     => 'custom/reedcrm/class/pocketrecording.class.php',
+            'lib_path'       => 'custom/reedcrm/lib/reedcrm_pocketrecording.lib.php',
         ];
 
         return 0; // or return 1 to replace standard code

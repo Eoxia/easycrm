@@ -851,6 +851,169 @@ TodoPropalRelaunchCronResult = %s relance(s) de devis créée(s)
 TodoInvoiceRelaunchCronLabel = ReedCRM - Relances des factures impayées
 TodoInvoiceRelaunchCronComment = Crée un événement à faire pour chaque facture validée impayée depuis plus de 30 jours après son échéance (constante REEDCRM_TODO_INVOICE_RELAUNCH_DAYS). L'événement alimente la colonne « Factures à relancer » du tableau Todo.
 TodoInvoiceRelaunchCronResult = %s relance(s) de facture créée(s)
+# Signed quotes never invoiced
+SignedUnbilledMenu = PR signées non facturées
+SignedUnbilledIntro = Propositions commerciales signées sans facture rattachée. Chaque ligne est recoupée avec les factures du client pour repérer celles qui ont en fait été facturées séparément (facture créée à part, via la commande ou le contrat).
+SignedUnbilledToBill = Réellement à facturer
+SignedUnbilledOver6Months = Dont signées depuis + de 6 mois
+SignedUnbilledSuspect = Probablement déjà facturées
+SignedUnbilledDisplayed = Lignes affichées
+SignedUnbilledPeriod = Période
+SignedUnbilledPeriodMonths = %s derniers mois
+SignedUnbilledVerification = Vérification facturation
+SignedUnbilledFilterAll = Tout afficher
+SignedUnbilledFilterTodo = Seulement à facturer
+SignedUnbilledFilterSuspect = Seulement les doutes
+SignedUnbilledSalesRep = Commercial
+SignedUnbilledMinAmount = Montant TTC mini
+SignedUnbilledAge = Ancienneté
+SignedUnbilledDays = %s j
+SignedUnbilledClientInvoices = Factures client depuis la signature
+SignedUnbilledNone = Aucune proposition signée non facturée sur la période
+SignedUnbilledMatchNone = À facturer
+SignedUnbilledMatchChain = Facturée via la commande / le contrat
+SignedUnbilledMatchAmount = Facture du même montant
+SignedUnbilledMatchProducts = Mêmes produits facturés
+SignedUnbilledInvoice = Créer la facture depuis ce devis
+SignedUnbilledClassifyBilled = Classer "Facturée" (la ligne sort de la liste)
+SignedUnbilledConfirmBilled = Classer le devis %s comme facturé ?
+SignedUnbilledMarkedBilled = Devis %s classé facturé
+SignedUnbilledLegend = Recoupement : "Facturée via la commande / le contrat" = une facture existe via la commande ou le contrat issu du devis. "Facture du même montant" = une facture du client, postérieure à la signature (tolérance 30 j), a exactement le même montant HT ou TTC. "Mêmes produits facturés" = au moins la moitié des produits du devis ont été facturés à ce client après la signature. Ces trois cas sont à vérifier à l'œil : si c'est bien la même prestation, classe le devis "Facturée".
+
+# Recurring invoice follow-up - billing run traceability & portfolio movements
+FollowupRunStatus = Traitement
+FollowupRunStatusHelp = Où en est la facturation du mois pour cet abonnement : « À faire » tant qu'aucune facture n'a été générée, « Fait » dès qu'une facture issue de cette facture modèle est datée du mois consulté. Les lignes déjà faites restent affichées, la liste ne se vide plus en fin de mois.
+FollowupRunToDo = À faire
+FollowupRunDone = Fait
+FollowupGeneratedInvoice = Facture générée
+FollowupTemplateSuspended = Arrêté
+FollowupTemplateSuspendedHelp = Facture modèle aujourd'hui suspendue : elle reste affichée sur les mois où elle a réellement été facturée.
+FollowupMovementsTitle = Entrées / sorties des abonnements récurrents
+FollowupMovementsInMonth = Nouveaux abonnements du mois
+FollowupMovementsInAmount = Montant gagné (mois)
+FollowupMovementsOutMonth = Abonnements arrêtés du mois
+FollowupMovementsOutAmount = Montant perdu (mois)
+FollowupMovementsNetMonth = Solde net du mois
+FollowupMovementsNetYear = Solde net de l'année
+FollowupMovementsNetYearNb = Entrées / sorties de l'année
+FollowupMovementsChartTitle = Entrées (+) / sorties (-) par mois et solde cumulé
+FollowupMovementsIn = Entrées
+FollowupMovementsOut = Sorties
+FollowupMovementsCumul = Solde cumulé
+FollowupMovementsNoIn = Aucun nouvel abonnement ce mois-ci
+FollowupMovementsNoOut = Aucun abonnement arrêté ce mois-ci
+FollowupRunLate = En retard
+FollowupRunLateHelp = L'échéance du mois est passée et aucune facture n'a encore été générée.
+FollowupRunToDoHelp = Aucune facture générée sur ce mois pour cet abonnement : reste à générer.
+FollowupRunDoneOn = Facture générée le %s
+FollowupRunNothingToDo = Rien à faire sur %s : les %s factures du mois ont déjà été générées.
+FollowupRunNothingDone = Aucune facture encore générée sur %s.
+
+#
+# Pocket
+#
+Pocket = Pocket
+PocketRecording = Enregistrement Pocket
+PocketRecordings = Enregistrements Pocket
+PocketRecordingId = Identifiant Pocket
+PocketRecordingDate = Date d'enregistrement
+PocketFolder = Dossier Pocket
+PocketFolderId = Identifiant du dossier Pocket
+PocketFolderTitle = Dossier importé
+PocketFolderHelp = Seuls les enregistrements de ce dossier sont importés dans Dolibarr. Tant qu'aucun dossier n'est choisi, aucune synchronisation n'a lieu.
+PocketFolderMissing = Aucun dossier Pocket sélectionné
+PocketNoFolderSelected = -- Aucun dossier --
+PocketTags = Tags Pocket
+PocketState = État Pocket
+PocketSummary = Résumé
+PocketTranscript = Transcription
+PocketActionItems = Actions à faire
+PocketLastSyncDate = Dernière synchronisation
+PocketNoSummary = Aucun résumé disponible pour cet enregistrement
+PocketNoTranscript = Aucune transcription disponible pour cet enregistrement
+PocketNoActionItem = Aucune action détectée par Pocket
+PocketRecordingStatusNew = Nouveau
+PocketRecordingStatusProcessed = Traité
+PocketRecordingStatusArchived = Archivé
+PocketConnection = Connexion à Pocket
+PocketConnectionState = État de la connexion
+PocketApiKey = Clé API Pocket
+PocketApiKeyHelp = Clé de type pk_... créée depuis l'application Pocket. Elle donne accès en lecture aux enregistrements, transcriptions et audios du compte.
+PocketApiKeySet = Clé enregistrée
+PocketApiKeyMissing = Aucune clé API Pocket configurée
+PocketApiHttpError = L'API Pocket a répondu une erreur HTTP %s
+PocketApiInvalidResponse = Réponse illisible de l'API Pocket
+PocketTestConnection = Tester la connexion
+PocketConnectionFailed = Connexion à Pocket impossible : %s
+PocketConnectionSucceeded = Connexion à Pocket réussie, %s dossiers trouvés
+PocketManualSync = Synchronisation manuelle
+PocketManualSyncHelp = Importe immédiatement les enregistrements du dossier configuré. La même opération est jouée automatiquement par la tâche planifiée.
+PocketSyncNow = Synchroniser maintenant
+PocketSyncReport = Synchronisation Pocket : %s créés, %s mis à jour, %s ignorés, %s en erreur
+PocketSyncCronLabel = Synchronisation des enregistrements Pocket
+PocketSyncCronComment = Importe les enregistrements du dossier Pocket configuré, avec leur résumé, leur transcription et leurs actions
+PocketRefreshFromApi = Rafraîchir depuis Pocket
+PocketRefreshDone = Enregistrement rafraîchi depuis Pocket
+PocketRefreshFailed = Le rafraîchissement depuis Pocket a échoué
+PocketDownloadAudio = Télécharger l'audio
+PocketAudioUnavailable = Audio indisponible pour cet enregistrement
+DeletePocketRecording = Supprimer l'enregistrement Pocket
+ConfirmDeletePocketRecording = Êtes-vous sûr de vouloir supprimer cet enregistrement ? Il sera réimporté à la prochaine synchronisation s'il est toujours présent dans le dossier Pocket.
+
+#
+# Objets liables aux enregistrements Pocket
+# Ces clés sont génériques (tpl saturne) : ReedCRM charge son .lang en premier, sa formulation gagne
+#
+LinkableElements = Éléments liables
+LinkedObjectUsage = Utilisation
+LinkedObjectUsageDetail = %s lien(s) vers un enregistrement Pocket
+NoLinkedObjectUsage = Aucun lien
+EnableAllLinksConfirm = Activer le lien vers tous les éléments ?
+DisableAllLinksConfirm = Désactiver le lien vers tous les éléments ? Les onglets correspondants disparaîtront, les liens déjà créés sont conservés.
+DisableLinkConfirm = Désactiver le lien vers « %s » ? L'onglet disparaîtra, les liens déjà créés sont conservés.
+CleanUnusedLinks = Réaligner les onglets sur la configuration
+CleanUnusedLinksConfirm = Reconstruire les onglets et les hooks à partir des liens activés ?
+LinkedObjectSyncDone = Configuration appliquée : %s onglets et %s hooks enregistrés
+LinkedObjectSyncError = L'application de la configuration des liens a échoué
+
+#
+# Pocket - lecteur audio et actions a faire
+#
+PocketAudio = Audio
+PocketPlayAudio = Écouter l'enregistrement
+PocketAssignedUser = Affecté à
+PocketAssignee = Interlocuteur Pocket
+PocketCreateEvent = Créer un événement
+PocketActionItemId = Identifiant de l'action Pocket
+PocketActionItemTodo = À faire
+PocketActionItemDone = Faite
+
+#
+# Pocket - rattachement depuis les objets
+#
+PocketLinkedObjects = Objets liés
+PocketNoLinkedObject = Aucun objet lié à cet enregistrement
+PocketLinkFromObjectHint = Pour rattacher cet enregistrement, ouvrez la fiche du ticket, du projet, de la facture ou de la proposition concerné et utilisez son onglet « Enregistrements Pocket ».
+PocketLinkRecording = Rattacher un enregistrement
+PocketUnlinkRecording = Détacher cet enregistrement
+PocketNoRecordingToLink = Tous les enregistrements disponibles sont déjà rattachés
+PocketRecordingLinked = Enregistrement rattaché
+PocketRecordingUnlinked = Enregistrement détaché
+PocketRecordingLinkFailed = L'opération de rattachement a échoué
+
+#
+# Menu - Sections du menu de gauche
+#
+MenuSectionQuickAccess = Accès rapides
+MenuSectionCommerce = Commerce
+MenuSectionServicePortfolio = Portefeuille service
+MenuSectionAdvTechnical = ADV / Technique
+MenuSectionBilling = Facturation
+MenuSectionTools = Outils transversaux
+MenuSectionAdministration = Administration
+ShipmentFollowupMenu = Suivi des expéditions
+TicketFollowupMenu = Suivi des tickets
+DataManagementMenu = Gestion des données
 
 # Clôture rapide d'un événement
 QuickCloseEventTitle = Clôturer l'événement
