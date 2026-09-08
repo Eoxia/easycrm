@@ -95,7 +95,7 @@ ProductInactiveMonthsDescription = Nombre de mois d'inactivité (pas de vente ni
 ReminderValue = Délai du rappel
 ReminderValueDescription = Nombre d’unités de temps avant l’événement pour déclencher le rappel
 ReminderUnit = Unité du rappel
-ReminderUnitDescription = nité de temps utilisée pour le rappel
+ReminderUnitDescription = Unité de temps utilisée pour le rappel
 
 # ApiQuickCreation
 ApiQuickCreations = ajouts rapides via l'api
@@ -1014,3 +1014,26 @@ MenuSectionAdministration = Administration
 ShipmentFollowupMenu = Suivi des expéditions
 TicketFollowupMenu = Suivi des tickets
 DataManagementMenu = Gestion des données
+
+# Clôture rapide d'un événement
+QuickCloseEventTitle = Clôturer l'événement
+QuickCloseEventTooltip = Clôturer cet événement
+QuickCloseEventDescription = Description
+QuickCloseEventDescriptionPlaceholder = Ajouté à la description de l'événement (facultatif)
+QuickCloseEventReschedule = Reprogrammer un événement identique pour plus tard
+QuickCloseEventNewLabel = Nom du nouvel événement
+QuickCloseEventNewLabelPlaceholder = Nom de l'événement clôturé
+QuickCloseEventInOneMonth = Dans 1 mois
+QuickCloseEventInDays = Dans
+QuickCloseEventInDaysSuffix = jours
+QuickCloseEventConfirm = Clôturer
+QuickCloseEventDone = Événement clôturé
+QuickCloseEventDoneAndRescheduled = Événement clôturé, nouvel événement programmé le %s
+QuickCloseEventNotTodo = Cet événement n'est pas à faire, il ne peut pas être clôturé
+QuickCloseEventError = La clôture de l'événement a échoué
+QuickCloseEvents = clôtures rapides d'événement
+QuickCloseEventInDaysLabel = Dans un nombre de jours
+QuickCloseEventDefaultDelay = Délai de reprogrammation par défaut
+QuickCloseEventDefaultDelayDescription = Choix présélectionné dans la modale de clôture rapide quand la reprogrammation est demandée
+QuickCloseEventDefaultDays = Nombre de jours par défaut
+QuickCloseEventDefaultDaysDescription = Nombre de jours prérempli pour le délai « Dans un nombre de jours »
