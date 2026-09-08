@@ -74,9 +74,12 @@
 
 /* The eldy menu indents sub entries with non breaking spaces from level 2 only,
  * so a level 1 entry ends up further left than the label of its own parent.
- * Align it under the parent label, past the parent picto.
+ * Align it under the parent label, past the parent picto. The theme sizes the row in
+ * content box, so without border-box that indent widens it by 26px past the level 1
+ * rows: harmless while the row had no background, visible once it is hovered.
  */
 #id-left:has(.reedcrm-menu-section) .menu_contenu {
+    box-sizing: border-box;
     padding-left: 26px;
 }
 
