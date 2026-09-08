@@ -1,0 +1,63 @@
+/* Copyright (C) 2026 EVARISK <technique@evarisk.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/* Section headers of the ReedCRM left menu.
+ * Loaded on every page through module_parts['css'] because the ReedCRM left menu
+ * is also displayed on pages that do not belong to the module (recurring invoice
+ * templates, saturne generic lists...) and that never load reedcrm.min.css.
+ * The markers live in the "prefix" column of llx_menu because "titre" is split on
+ * "/" by Menubase::menuLoad() to translate composed titles.
+ */
+
+.menu_titre .vmenu:has(> .reedcrm-menu-section) {
+    font-size: 0.75em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.5;
+}
+
+/* A section header is a label, not a menu entry: drop the hairline the theme draws
+ * under every left menu block so the header stays attached to the entries it opens.
+ */
+.blockvmenu:has(.reedcrm-menu-section) {
+    padding-top: 12px;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.blockvmenu:has(.reedcrm-menu-section) .menu_titre {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Blank block used to set the App entry apart : the hairline of the previous block
+ * draws the rule, this one only adds the breathing room.
+ */
+.blockvmenu:has(.reedcrm-menu-separator) {
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.blockvmenu:has(.reedcrm-menu-separator) .menu_titre {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 4px;
+    padding-bottom: 0;
+}
