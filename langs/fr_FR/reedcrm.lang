@@ -1000,3 +1000,16 @@ PocketNoRecordingToLink = Tous les enregistrements disponibles sont déjà ratta
 PocketRecordingLinked = Enregistrement rattaché
 PocketRecordingUnlinked = Enregistrement détaché
 PocketRecordingLinkFailed = L'opération de rattachement a échoué
+
+#
+# Menu - Sections du menu de gauche
+#
+MenuSectionQuickAccess = Accès rapides
+MenuSectionCommerce = Commerce
+MenuSectionServicePortfolio = Portefeuille service
+MenuSectionAdvTechnical = ADV / Technique
+MenuSectionBilling = Facturation
+MenuSectionTools = Outils transversaux
+MenuSectionAdministration = Administration
+ShipmentFollowupMenu = Suivi des expéditions
+TicketFollowupMenu = Suivi des tickets

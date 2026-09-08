@@ -116,7 +116,7 @@ class modReedCRM extends DolibarrModules
             // Set this to 1 if module has its own theme directory (theme)
             'theme' => 0,
             // Set this to relative path of css file if module has its own css file
-            'css' => [],
+            'css' => ['/reedcrm/css/reedcrm_menu.css'],
             // Set this to relative path of js file if module must load a js on all pages
             'js' => [],
             // Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all')
@@ -644,6 +644,8 @@ class modReedCRM extends DolibarrModules
         $this->menu = [];
         $r = 0;
 
+        $menuEnabled = ($conf->browser->layout != 'classic') ? 1 : 0;
+
         // Add here entries to declare new menus
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
@@ -657,6 +659,40 @@ class modReedCRM extends DolibarrModules
             'position' => 1000 + $r,
             'enabled'  => 'isModEnabled(\'reedcrm\')',
             'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        /* SECTION QUICK ACCESS */
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => 'MenuSectionQuickAccess',
+            'prefix'   => '<span class="reedcrm-menu-section"></span>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'section_quickaccess',
+            'url'      => '',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('TodoBoard'),
+            'prefix'   => '<i class="fas fa-clipboard-check pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'reedcrmtodo',
+            'url'      => '/reedcrm/view/todo_list.php',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\') && isModEnabled(\'agenda\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\') && $user->hasRight(\'agenda\', \'myactions\', \'read\')',
             'target'   => '',
             'user'     => 0,
         ];
@@ -677,8 +713,6 @@ class modReedCRM extends DolibarrModules
             'user'     => 0,
         ];
 
-        $menuEnabled = ($conf->browser->layout != 'classic') ? 1 : 0;
-
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
@@ -695,18 +729,53 @@ class modReedCRM extends DolibarrModules
             'user'     => 0,
         ];
 
+        // Thin rule to set the App entry apart : it is the only link that leaves the ReedCRM back office.
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
-            'titre'    => $langs->transnoentities('TodoBoard'),
-            'prefix'   => '<i class="fas fa-clipboard-check pictofixedwidth"></i>',
+            'titre'    => '',
+            'prefix'   => '<span class="reedcrm-menu-separator"></span>',
             'mainmenu' => 'reedcrm',
-            'leftmenu' => 'reedcrmtodo',
-            'url'      => '/reedcrm/view/todo_list.php',
+            'leftmenu' => 'separator_quickaccess',
+            'url'      => '',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
-            'enabled'  => 'isModEnabled(\'reedcrm\') && isModEnabled(\'agenda\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'read\') && $user->hasRight(\'agenda\', \'myactions\', \'read\')',
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => 'App',
+            'prefix'   => '<i class="fa fa-mobile pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'quickcreationfrontendpwa',
+            'url'      => '/custom/reedcrm/view/frontend/quickcreation.php?source=pwa',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0
+        ];
+
+        /* SECTION COMMERCE */
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => 'MenuSectionCommerce',
+            'prefix'   => '<span class="reedcrm-menu-section"></span>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'section_commerce',
+            'url'      => '',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
             'target'   => '',
             'user'     => 0,
         ];
@@ -775,15 +844,67 @@ class modReedCRM extends DolibarrModules
             'user'     => 0,
         ];
 
+        /* SECTION SERVICE PORTFOLIO */
+
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
-            'titre'    => $langs->trans('Sendings'),
+            'titre'    => 'MenuSectionServicePortfolio',
+            'prefix'   => '<span class="reedcrm-menu-section"></span>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'section_serviceportfolio',
+            'url'      => '',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'followup\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('DuFollowupMenu'),
+            'prefix'   => '<i class="fas fa-shield-alt pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'duaudit',
+            'url'      => '/reedcrm/view/duaudit_list.php',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'followup\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        /* SECTION SALES ADMINISTRATION / TECHNICAL */
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => 'MenuSectionAdvTechnical',
+            'prefix'   => '<span class="reedcrm-menu-section"></span>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'section_advtechnical',
+            'url'      => '',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\') && (isModEnabled(\'expedition\') || isModEnabled(\'ticket\'))',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('ShipmentFollowupMenu'),
             'prefix'   => '<i class="fas fa-truck pictofixedwidth"></i>',
             'mainmenu' => 'reedcrm',
             'leftmenu' => 'expeditions',
             'url'      => '/custom/reedcrm/expedition_list.php',
-            'langs'    => 'sendings',
+            'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
             'enabled'  => 'isModEnabled(\'reedcrm\') && isModEnabled(\'expedition\')',
             'perms'    => '$user->hasRight(\'expedition\', \'lire\')',
@@ -794,7 +915,7 @@ class modReedCRM extends DolibarrModules
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
-            'titre'    => $langs->transnoentities('TicketDashboard'),
+            'titre'    => $langs->transnoentities('TicketFollowupMenu'),
             'prefix'   => '<i class="fas fa-ticket-alt pictofixedwidth"></i>',
             'mainmenu' => 'reedcrm',
             'leftmenu' => 'reedcrmticketdashboard',
@@ -807,18 +928,52 @@ class modReedCRM extends DolibarrModules
             'user'     => 0,
         ];
 
+        /* SECTION BILLING */
+
         $this->menu[$r++] = [
-            'fk_menu'  => 'fk_mainmenu=ticket',
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
-            'titre'    => $langs->transnoentities('TicketDashboard'),
-            'prefix'   => '<i class="fas fa-chart-line pictofixedwidth"></i>',
-            'mainmenu' => 'ticket',
-            'leftmenu' => 'reedcrmticketdashboard',
-            'url'      => '/reedcrm/view/ticket_dashboard.php',
+            'titre'    => 'MenuSectionBilling',
+            'prefix'   => '<span class="reedcrm-menu-section"></span>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'section_billing',
+            'url'      => '',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
-            'enabled'  => 'isModEnabled(\'reedcrm\') && isModEnabled(\'ticket\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'read\') && $user->hasRight(\'ticket\', \'read\')',
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('BillingGapsMenu'),
+            'prefix'   => '<i class="fas fa-file-invoice-dollar pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'billinggaps',
+            'url'      => '/reedcrm/view/billinggaps_list.php',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'followup\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm,fk_leftmenu=billinggaps',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('SignedUnbilledMenu'),
+            'prefix'   => '<i class="fas fa-file-signature pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'signedunbilled',
+            'url'      => '/reedcrm/view/signedunbilled_list.php',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'followup\', \'read\')',
             'target'   => '',
             'user'     => 0,
         ];
@@ -855,18 +1010,20 @@ class modReedCRM extends DolibarrModules
             'user'     => 0,
         ];
 
+        /* SECTION CROSS-FUNCTIONAL TOOLS */
+
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
-            'titre'    => $langs->transnoentities('DuFollowupMenu'),
-            'prefix'   => '<i class="fas fa-shield-alt pictofixedwidth"></i>',
+            'titre'    => 'MenuSectionTools',
+            'prefix'   => '<span class="reedcrm-menu-section"></span>',
             'mainmenu' => 'reedcrm',
-            'leftmenu' => 'duaudit',
-            'url'      => '/reedcrm/view/duaudit_list.php',
+            'leftmenu' => 'section_tools',
+            'url'      => '',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
             'enabled'  => 'isModEnabled(\'reedcrm\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'followup\', \'read\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
             'target'   => '',
             'user'     => 0,
         ];
@@ -890,31 +1047,13 @@ class modReedCRM extends DolibarrModules
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
-            'titre'    => $langs->transnoentities('BillingGapsMenu'),
-            'prefix'   => '<i class="fas fa-file-invoice-dollar pictofixedwidth"></i>',
-            'mainmenu' => 'reedcrm',
-            'leftmenu' => 'billinggaps',
-            'url'      => '/reedcrm/view/billinggaps_list.php',
+            'titre'    => '<i class="fas fa-map-marked-alt pictofixedwidth" style="padding-right: 4px; color: #63ACC9;"></i>' . $langs->transnoentities('Map'),
+            'leftmenu' => 'map',
+            'url'      => 'reedcrm/view/map.php?from_type=project',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
             'enabled'  => 'isModEnabled(\'reedcrm\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'followup\', \'read\')',
-            'target'   => '',
-            'user'     => 0,
-        ];
-
-        $this->menu[$r++] = [
-            'fk_menu'  => 'fk_mainmenu=reedcrm',
-            'type'     => 'left',
-            'titre'    => $langs->transnoentities('SignedUnbilledMenu'),
-            'prefix'   => '<i class="fas fa-file-signature pictofixedwidth"></i>',
-            'mainmenu' => 'reedcrm',
-            'leftmenu' => 'signedunbilled',
-            'url'      => '/reedcrm/view/signedunbilled_list.php',
-            'langs'    => 'reedcrm@reedcrm',
-            'position' => 1000 + $r,
-            'enabled'  => 'isModEnabled(\'reedcrm\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'followup\', \'read\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'address\', \'read\')',
             'target'   => '',
             'user'     => 0,
         ];
@@ -935,32 +1074,38 @@ class modReedCRM extends DolibarrModules
             'user'     => 0,
         ];
 
-        $this->menu[$r++] = [
-            'fk_menu'  => 'fk_mainmenu=reedcrm',
-            'type'     => 'left',
-            'titre'    => 'App',
-            'prefix'   => '<i class="fa fa-mobile pictofixedwidth"></i>',
-            'mainmenu' => 'reedcrm',
-            'leftmenu' => 'quickcreationfrontendpwa',
-            'url'      => '/custom/reedcrm/view/frontend/quickcreation.php?source=pwa',
-            'langs'    => 'reedcrm@reedcrm',
-            'position' => 1000 + $r,
-            'enabled'  => 'isModEnabled(\'reedcrm\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
-            'target'   => '',
-            'user'     => 0
-        ];
+        /* SECTION ADMINISTRATION : the configuration entries themselves are declared by Saturne at position 2000 and above */
 
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
-            'titre'    => '<i class="fas fa-map-marked-alt pictofixedwidth" style="padding-right: 4px; color: #63ACC9;"></i>' . $langs->transnoentities('Map'),
-            'leftmenu' => 'map',
-            'url'      => 'reedcrm/view/map.php?from_type=project',
+            'titre'    => 'MenuSectionAdministration',
+            'prefix'   => '<span class="reedcrm-menu-section"></span>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'section_administration',
+            'url'      => '',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1999,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'adminpage\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        /* ENTRIES ADDED TO OTHER MAIN MENUS */
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=ticket',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('TicketDashboard'),
+            'prefix'   => '<i class="fas fa-chart-line pictofixedwidth"></i>',
+            'mainmenu' => 'ticket',
+            'leftmenu' => 'reedcrmticketdashboard',
+            'url'      => '/reedcrm/view/ticket_dashboard.php',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
-            'enabled'  => 'isModEnabled(\'reedcrm\')',
-            'perms'    => '$user->hasRight(\'reedcrm\', \'address\', \'read\')',
+            'enabled'  => 'isModEnabled(\'reedcrm\') && isModEnabled(\'ticket\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\') && $user->hasRight(\'ticket\', \'read\')',
             'target'   => '',
             'user'     => 0,
         ];
