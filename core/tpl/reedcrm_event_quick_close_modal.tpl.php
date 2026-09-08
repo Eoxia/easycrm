@@ -64,7 +64,8 @@ if (is_object($object) && $object->element === 'action' && $object->id > 0
      data-card-event-id="<?php echo $quickCloseCardID; ?>"
      data-card-event-label="<?php echo dol_escape_htmltag($quickCloseCardLabel); ?>"
      data-trans-tooltip="<?php echo dol_escape_htmltag($langs->trans('QuickCloseEventTooltip')); ?>"
-     data-trans-error="<?php echo dol_escape_htmltag($langs->trans('QuickCloseEventError')); ?>"></div>
+     data-trans-error="<?php echo dol_escape_htmltag($langs->trans('QuickCloseEventError')); ?>"
+     data-trans-date-required="<?php echo dol_escape_htmltag($langs->trans('QuickCloseEventDateRequired')); ?>"></div>
 
 <div class="wpeo-modal modal-reedcrm-quick-close" id="reedcrm-quick-close-modal">
     <div class="modal-container">
@@ -96,6 +97,12 @@ if (is_object($object) && $object->element === 'action' && $object->id > 0
                     <span><?php echo dol_escape_htmltag($langs->trans('QuickCloseEventInDays')); ?></span>
                     <input type="number" id="reedcrm-quick-close-delay-value" class="reedcrm-quick-close-delay-value" value="<?php echo (int) $quickCloseDelayValue; ?>" min="1" max="3650">
                     <span><?php echo dol_escape_htmltag($langs->trans('QuickCloseEventInDaysSuffix')); ?></span>
+                </label>
+                <?php // A day picked by hand, for a relaunch that has to fall on a given date ?>
+                <label class="reedcrm-quick-close-delay-choice">
+                    <input type="radio" name="reedcrm-quick-close-delay-unit" value="date">
+                    <span><?php echo dol_escape_htmltag($langs->trans('QuickCloseEventOnDate')); ?></span>
+                    <input type="date" id="reedcrm-quick-close-delay-date" class="reedcrm-quick-close-delay-date" min="<?php echo dol_print_date(dol_now(), '%Y-%m-%d'); ?>">
                 </label>
             </div>
         </div>
