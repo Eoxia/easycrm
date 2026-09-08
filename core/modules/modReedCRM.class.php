@@ -237,6 +237,14 @@ class modReedCRM extends DolibarrModules
             $i++ => ['REEDCRM_RECURRINGINVOICEFOLLOWUP_ADDON', 'chaine', 'mod_recurringinvoicefollowup_standard', '', 0, 'current'],
             $i++ => ['REEDCRM_DU_ALERT_OFFSET_MONTHS', 'integer', 1, '', 0, 'current'],
 
+            // CONST INTERVENTION DATE
+            $i++ => ['REEDCRM_INTERVENTION_DATE_ENABLED', 'integer', 1, '', 0, 'current'],
+            $i++ => ['REEDCRM_INTERVENTION_DATE_CREATE_EVENT', 'integer', 1, '', 0, 'current'],
+            $i++ => ['REEDCRM_INTERVENTION_DATE_DEFAULT_DURATION', 'integer', 60, '', 0, 'current'],
+            $i++ => ['REEDCRM_INTERVENTION_DATE_MAX_PER_LINE', 'integer', 24, '', 0, 'current'],
+            $i++ => ['REEDCRM_INTERVENTION_DATE_FROM', 'chaine', '2026-08-15', '', 0, 'current'],
+            $i++ => ['REEDCRM_INTERVENTION_DATE_PRODUCT_TAG', 'integer', 0, '', 0, 'current'],
+
             // CONST CALL LIST
             $i++ => ['REEDCRM_CALL_LIST_ADDON', 'chaine', 'mod_call_list_standard', '', 0, 'current'],
             $i++ => ['REEDCRM_CALL_LIST_GENERATE_DOCUMENTS_ADDON', 'chaine', 'pdf_calllist_standard', '', 0, 'current'],
@@ -893,7 +901,7 @@ class modReedCRM extends DolibarrModules
             'url'      => '',
             'langs'    => 'reedcrm@reedcrm',
             'position' => 1000 + $r,
-            'enabled'  => 'isModEnabled(\'reedcrm\') && (isModEnabled(\'expedition\') || isModEnabled(\'ticket\'))',
+            'enabled'  => 'isModEnabled(\'reedcrm\') && (isModEnabled(\'expedition\') || isModEnabled(\'ticket\') || getDolGlobalInt(\'REEDCRM_INTERVENTION_DATE_ENABLED\'))',
             'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
             'target'   => '',
             'user'     => 0,
@@ -911,6 +919,22 @@ class modReedCRM extends DolibarrModules
             'position' => 1000 + $r,
             'enabled'  => 'isModEnabled(\'reedcrm\') && isModEnabled(\'expedition\')',
             'perms'    => '$user->hasRight(\'expedition\', \'lire\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('InterventionCalendar'),
+            'prefix'   => '<i class="fas fa-calendar-alt pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'interventioncalendar',
+            'url'      => '/reedcrm/view/intervention_calendar.php',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\') && isModEnabled(\'propal\') && getDolGlobalInt(\'REEDCRM_INTERVENTION_DATE_ENABLED\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\') && $user->hasRight(\'propal\', \'lire\')',
             'target'   => '',
             'user'     => 0,
         ];

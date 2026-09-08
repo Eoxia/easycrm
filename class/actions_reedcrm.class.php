@@ -1499,6 +1499,14 @@ class ActionsReedcrm
             require __DIR__ . '/../core/tpl/reedcrm_event_quick_close_modal.tpl.php';
         }
 
+        // Intervention dates of the service lines, planned from the proposal card
+        require_once __DIR__ . '/../lib/reedcrm_interventiondate.lib.php';
+        if (strpos($parameters['context'], 'propalcard') !== false && reedcrmInterventionIsEnabled()
+            && $user->hasRight('propal', 'lire') && is_object($object) && $object->id > 0) {
+            $langs->load('reedcrm@reedcrm');
+            require __DIR__ . '/../core/tpl/reedcrm_intervention_date_modal.tpl.php';
+        }
+
         return 0; // or return 1 to replace standard code
     }
 
@@ -3694,6 +3702,76 @@ EOT;
         ob_start();
         require __DIR__ . '/../core/tpl/index/reedcrm_upcoming_reminders.tpl.php';
         $this->resprints = ob_get_clean();
+
+        return 0;
+    }
+
+    /**
+     * Overloading the objectLineView_ProductSupplier function : hangs the intervention date trigger
+     * under every service line of a proposal. It is the last hook of the description cell, and the
+     * return value stays 0 so the native supplier block is still displayed.
+     *
+     * @param  array  $parameters Hook metadata (context, etc...)
+     * @param  object $object     Object the displayed line belongs to
+     * @param  string $action     Current action
+     * @return int                0 on success
+     */
+    public function objectLineView_ProductSupplier(array $parameters, $object, string $action): int
+    {
+        global $db, $langs, $user;
+
+        require_once __DIR__ . '/../lib/reedcrm_interventiondate.lib.php';
+
+        if (!is_object($object) || $object->element !== 'propal' || !reedcrmInterventionIsEnabled()) {
+            return 0;
+        }
+        if (!$user->hasRight('propal', 'lire') || empty($parameters['line'])) {
+            return 0;
+        }
+
+        // A proposal older than the go-live date of the feature carries no intervention
+        $minPropalDate = reedcrmInterventionMinPropalDate();
+        $propalDate    = !empty($object->date) ? $object->date : ($object->datep ?? 0);
+        if ($minPropalDate > 0 && !empty($propalDate) && $propalDate < $minPropalDate) {
+            return 0;
+        }
+
+        require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+
+        $line = $parameters['line'];
+        if ((int) $line->product_type !== Product::TYPE_SERVICE) {
+            return 0;
+        }
+        if (!reedcrmInterventionProductHasTag((int) $line->fk_product)) {
+            return 0;
+        }
+
+        require_once __DIR__ . '/interventiondate.class.php';
+
+        $expected = InterventionDate::getExpectedCount((float) $line->qty);
+        if ($expected <= 0) {
+            return 0;
+        }
+
+        // Every line of the card asks for the same counters, they are read once for the whole proposal
+        static $plannedByLine = [];
+        if (!isset($plannedByLine[$object->id])) {
+            $interventionDate               = new InterventionDate($db);
+            $plannedByLine[$object->id]     = $interventionDate->countPlannedByElement('propal', (int) $object->id);
+        }
+        $planned = $plannedByLine[$object->id][(int) $line->id] ?? 0;
+
+        $langs->load('reedcrm@reedcrm');
+
+        $html  = '<div class="reedcrm-intervention-line">';
+        $html .= '<div class="reedcrm-intervention-trigger' . ($planned >= $expected ? ' reedcrm-intervention-trigger-complete' : '') . '"';
+        $html .= ' data-line-id="' . (int) $line->id . '" title="' . dol_escape_htmltag($langs->trans('InterventionDatePlanTooltip')) . '">';
+        $html .= '<i class="fas fa-calendar-alt"></i>';
+        $html .= '<span class="reedcrm-intervention-count">' . $planned . '/' . $expected . '</span>';
+        $html .= '<span class="reedcrm-intervention-trigger-label">' . dol_escape_htmltag($langs->trans('InterventionDates')) . '</span>';
+        $html .= '</div></div>';
+
+        $this->resprints = $html;
 
         return 0;
     }
