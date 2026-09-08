@@ -233,7 +233,7 @@ if ($show == 'transcript') {
     print load_fiche_titre($langs->trans('PocketSummary'), '', '');
     print '<div class="underbanner clearboth"></div>';
     print '<div class="reedcrm-pocket-summary">';
-    print !empty($object->summary) ? dolMd2Html($object->summary) : '<span class="opacitymedium">' . $langs->trans('PocketNoSummary') . '</span>';
+    print !empty($object->summary) ? reedcrm_pocket_summary_to_html($object->summary) : '<span class="opacitymedium">' . $langs->trans('PocketNoSummary') . '</span>';
     print '</div>';
 
     // Action items. Read from their own rows and not from the recording JSON: the assigned user
@@ -249,7 +249,7 @@ if ($show == 'transcript') {
     print '<table class="noborder centpercent">';
     print '<tr class="liste_titre">';
     print '<td>' . $langs->trans('Label') . '</td>';
-    print '<td class="center">' . $langs->trans('DateDeadline') . '</td>';
+    print '<td class="center">' . $langs->trans('Deadline') . '</td>';
     print '<td class="center">' . $langs->trans('Priority') . '</td>';
     print '<td>' . $langs->trans('PocketAssignedUser') . '</td>';
     print '<td class="center">' . $langs->trans('Event') . '</td>';
@@ -260,10 +260,17 @@ if ($show == 'transcript') {
             print '<tr class="oddeven pocket-action-row" data-action-item-id="' . $actionItem->id . '"';
             print ' data-url="' . dol_escape_htmltag($actionItemUrl) . '" data-token="' . newToken() . '">';
 
-            print '<td>';
-            print dol_escape_htmltag((string) $actionItem->label);
-            if (!empty($actionItem->description)) {
-                print '<br><span class="opacitymedium small">' . dol_escape_htmltag($actionItem->description) . '</span>';
+            // The wording extracted by Pocket is rarely usable as is, so both the label and its
+            // description are edited in place: each field saves itself when it loses the focus
+            print '<td class="pocket-action-text">';
+            if ($permissiontoadd) {
+                print '<input type="text" class="pocket-action-label" value="' . dol_escape_htmltag((string) $actionItem->label) . '" placeholder="' . dol_escape_htmltag($langs->trans('Label')) . '">';
+                print '<textarea class="pocket-action-description" rows="2" placeholder="' . dol_escape_htmltag($langs->trans('Description')) . '">' . dol_escape_htmltag((string) $actionItem->description) . '</textarea>';
+            } else {
+                print dol_escape_htmltag((string) $actionItem->label);
+                if (!empty($actionItem->description)) {
+                    print '<br><span class="opacitymedium small">' . dol_escape_htmltag($actionItem->description) . '</span>';
+                }
             }
             print '</td>';
 
