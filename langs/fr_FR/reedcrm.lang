@@ -1013,3 +1013,4 @@ MenuSectionTools = Outils transversaux
 MenuSectionAdministration = Administration
 ShipmentFollowupMenu = Suivi des expéditions
 TicketFollowupMenu = Suivi des tickets
+DataManagementMenu = Gestion des données
