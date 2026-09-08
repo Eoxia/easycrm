@@ -116,3 +116,35 @@
 #id-left .blockvmenu:has(+ .blockvmenu .reedcrm-menu-separator) {
     border-bottom: none;
 }
+
+/* ------------------------------------------------------------------ */
+/* Full row click target                                               */
+/* ------------------------------------------------------------------ */
+
+/* Eldy prints each entry as an inline <a> inside a row that spans the whole
+ * width of the left menu, so only the label itself reacts to a click. Stretch
+ * the link over its row with a transparent overlay rather than turning it into
+ * a block: the indentation that eldy prints as "&nbsp;" text nodes before the
+ * link stays on the same line, and no width or margin of the theme is touched.
+ * Rows without a link (section headers, separator, disabled entries) hold a
+ * <span> instead of an <a> and are left alone by the :has() guard.
+ */
+#id-left:has(.reedcrm-menu-section) .menu_titre:has(> a.vmenu),
+#id-left:has(.reedcrm-menu-section) .menu_contenu:has(> a.vsmenu) {
+    position: relative;
+}
+
+#id-left:has(.reedcrm-menu-section) .menu_titre > a.vmenu::after,
+#id-left:has(.reedcrm-menu-section) .menu_contenu > a.vsmenu::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+}
+
+/* Nothing would tell that the whole row is now clickable without a hover state. */
+#id-left:has(.reedcrm-menu-section) .menu_titre:has(> a.vmenu):hover,
+#id-left:has(.reedcrm-menu-section) .menu_contenu:has(> a.vsmenu):hover {
+    background: rgba(1, 71, 81, 0.07);
+    border-radius: 4px;
+    cursor: pointer;
+}
