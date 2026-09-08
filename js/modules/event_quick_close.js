@@ -207,9 +207,13 @@ window.reedcrm.eventQuickClose.event = function () {
     $('#reedcrm-quick-close-delay').toggleClass('reedcrm-quick-close-delay-visible', $(this).is(':checked'));
   });
 
-  // Typing a number of days is meaningless while the "in one month" choice is selected
+  // Typing a number of days is meaningless while another choice is selected, picking a day too
   $(document).on('focus.reedcrmQuickClose', '#reedcrm-quick-close-delay-value', function () {
     $('input[name="reedcrm-quick-close-delay-unit"][value="d"]').prop('checked', true);
+  });
+
+  $(document).on('focus.reedcrmQuickClose', '#reedcrm-quick-close-delay-date', function () {
+    $('input[name="reedcrm-quick-close-delay-unit"][value="date"]').prop('checked', true);
   });
 
   $(document).on('click.reedcrmQuickClose', '.reedcrm-quick-close-confirm', function () {
@@ -261,6 +265,7 @@ window.reedcrm.eventQuickClose.open = function ($trigger) {
   $('#reedcrm-quick-close-delay').removeClass('reedcrm-quick-close-delay-visible');
   $('input[name="reedcrm-quick-close-delay-unit"][value="' + defaultUnit + '"]').prop('checked', true);
   $('#reedcrm-quick-close-delay-value').val(defaultDays);
+  $('#reedcrm-quick-close-delay-date').val('');
   // The rescheduled event repeats the closed one, its name stays editable
   $('#reedcrm-quick-close-new-label').val(label);
 
@@ -302,6 +307,16 @@ window.reedcrm.eventQuickClose.confirm = function ($button) {
     return;
   }
 
+  var delayUnit = $('input[name="reedcrm-quick-close-delay-unit"]:checked').val();
+  var delayDate = $('#reedcrm-quick-close-delay-date').val();
+
+  // The day choice has nothing to schedule without a day
+  if ($('#reedcrm-quick-close-reschedule').is(':checked') && delayUnit === 'date' && !delayDate) {
+    window.reedcrm.eventQuickClose.notify(window.reedcrm.eventQuickClose.config('trans-date-required'), 'error');
+    $('#reedcrm-quick-close-delay-date').trigger('focus');
+    return;
+  }
+
   $button.addClass('button-disable');
 
   $.ajax({
@@ -313,8 +328,9 @@ window.reedcrm.eventQuickClose.confirm = function ($button) {
       event_id: eventId,
       comment: $('#reedcrm-quick-close-comment').val(),
       reschedule: $('#reedcrm-quick-close-reschedule').is(':checked') ? 1 : 0,
-      delay_unit: $('input[name="reedcrm-quick-close-delay-unit"]:checked').val(),
+      delay_unit: delayUnit,
       delay_value: $('#reedcrm-quick-close-delay-value').val(),
+      delay_date: delayDate,
       new_label: $('#reedcrm-quick-close-new-label').val()
     },
     success: function (response) {

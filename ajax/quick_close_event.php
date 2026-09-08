@@ -18,8 +18,8 @@
 /**
  * \file    ajax/quick_close_event.php
  * \ingroup reedcrm
- * \brief   Closes a to-do event (progress set to 100%) with an optional comment, and optionally clones it
- *          as a new to-do event, renamed at will and postponed by one month or X days.
+ * \brief   Closes a to-do event (progress set to 100%, ended today) with an optional comment, and optionally clones it
+ *          as a new to-do event, renamed at will and postponed by one month, X days, or to a picked day.
  */
 
 if (!defined('NOTOKENRENEWAL')) {
@@ -50,6 +50,7 @@ $comment    = GETPOST('comment', 'alphanohtml');
 $reschedule = GETPOSTINT('reschedule');
 $delayUnit  = GETPOST('delay_unit', 'aZ09');
 $delayValue = GETPOSTINT('delay_value');
+$delayDate  = GETPOST('delay_date', 'aZ09');
 $newLabel   = GETPOST('new_label', 'alphanohtml');
 
 if ($eventID <= 0) {
@@ -88,6 +89,13 @@ $db->begin();
 $actionComm->oldcopy    = clone $actionComm;
 $actionComm->percentage = 100;
 
+// Finishing an event records when it was done: its end date is today
+$actionComm->datef = dol_now();
+// An event that never started, or that was due later, would otherwise end before it begins
+if (empty($originalDatep) || $originalDatep > $actionComm->datef) {
+    $actionComm->datep = $actionComm->datef;
+}
+
 if (dol_strlen($comment) > 0) {
     $stamp = dol_print_date(dol_now(), 'dayhour', 'tzuserrel') . ' - ' . $user->getFullName($langs);
     // The description is rendered with dol_htmlentitiesbr(), appending HTML keeps plain and rich notes readable
@@ -107,14 +115,26 @@ $newEvent = ['id' => 0];
 
 if ($reschedule > 0) {
     // A caller sending nothing falls back on the delay configured for the module
-    if ($delayUnit !== 'm' && $delayUnit !== 'd') {
+    if ($delayUnit !== 'm' && $delayUnit !== 'd' && $delayUnit !== 'date') {
         $delayUnit = getDolGlobalString('REEDCRM_QUICK_CLOSE_DELAY_UNIT', 'm') === 'd' ? 'd' : 'm';
     }
     if ($delayValue < 1) {
         $delayValue = getDolGlobalInt('REEDCRM_QUICK_CLOSE_DELAY_VALUE', 7);
     }
 
-    if ($delayUnit === 'd') {
+    if ($delayUnit === 'date') {
+        // The picked day keeps the hour of the closed event, the current one when it had no date
+        // at all, the way a relaunch raised by the cron has none. The hour is read and written back
+        // in the same timezone as the dates of the board, so the new event falls on the hour shown
+        $timeOfDay = dol_print_date(!empty($originalDatep) ? $originalDatep : dol_now(), '%H:%M:%S');
+        // An empty day would let strtotime() answer today, the choice has to carry one
+        $newDatep  = !empty($delayDate) ? strtotime($delayDate . ' ' . $timeOfDay) : 0;
+        if (empty($newDatep)) {
+            $db->rollback();
+            echo json_encode(['success' => false, 'error' => $langs->trans('QuickCloseEventDateRequired')]);
+            exit;
+        }
+    } elseif ($delayUnit === 'd') {
         $delayValue = max(1, min(3650, $delayValue));
         $newDatep   = dol_time_plus_duree(dol_now(), $delayValue, 'd');
     } else {
@@ -151,7 +171,9 @@ if ($reschedule > 0) {
     $newEvent = [
         'id'    => $newID,
         'ref'   => $clone->ref,
-        'date'  => dol_print_date($newDatep, 'dayhour', 'tzuserrel'),
+        // Same timezone as the dates the board and the event card show, so the confirmation
+        // announces the hour the new event really carries
+        'date'  => dol_print_date($newDatep, 'dayhour'),
         'url'   => DOL_URL_ROOT . '/comm/action/card.php?id=' . $newID
     ];
 }
