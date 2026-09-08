@@ -233,8 +233,15 @@ window.reedcrm.eventQuickClose.open = function ($trigger) {
   // reference link of the row, whatever the column order, but without MAIN_ENABLE_AJAX_TOOLTIP that
   // title holds the whole summary of the event : the text of the link is the name in that case.
   var $row  = $trigger.closest('tr');
+  var $card = $trigger.closest('.todo-card');
   var $link = $row.find('a[href*="/comm/action/card.php?id="]').first();
   var label = ($trigger.attr('data-event-label') || '').trim();
+
+  // On the to-do board the name is the label of the card, editable in place: read it rather than
+  // a copy the inline edition would have left behind
+  if (!label && $card.length) {
+    label = $card.find('.todo-card-label').first().text().trim();
+  }
 
   if (!label) {
     label = ($link.attr('title') || '').trim();
@@ -319,6 +326,25 @@ window.reedcrm.eventQuickClose.confirm = function ($button) {
       }
 
       var $trigger = $('.reedcrm-quick-close-trigger[data-event-id="' + eventId + '"]');
+      var $card    = $trigger.closest('.todo-card');
+
+      // On the to-do board the closed event is repainted at 100% and moves to the column it now belongs to
+      if ($card.length && window.reedcrm.todoKanban) {
+        window.reedcrm.todoKanban.paintCard($card, 100);
+        window.reedcrm.todoKanban.moveToColumn($card, 100);
+        window.reedcrm.todoKanban.flag($card, 'todo-card-saved', 2000);
+
+        window.reedcrm.eventQuickClose.close();
+        window.reedcrm.eventQuickClose.notify(response.message, 'success');
+
+        // The rescheduled event is a card of its own, only a reload brings it into the board
+        if (response.new_event && response.new_event.id > 0) {
+          setTimeout(function () {
+            window.location.reload();
+          }, 1500);
+        }
+        return;
+      }
 
       // On the card the action buttons and the dates follow the status, only a reload renders them again
       if ($trigger.hasClass('reedcrm-quick-close-trigger-banner')) {
