@@ -24,6 +24,11 @@
  * "/" by Menubase::menuLoad() to translate composed titles.
  */
 
+/* ReedCRM brand palette. */
+:root {
+    --reedcrm-brand-deep: #014751;
+}
+
 /* ------------------------------------------------------------------ */
 /* Section headers                                                     */
 /* ------------------------------------------------------------------ */
@@ -32,7 +37,7 @@
     margin: 9px 8px 0 4px;
     padding-top: 5px;
     padding-bottom: 4px;
-    background: var(--colorbackhmenu1, rgb(38, 60, 92));
+    background: var(--reedcrm-brand-deep);
     border: none;
     border-radius: 5px;
 }
@@ -49,13 +54,13 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--colortextbackhmenu, #FFFFFF);
+    color: #FFFFFF;
     opacity: 1;
 }
 
 /* The picto sits on the dark band, so it must not inherit any theme picto colour. */
 #id-left .menu_titre .reedcrm-menu-section > i {
-    color: var(--colortextbackhmenu, #FFFFFF);
+    color: #FFFFFF;
 }
 
 /* The block right after a header must not look detached from it. */
@@ -104,7 +109,7 @@
     display: block;
     height: 3px;
     margin: 3px 10px 3px 0;
-    background: rgba(0, 0, 0, 0.18);
+    background: var(--reedcrm-brand-deep);
 }
 
 /* Drop the hairline of the entry above so the thick rule reads as a single break. */
