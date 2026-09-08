@@ -55,8 +55,9 @@ function reedcrmTodoGetKanbanColumns(): array
 /**
  * Return the column an event belongs to
  *
- * A relaunch stays in its own backlog as long as it is neither done nor dropped, so that
- * marking it done (100%) or not applicable (-1) is what takes it out of the backlog.
+ * A relaunch is raised without any date and waits in its own backlog: marking it done (100%)
+ * or not applicable (-1) takes it out, and so does planning it. A relaunch carrying a date has
+ * been taken in hand, it belongs to the column of its percentage like any other event.
  *
  * @param  array $columns Columns from reedcrmTodoGetKanbanColumns()
  * @param  array $event   One enriched event of reedcrmTodoGetEvents()
@@ -68,7 +69,8 @@ function reedcrmTodoGetColumnForEvent(array $columns, array $event): array
 
     foreach ($columns as $column) {
         if (!empty($column['code'])) {
-            if (($event['code'] ?? '') === $column['code'] && $percent >= 0 && $percent < 100) {
+            if (($event['code'] ?? '') === $column['code'] && $percent >= 0 && $percent < 100
+                && empty($event['date_start'])) {
                 return $column;
             }
             continue;
@@ -523,6 +525,19 @@ function reedcrmTodoGetSortExpression(): string
 }
 
 /**
+ * Return the SQL condition an event still waiting in a relaunch backlog matches
+ *
+ * Mirrors reedcrmTodoGetColumnForEvent(): the cron raises a relaunch without any date, and
+ * giving it one is what takes it out of its backlog, just like finishing or dropping it.
+ *
+ * @return string SQL condition, on the alias of the events table
+ */
+function reedcrmTodoGetBacklogCondition(): string
+{
+    return 'a.percent >= 0 AND a.percent < 100 AND a.datep IS NULL';
+}
+
+/**
  * Return the SQL condition matching the events of a column
  *
  * Mirrors reedcrmTodoGetColumnForEvent(): a backlog keyed on a code takes its events as long
@@ -535,7 +550,7 @@ function reedcrmTodoGetSortExpression(): string
 function reedcrmTodoGetColumnSqlCondition(array $column, array $columns): string
 {
     if (!empty($column['code'])) {
-        return "(a.code = '" . $column['code'] . "' AND a.percent >= 0 AND a.percent < 100)";
+        return "(a.code = '" . $column['code'] . "' AND " . reedcrmTodoGetBacklogCondition() . ')';
     }
 
     if ($column['min'] === null) {
@@ -574,7 +589,7 @@ function reedcrmTodoGetBacklogExclusion(array $columns): string
         return '';
     }
 
-    return ' AND NOT (a.percent >= 0 AND a.percent < 100 AND a.code IN (' . implode(', ', $backlogCodes) . '))';
+    return ' AND NOT (' . reedcrmTodoGetBacklogCondition() . ' AND a.code IN (' . implode(', ', $backlogCodes) . '))';
 }
 
 /**
@@ -647,7 +662,7 @@ function reedcrmTodoCountByColumn(DoliDB $db, array $filters, array $columns): a
         $sql .= ', ' . $rangeSelect;
     }
     $sql .= reedcrmTodoBuildEventsFrom($db, $filters, ['display' => false, 'origin' => false]);
-    $sql .= ' AND a.percent >= 0 AND a.percent < 100';
+    $sql .= ' AND ' . reedcrmTodoGetBacklogCondition();
     $sql .= " AND a.code IN ('" . implode("', '", array_keys($keyByCode)) . "')";
     $sql .= ' GROUP BY a.code';
 
