@@ -29,12 +29,12 @@
 /* ------------------------------------------------------------------ */
 
 #id-left .blockvmenu:has(.reedcrm-menu-section) {
-    margin-top: 8px;
+    margin: 9px 8px 0 4px;
     padding-top: 5px;
     padding-bottom: 4px;
-    background: rgba(0, 0, 0, 0.07);
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--colorbackhmenu1, rgb(38, 60, 92));
+    border: none;
+    border-radius: 5px;
 }
 
 #id-left .blockvmenu:has(.reedcrm-menu-section) .menu_titre {
@@ -49,8 +49,13 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--colorbackhmenu1, rgb(38, 60, 92));
+    color: var(--colortextbackhmenu, #FFFFFF);
     opacity: 1;
+}
+
+/* The picto sits on the dark band, so it must not inherit any theme picto colour. */
+#id-left .menu_titre .reedcrm-menu-section > i {
+    color: var(--colortextbackhmenu, #FFFFFF);
 }
 
 /* The block right after a header must not look detached from it. */
