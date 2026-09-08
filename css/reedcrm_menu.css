@@ -18,46 +18,90 @@
  * Loaded on every page through module_parts['css'] because the ReedCRM left menu
  * is also displayed on pages that do not belong to the module (recurring invoice
  * templates, saturne generic lists...) and that never load reedcrm.min.css.
+ * Everything is scoped to a left menu that actually carries a section marker, so
+ * the other main menus of Dolibarr keep their native rendering.
  * The markers live in the "prefix" column of llx_menu because "titre" is split on
  * "/" by Menubase::menuLoad() to translate composed titles.
  */
 
-.menu_titre .vmenu:has(> .reedcrm-menu-section) {
-    font-size: 0.75em;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+/* ------------------------------------------------------------------ */
+/* Section headers                                                     */
+/* ------------------------------------------------------------------ */
+
+#id-left .blockvmenu:has(.reedcrm-menu-section) {
+    margin-top: 8px;
+    padding-top: 5px;
+    padding-bottom: 4px;
+    background: rgba(0, 0, 0, 0.045);
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+#id-left .blockvmenu:has(.reedcrm-menu-section) .menu_titre {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#id-left .menu_titre .vmenu:has(> .reedcrm-menu-section) {
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
-    opacity: 0.5;
+    opacity: 0.55;
 }
 
-/* A section header is a label, not a menu entry: drop the hairline the theme draws
- * under every left menu block so the header stays attached to the entries it opens.
+/* The block right after a header must not look detached from it. */
+#id-left .blockvmenu:has(.reedcrm-menu-section) + .blockvmenu {
+    padding-top: 6px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sub entries                                                         */
+/* ------------------------------------------------------------------ */
+
+/* The eldy menu indents sub entries with non breaking spaces from level 2 only,
+ * so a level 1 entry ends up further left than the label of its own parent.
+ * Align it under the parent label, past the parent picto.
  */
-.blockvmenu:has(.reedcrm-menu-section) {
-    padding-top: 12px;
+#id-left:has(.reedcrm-menu-section) .menu_contenu {
+    padding-left: 26px;
+}
+
+#id-left:has(.reedcrm-menu-section) .menu_contenu .vsmenu {
+    opacity: 0.85;
+}
+
+/* ------------------------------------------------------------------ */
+/* Rule that sets the App entry apart                                  */
+/* ------------------------------------------------------------------ */
+
+#id-left .blockvmenu:has(.reedcrm-menu-separator) {
+    padding-top: 0;
     padding-bottom: 0;
     border-bottom: none;
 }
 
-.blockvmenu:has(.reedcrm-menu-section) .menu_titre {
+#id-left .blockvmenu:has(.reedcrm-menu-separator) .menu_titre {
     margin-top: 0;
     margin-bottom: 0;
     padding-top: 0;
     padding-bottom: 0;
 }
 
-/* Blank block used to set the App entry apart : the hairline of the previous block
- * draws the rule, this one only adds the breathing room.
- */
-.blockvmenu:has(.reedcrm-menu-separator) {
-    padding-top: 0;
-    padding-bottom: 0;
-    border-bottom: none;
+#id-left .menu_titre .vmenu:has(> .reedcrm-menu-separator) {
+    display: block;
 }
 
-.blockvmenu:has(.reedcrm-menu-separator) .menu_titre {
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-top: 4px;
-    padding-bottom: 0;
+#id-left .menu_titre .reedcrm-menu-separator {
+    display: block;
+    height: 3px;
+    margin: 3px 10px 3px 0;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+/* Drop the hairline of the entry above so the thick rule reads as a single break. */
+#id-left .blockvmenu:has(+ .blockvmenu .reedcrm-menu-separator) {
+    border-bottom: none;
 }
