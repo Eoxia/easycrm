@@ -1490,8 +1490,9 @@ class ActionsReedcrm
             $this->resprints .= $html;
         }
 
-        // Quick close of the to-do events listed by show_actions_done(), on every page displaying that list
-        $quickCloseContexts = 'agenda|thirdpartycomm|thirdpartysupplier|projectcardinfo|call_list_card|thirdpartycalls|address';
+        // Quick close of the to-do events listed by show_actions_done(), on every page displaying that list,
+        // and of the event shown alone on its own card (actioncard)
+        $quickCloseContexts = 'agenda|actioncard|thirdpartycomm|thirdpartysupplier|projectcardinfo|call_list_card|thirdpartycalls|address';
         if (isModEnabled('agenda') && preg_match('/' . $quickCloseContexts . '/', $parameters['context'])
             && ($user->hasRight('agenda', 'myactions', 'create') || $user->hasRight('agenda', 'allactions', 'create'))) {
             $langs->load('reedcrm@reedcrm');

@@ -18,8 +18,8 @@
 /**
  * \file    ajax/quick_close_event.php
  * \ingroup reedcrm
- * \brief   Closes a to-do event (progress set to 100%) with an optional comment,
- *          and optionally clones it as a new to-do event postponed by one month or X days.
+ * \brief   Closes a to-do event (progress set to 100%) with an optional comment, and optionally clones it
+ *          as a new to-do event, renamed at will and postponed by one month or X days.
  */
 
 if (!defined('NOTOKENRENEWAL')) {
@@ -50,6 +50,7 @@ $comment    = GETPOST('comment', 'alphanohtml');
 $reschedule = GETPOSTINT('reschedule');
 $delayUnit  = GETPOST('delay_unit', 'aZ09');
 $delayValue = GETPOSTINT('delay_value');
+$newLabel   = GETPOST('new_label', 'alphanohtml');
 
 if ($eventID <= 0) {
     echo json_encode(['success' => false, 'error' => $langs->trans('ErrorRecordNotFound')]);
@@ -129,6 +130,11 @@ if ($reschedule > 0) {
 
     // The clone repeats the event as it was, the closure comment belongs to the closed one only
     $clone->percentage   = 0;
+    // A name typed in the modal renames the clone, an empty one keeps the name of the closed event
+    $newLabel = trim($newLabel);
+    if ($newLabel !== '') {
+        $clone->label = dol_trunc($newLabel, 255, 'right', 'UTF-8', 1);
+    }
     $clone->datep        = $newDatep;
     $clone->datef        = (!empty($originalDatef) && !empty($originalDatep)) ? $newDatep + ($originalDatef - $originalDatep) : null;
     // create() falls back on the deprecated note property when note_private is empty, both must be reset

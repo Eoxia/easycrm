@@ -19,8 +19,9 @@
 /**
  * \file    js/modules/event_quick_close.js
  * \ingroup reedcrm
- * \brief   Turns the status badge of every to-do event listed by show_actions_done() into a
- *          quick close trigger : optional comment, and optional clone postponed by 1 month or X days.
+ * \brief   Turns the status badge of every to-do event, listed by show_actions_done() or shown in the
+ *          banner of its own card, into a quick close trigger : optional comment, and optional clone
+ *          renamed at will and postponed by 1 month or X days.
  */
 
 if (!window.reedcrm) {
@@ -86,6 +87,21 @@ window.reedcrm.eventQuickClose.config = function (name) {
 };
 
 /**
+ * Turn every closable status badge of the page into a trigger, in a list and on an event card alike
+ *
+ * @memberof ReedCRM_EventQuickClose
+ *
+ * @since   1.0.0
+ * @version 1.0.0
+ *
+ * @returns {void}
+ */
+window.reedcrm.eventQuickClose.decorate = function () {
+  window.reedcrm.eventQuickClose.decorateList();
+  window.reedcrm.eventQuickClose.decorateCard();
+};
+
+/**
  * Flag every event row whose progress is below 100% as closable. The events list is rendered by
  * a core function without any marker, a row is identified by its link to the event card and its
  * progress badge (a "NA" badge is a system event, it has no progress to close).
@@ -97,7 +113,7 @@ window.reedcrm.eventQuickClose.config = function (name) {
  *
  * @returns {void}
  */
-window.reedcrm.eventQuickClose.decorate = function () {
+window.reedcrm.eventQuickClose.decorateList = function () {
   $('a[href*="/comm/action/card.php?id="]').each(function () {
     var $row = $(this).closest('tr');
     if (!$row.length || $row.hasClass('reedcrm-quick-close-row')) {
@@ -124,6 +140,36 @@ window.reedcrm.eventQuickClose.decorate = function () {
       .attr('title', window.reedcrm.eventQuickClose.config('trans-tooltip'))
       .append('<i class="fas fa-check-circle reedcrm-quick-close-icon"></i>');
   });
+};
+
+/**
+ * Flag the status badge of the banner as closable on the card of a to-do event. There is no row to
+ * read here, the template hands over the event of the page and an empty id means it is not closable.
+ *
+ * @memberof ReedCRM_EventQuickClose
+ *
+ * @since   1.0.0
+ * @version 1.0.0
+ *
+ * @returns {void}
+ */
+window.reedcrm.eventQuickClose.decorateCard = function () {
+  var eventId = parseInt(window.reedcrm.eventQuickClose.config('card-event-id'), 10);
+  if (!eventId) {
+    return;
+  }
+
+  // showrefnav() wraps the status of the banner in its own block, the badge is the only one there
+  var $badge = $('.statusref').find('span[class*="badge-status"]').first();
+  if (!$badge.length || $badge.hasClass('reedcrm-quick-close-trigger')) {
+    return;
+  }
+
+  $badge.addClass('reedcrm-quick-close-trigger reedcrm-quick-close-trigger-banner')
+    .attr('data-event-id', eventId)
+    .attr('data-event-label', window.reedcrm.eventQuickClose.config('card-event-label'))
+    .attr('title', window.reedcrm.eventQuickClose.config('trans-tooltip'))
+    .append('<i class="fas fa-check-circle reedcrm-quick-close-icon"></i>');
 };
 
 /**
@@ -172,7 +218,7 @@ window.reedcrm.eventQuickClose.event = function () {
 };
 
 /**
- * Open the modal for one event row
+ * Open the modal for one event
  *
  * @memberof ReedCRM_EventQuickClose
  *
@@ -183,10 +229,19 @@ window.reedcrm.eventQuickClose.event = function () {
  * @return {void}
  */
 window.reedcrm.eventQuickClose.open = function ($trigger) {
+  // On a card the name comes from the trigger. In a list getNomUrl() puts it in the title of the
+  // reference link of the row, whatever the column order, but without MAIN_ENABLE_AJAX_TOOLTIP that
+  // title holds the whole summary of the event : the text of the link is the name in that case.
   var $row  = $trigger.closest('tr');
   var $link = $row.find('a[href*="/comm/action/card.php?id="]').first();
-  // getNomUrl() puts the event label in the title of the reference link, whatever the column order
-  var label = ($link.attr('title') || '').trim();
+  var label = ($trigger.attr('data-event-label') || '').trim();
+
+  if (!label) {
+    label = ($link.attr('title') || '').trim();
+    if (!label || label.indexOf('<') !== -1) {
+      label = $link.text().trim();
+    }
+  }
 
   window.reedcrm.eventQuickClose.currentEventId = parseInt($trigger.attr('data-event-id'), 10);
 
@@ -199,8 +254,10 @@ window.reedcrm.eventQuickClose.open = function ($trigger) {
   $('#reedcrm-quick-close-delay').removeClass('reedcrm-quick-close-delay-visible');
   $('input[name="reedcrm-quick-close-delay-unit"][value="' + defaultUnit + '"]').prop('checked', true);
   $('#reedcrm-quick-close-delay-value').val(defaultDays);
+  // The rescheduled event repeats the closed one, its name stays editable
+  $('#reedcrm-quick-close-new-label').val(label);
 
-  $('#reedcrm-quick-close-modal .reedcrm-quick-close-event').text(label || $link.text().trim());
+  $('#reedcrm-quick-close-modal .reedcrm-quick-close-event').text(label);
   $('#reedcrm-quick-close-modal').addClass('modal-active');
   $('#reedcrm-quick-close-comment').trigger('focus');
 };
@@ -250,7 +307,8 @@ window.reedcrm.eventQuickClose.confirm = function ($button) {
       comment: $('#reedcrm-quick-close-comment').val(),
       reschedule: $('#reedcrm-quick-close-reschedule').is(':checked') ? 1 : 0,
       delay_unit: $('input[name="reedcrm-quick-close-delay-unit"]:checked').val(),
-      delay_value: $('#reedcrm-quick-close-delay-value').val()
+      delay_value: $('#reedcrm-quick-close-delay-value').val(),
+      new_label: $('#reedcrm-quick-close-new-label').val()
     },
     success: function (response) {
       $button.removeClass('button-disable');
@@ -261,6 +319,17 @@ window.reedcrm.eventQuickClose.confirm = function ($button) {
       }
 
       var $trigger = $('.reedcrm-quick-close-trigger[data-event-id="' + eventId + '"]');
+
+      // On the card the action buttons and the dates follow the status, only a reload renders them again
+      if ($trigger.hasClass('reedcrm-quick-close-trigger-banner')) {
+        window.reedcrm.eventQuickClose.close();
+        window.reedcrm.eventQuickClose.notify(response.message, 'success');
+        setTimeout(function () {
+          window.location.reload();
+        }, 1500);
+        return;
+      }
+
       $trigger.closest('td').html(response.status_html);
       $trigger.closest('tr').removeClass('reedcrm-quick-close-row').addClass('reedcrm-quick-close-flash');
 

@@ -1,8 +1,9 @@
 // =============================================================================
 // Quick close of a to-do event
-// The status badge of every unfinished event listed by show_actions_done()
-// becomes a trigger (js/modules/event_quick_close.js) opening the modal
-// rendered by core/tpl/reedcrm_event_quick_close_modal.tpl.php.
+// The status badge of every unfinished event, listed by show_actions_done() or
+// shown in the banner of its own card, becomes a trigger
+// (js/modules/event_quick_close.js) opening the modal rendered by
+// core/tpl/reedcrm_event_quick_close_modal.tpl.php.
 // =============================================================================
 
 $reedcrm-quick-close-accent: #014751;
@@ -81,6 +82,13 @@ tr.reedcrm-quick-close-flash > td {
     width: 100%;
     box-sizing: border-box;
     resize: vertical;
+  }
+
+  // Name given to the rescheduled event, prefilled with the name of the closed one.
+  .reedcrm-quick-close-new-label {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 12px;
   }
 
   .reedcrm-quick-close-toggle {

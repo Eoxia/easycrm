@@ -930,9 +930,11 @@ DataManagementMenu = Data management
 # Quick close of an event
 QuickCloseEventTitle = Close the event
 QuickCloseEventTooltip = Close this event
-QuickCloseEventComment = Comment
-QuickCloseEventCommentPlaceholder = Appended to the event description (optional)
+QuickCloseEventDescription = Description
+QuickCloseEventDescriptionPlaceholder = Appended to the event description (optional)
 QuickCloseEventReschedule = Schedule the same event again for later
+QuickCloseEventNewLabel = New event name
+QuickCloseEventNewLabelPlaceholder = Name of the closed event
 QuickCloseEventInOneMonth = In 1 month
 QuickCloseEventInDays = In
 QuickCloseEventInDaysSuffix = days
