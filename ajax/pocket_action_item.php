@@ -75,6 +75,37 @@ if ($subAction === 'assign') {
     exit;
 }
 
+if ($subAction === 'set_text') {
+    // Pocket writes the wording, the user owns it afterwards: an empty label is a legitimate
+    // value, the fallback only applies to the event that carries the action in the agenda
+    // restricthtml encodes the ampersands and the quotes of a plain text, and the card escapes the
+    // wording again when it prints it: without the decoding, an edit saved twice would store the
+    // HTML source of the previous one
+    $label       = htmlspecialchars_decode(GETPOST('label', 'restricthtml'), ENT_QUOTES);
+    $description = htmlspecialchars_decode(GETPOST('description', 'restricthtml'), ENT_QUOTES);
+
+    $actionItem->label       = dol_trunc($label, 255, 'right', 'UTF-8', 1);
+    $actionItem->description = $description;
+
+    if ($actionItem->update($user) <= 0) {
+        echo json_encode(['success' => false, 'error' => $actionItem->error]);
+        exit;
+    }
+
+    // The event created from the action carries the same wording, keep the two aligned
+    if ($actionItem->fk_actioncomm > 0) {
+        $event = new ActionComm($db);
+        if ($event->fetch($actionItem->fk_actioncomm) > 0) {
+            $event->label        = $actionItem->label ?: $langs->transnoentities('PocketActionItems');
+            $event->note_private = $actionItem->description;
+            $event->update($user);
+        }
+    }
+
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 if ($subAction === 'set_due_date') {
     $dueDate = GETPOST('due_date', 'alphanohtml');
 

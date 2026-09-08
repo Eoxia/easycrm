@@ -318,3 +318,290 @@ function reedcrm_pocket_format_duration(int $duration): string
 
     return sprintf('%d:%02d', $minutes, $seconds);
 }
+
+/**
+ * Render the markdown summary of a recording, Pocket blocks included.
+ *
+ * Pocket enriches its summary with its own tags (chart, flowchart, timeline, decision tree), which
+ * no markdown parser knows. Parsedown runs in safe mode and escapes every tag it does not handle,
+ * so those blocks used to be printed as raw source in the middle of the text: they are pulled out
+ * of the markdown, rendered on their own, then stitched back at the place they came from.
+ *
+ * @param  string $summary Markdown summary as returned by Pocket.
+ * @return string          Ready to print HTML.
+ */
+function reedcrm_pocket_summary_to_html(string $summary): string
+{
+    require_once DOL_DOCUMENT_ROOT . '/core/lib/parsemd.lib.php';
+
+    if (trim($summary) === '') {
+        return '';
+    }
+
+    $parts = preg_split('#(<pocket:[a-z0-9-]+\b[^>]*>.*?</pocket:[a-z0-9-]+>)#is', $summary, -1, PREG_SPLIT_DELIM_CAPTURE);
+    if (!is_array($parts)) {
+        return dolMd2Html($summary);
+    }
+
+    $html = '';
+    foreach ($parts as $part) {
+        if (trim($part) === '') {
+            continue;
+        }
+
+        if (preg_match('#^<pocket:([a-z0-9-]+)\b([^>]*)>(.*)</pocket:[a-z0-9-]+>$#is', $part, $match)) {
+            $html .= reedcrm_pocket_render_block($match[1], $match[2], $match[3]);
+        } else {
+            $html .= dolMd2Html($part);
+        }
+    }
+
+    return $html;
+}
+
+/**
+ * Render one Pocket block into HTML.
+ *
+ * A block whose type is unknown, or whose lines do not follow the expected syntax, still carries
+ * analysis: it falls back to its raw text rather than being dropped.
+ *
+ * @param  string $type          Block type, ex. 'chart'.
+ * @param  string $rawAttributes Attributes of the opening tag, ex. ' type="pie" title="..."'.
+ * @param  string $content       Content between the opening and the closing tag.
+ * @return string                Ready to print HTML.
+ */
+function reedcrm_pocket_render_block(string $type, string $rawAttributes, string $content): string
+{
+    $attributes = [];
+    if (preg_match_all('/([a-zA-Z0-9_-]+)\s*=\s*"([^"]*)"/', $rawAttributes, $matches, PREG_SET_ORDER)) {
+        foreach ($matches as $match) {
+            $attributes[strtolower($match[1])] = $match[2];
+        }
+    }
+
+    $lines = [];
+    foreach (preg_split('/\R/', $content) as $line) {
+        $line = trim($line);
+        if ($line !== '') {
+            $lines[] = $line;
+        }
+    }
+
+    switch (strtolower($type)) {
+        case 'chart':
+            $body = reedcrm_pocket_render_chart($lines);
+            break;
+        case 'flowchart':
+            $body = reedcrm_pocket_render_flowchart($lines);
+            break;
+        case 'timeline':
+            $body = reedcrm_pocket_render_timeline($lines);
+            break;
+        case 'decision-tree':
+        case 'decisiontree':
+            $body = reedcrm_pocket_render_decision_tree($lines);
+            break;
+        default:
+            $body = '';
+    }
+
+    if ($body === '') {
+        $body = '<div class="reedcrm-pocket-block-raw">' . dol_escape_htmltag(implode("\n", $lines), 0, 1) . '</div>';
+    }
+
+    $html  = '<div class="reedcrm-pocket-block reedcrm-pocket-block-' . dol_escape_htmltag(strtolower($type)) . '">';
+    if (!empty($attributes['title'])) {
+        $html .= '<div class="reedcrm-pocket-block-title">' . dol_escape_htmltag($attributes['title']) . '</div>';
+    }
+    $html .= $body;
+    $html .= '</div>';
+
+    return $html;
+}
+
+/**
+ * Render a Pocket chart as one bar per value.
+ *
+ * Lines read 'Label | value | #color', the colour being optional. The share and the colour are the
+ * only data driven parts, they travel as CSS variables so the styling itself stays in the SCSS.
+ *
+ * @param  string[] $lines Lines of the block.
+ * @return string          HTML, empty string when the lines are not chart data.
+ */
+function reedcrm_pocket_render_chart(array $lines): string
+{
+    $entries = [];
+    $total   = 0.0;
+
+    foreach ($lines as $line) {
+        $cells = array_map('trim', explode('|', $line));
+        if (count($cells) < 2 || !is_numeric(str_replace(',', '.', $cells[1]))) {
+            return '';
+        }
+
+        $value = (float) str_replace(',', '.', $cells[1]);
+        $color = (isset($cells[2]) && preg_match('/^#[0-9a-fA-F]{3,8}$/', $cells[2])) ? $cells[2] : '';
+
+        $entries[] = ['label' => $cells[0], 'value' => $value, 'color' => $color];
+        $total    += $value;
+    }
+
+    if (empty($entries) || $total <= 0) {
+        return '';
+    }
+
+    // Pocket does not always send a colour, the fallback keeps the bars distinguishable
+    $palette = ['#63acc9', '#f0a500', '#7cb342', '#c0392b', '#8e6fbe', '#26a69a'];
+
+    $html = '<ul class="reedcrm-pocket-chart">';
+    foreach ($entries as $index => $entry) {
+        $color = $entry['color'] !== '' ? $entry['color'] : $palette[$index % count($palette)];
+        $share = round(($entry['value'] / $total) * 100);
+
+        $html .= '<li style="--pocket-share: ' . $share . '%; --pocket-color: ' . $color . ';">';
+        $html .= '<span class="reedcrm-pocket-chart-label">' . dol_escape_htmltag($entry['label']) . '</span>';
+        $html .= '<span class="reedcrm-pocket-chart-track"><span class="reedcrm-pocket-chart-bar"></span></span>';
+        $html .= '<span class="reedcrm-pocket-chart-value">' . dol_escape_htmltag((string) $entry['value']) . ' (' . $share . '%)</span>';
+        $html .= '</li>';
+    }
+    $html .= '</ul>';
+
+    return $html;
+}
+
+/**
+ * Render a Pocket flowchart as one row per transition.
+ *
+ * Each line is drawn as its own edge instead of being chained into a single path: the steps Pocket
+ * writes are free text, so two lines meant to follow each other rarely spell their common step the
+ * same way, and a chain built on that comparison would silently drop a step.
+ *
+ * @param  string[] $lines Lines of the block.
+ * @return string          HTML, empty string when a line holds no transition.
+ */
+function reedcrm_pocket_render_flowchart(array $lines): string
+{
+    $edges = [];
+
+    foreach ($lines as $line) {
+        $nodes = preg_split('/\s*(?:->|=>)\s*/', $line);
+        if (!is_array($nodes) || count($nodes) < 2) {
+            return '';
+        }
+
+        $edges[] = array_values(array_filter(array_map('trim', $nodes), 'strlen'));
+    }
+
+    if (empty($edges)) {
+        return '';
+    }
+
+    $html = '<ul class="reedcrm-pocket-flow">';
+    foreach ($edges as $nodes) {
+        $html .= '<li>';
+        foreach ($nodes as $node) {
+            $html .= '<span class="reedcrm-pocket-flow-node">' . dol_escape_htmltag($node) . '</span>';
+        }
+        $html .= '</li>';
+    }
+    $html .= '</ul>';
+
+    return $html;
+}
+
+/**
+ * Render a Pocket timeline as an ordered list of steps.
+ *
+ * Lines read 'Step | detail', a line without separator being a step with no detail.
+ *
+ * @param  string[] $lines Lines of the block.
+ * @return string          HTML, empty string when the block holds no line.
+ */
+function reedcrm_pocket_render_timeline(array $lines): string
+{
+    if (empty($lines)) {
+        return '';
+    }
+
+    $html = '<ol class="reedcrm-pocket-timeline">';
+    foreach ($lines as $line) {
+        $cells  = array_map('trim', explode('|', $line, 2));
+        $html  .= '<li>';
+        $html  .= '<span class="reedcrm-pocket-timeline-step">' . dol_escape_htmltag($cells[0]) . '</span>';
+        if (!empty($cells[1])) {
+            $html .= '<span class="reedcrm-pocket-timeline-detail">' . dol_escape_htmltag($cells[1]) . '</span>';
+        }
+        $html .= '</li>';
+    }
+    $html .= '</ol>';
+
+    return $html;
+}
+
+/**
+ * Render a Pocket decision tree as its list of nodes and their branches.
+ *
+ * A node opens with 'id::Label', a branch reads 'Answer => target_id' and any other line completes
+ * the node it follows. Branch targets are resolved to the label of the node they point at, so the
+ * reader never has to translate an identifier by themselves.
+ *
+ * @param  string[] $lines Lines of the block.
+ * @return string          HTML, empty string when no node was declared.
+ */
+function reedcrm_pocket_render_decision_tree(array $lines): string
+{
+    $nodes     = [];
+    $currentId = '';
+
+    foreach ($lines as $line) {
+        if (preg_match('/^([A-Za-z0-9_-]+)::\s*(.*)$/', $line, $match)) {
+            $currentId         = $match[1];
+            $nodes[$currentId] = ['label' => trim($match[2]), 'text' => [], 'branches' => []];
+            continue;
+        }
+
+        if ($currentId === '') {
+            return '';
+        }
+
+        $branch = ltrim($line, "-*\t ");
+        if (preg_match('/^(.*?)\s*=>\s*([A-Za-z0-9_-]+)$/', $branch, $match)) {
+            $nodes[$currentId]['branches'][] = ['answer' => trim($match[1]), 'target' => $match[2]];
+            continue;
+        }
+
+        $nodes[$currentId]['text'][] = $line;
+    }
+
+    if (empty($nodes)) {
+        return '';
+    }
+
+    $html = '<ul class="reedcrm-pocket-tree">';
+    foreach ($nodes as $node) {
+        $html .= '<li>';
+        $html .= '<span class="reedcrm-pocket-tree-label">' . dol_escape_htmltag($node['label']) . '</span>';
+
+        if (!empty($node['text'])) {
+            $html .= '<span class="reedcrm-pocket-tree-text">' . dol_escape_htmltag(implode(' ', $node['text'])) . '</span>';
+        }
+
+        if (!empty($node['branches'])) {
+            $html .= '<ul class="reedcrm-pocket-tree-branches">';
+            foreach ($node['branches'] as $branch) {
+                $target = isset($nodes[$branch['target']]) ? $nodes[$branch['target']]['label'] : $branch['target'];
+
+                $html .= '<li>';
+                $html .= '<span class="reedcrm-pocket-tree-answer">' . dol_escape_htmltag($branch['answer']) . '</span>';
+                $html .= '<span class="reedcrm-pocket-tree-target">' . dol_escape_htmltag($target) . '</span>';
+                $html .= '</li>';
+            }
+            $html .= '</ul>';
+        }
+
+        $html .= '</li>';
+    }
+    $html .= '</ul>';
+
+    return $html;
+}

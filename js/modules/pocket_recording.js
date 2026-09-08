@@ -37,6 +37,43 @@ window.reedcrm.pocketRecording = {
     $(document).on('click', '.pocket-action-create-event', window.reedcrm.pocketRecording.createEvent);
     $(document).on('click', '.reedcrm-pocket-audio-load', window.reedcrm.pocketRecording.loadAudio);
     $(document).on('change', '.pocket-action-due-date', window.reedcrm.pocketRecording.setDueDate);
+    $(document).on('change', '.pocket-action-label, .pocket-action-description', window.reedcrm.pocketRecording.setText);
+  },
+
+  /**
+   * Save the label and the description of an action item once the edited field loses the focus.
+   *
+   * Both fields travel together: they are two halves of the same wording and the endpoint writes
+   * the row once, so an edit on one never resets the other with a stale value.
+   */
+  setText: function() {
+    var $field = $(this);
+    var $row   = $field.closest('tr');
+
+    // A field fires its change twice when it is left with the keyboard then with the mouse, and
+    // the second one carries nothing new: the last saved wording is kept to skip the write
+    if ($field.data('pocket-saved') === $field.val()) {
+      return;
+    }
+    $field.data('pocket-saved', $field.val());
+
+    $row.addClass('opacitymedium');
+
+    $.post($row.data('url'), {
+      subaction:      'set_text',
+      action_item_id: $row.data('action-item-id'),
+      label:          $row.find('.pocket-action-label').val(),
+      description:    $row.find('.pocket-action-description').val(),
+      token:          $row.data('token')
+    }, null, 'json').done(function(data) {
+      $row.removeClass('opacitymedium');
+      $field.toggleClass('error', !(data && data.success));
+    }).fail(function() {
+      $row.removeClass('opacitymedium');
+      $field.addClass('error');
+      // The write did not land, the next change on the same value has to be sent again
+      $field.removeData('pocket-saved');
+    });
   },
 
   /**
