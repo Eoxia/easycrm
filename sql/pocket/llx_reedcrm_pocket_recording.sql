@@ -33,6 +33,7 @@ CREATE TABLE llx_reedcrm_pocket_recording(
   recording_date      datetime,
   last_sync_date      datetime,
   summary             mediumtext,
+  summary_edited      smallint DEFAULT 0 NOT NULL,
   transcript          longtext,
   action_items        mediumtext,
   note_public         text,

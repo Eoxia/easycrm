@@ -987,19 +987,32 @@ PocketCreateEvent = Créer un événement
 PocketActionItemId = Identifiant de l'action Pocket
 PocketActionItemTodo = À faire
 PocketActionItemDone = Faite
+PocketActionItemEdited = Action réécrite
+PocketPriorityLow = Basse
+PocketPriorityMedium = Moyenne
+PocketPriorityHigh = Haute
+PocketSummaryEdited = Résumé réécrit
+PocketSummaryEditedHint = Ce résumé a été réécrit dans Dolibarr : les synchronisations Pocket ne l'écrasent plus.
+PocketSummaryEditHelp = Le résumé est écrit en markdown, blocs Pocket compris. Une fois enregistré, il n'est plus écrasé par les synchronisations : videz-le et enregistrez pour reprendre celui de Pocket.
 
 #
 # Pocket - rattachement depuis les objets
 #
 PocketLinkedObjects = Objets liés
 PocketNoLinkedObject = Aucun objet lié à cet enregistrement
-PocketLinkFromObjectHint = Pour rattacher cet enregistrement, ouvrez la fiche du ticket, du projet, de la facture ou de la proposition concerné et utilisez son onglet « Enregistrements Pocket ».
+PocketLinkFromObjectHint = Un objet d'un autre tiers se rattache depuis sa propre fiche, avec son onglet « Enregistrements Pocket ».
 PocketLinkRecording = Rattacher un enregistrement
 PocketUnlinkRecording = Détacher cet enregistrement
 PocketNoRecordingToLink = Tous les enregistrements disponibles sont déjà rattachés
 PocketRecordingLinked = Enregistrement rattaché
 PocketRecordingUnlinked = Enregistrement détaché
 PocketRecordingLinkFailed = L'opération de rattachement a échoué
+PocketLinkObject = Rattacher un objet du tiers
+PocketUnlinkObject = Détacher cet objet
+PocketNoObjectToLink = Aucun objet de ce tiers à rattacher
+PocketLinkNeedsThirdParty = Choisissez le tiers de l'enregistrement pour lui rattacher ses objets
+PocketObjectLinked = Objet rattaché
+PocketObjectUnlinked = Objet détaché
 
 #
 # Menu - Sections du menu de gauche

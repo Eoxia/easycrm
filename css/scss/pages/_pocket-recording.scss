@@ -24,6 +24,19 @@
     }
 }
 
+// The summary is rewritten on its markdown source and not on the rendered HTML: a monospaced block
+// keeps the lists and the Pocket blocks it embeds readable while they are edited
+.reedcrm-pocket-summary-edit {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e3e6ea;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
 .reedcrm-pocket-transcript {
     padding: 12px 16px;
     background: #ffffff;
@@ -115,7 +128,8 @@
     }
 }
 
-// Attach form shown above the recordings list, on a business object tab
+// Attach form: above the recordings list on a business object tab, and above the linked objects of
+// a recording card
 .reedcrm-pocket-link-form {
     display: flex;
     align-items: center;
