@@ -30,15 +30,183 @@ window.reedcrm.pocketRecording = {
 
   init: function() {
     window.reedcrm.pocketRecording.event();
+    window.reedcrm.pocketRecording.buildStatusPicker();
   },
 
   event: function() {
-    $(document).on('change', '.pocket-action-assign', window.reedcrm.pocketRecording.assignUser);
-    $(document).on('click', '.pocket-action-create-event', window.reedcrm.pocketRecording.createEvent);
-    $(document).on('click', '.reedcrm-pocket-audio-load', window.reedcrm.pocketRecording.loadAudio);
-    $(document).on('change', '.pocket-action-due-date', window.reedcrm.pocketRecording.setDueDate);
-    $(document).on('change', '.pocket-action-label, .pocket-action-description', window.reedcrm.pocketRecording.setText);
-    $(document).on('change', '.pocket-action-priority', window.reedcrm.pocketRecording.setPriority);
+    // init() runs twice, once from the end of this file and once from load_list_script(), so the
+    // handlers are dropped before being hung again: bound twice, a toggle undoes itself and every
+    // save fires two requests
+    $(document).off('.pocketRecording');
+
+    $(document).on('change.pocketRecording', '.pocket-action-assign', window.reedcrm.pocketRecording.assignUser);
+    $(document).on('click.pocketRecording', '.pocket-action-create-event', window.reedcrm.pocketRecording.createEvent);
+    $(document).on('click.pocketRecording', '.reedcrm-pocket-audio-load', window.reedcrm.pocketRecording.loadAudio);
+    $(document).on('change.pocketRecording', '.pocket-action-due-date', window.reedcrm.pocketRecording.setDueDate);
+    $(document).on('change.pocketRecording', '.pocket-action-label, .pocket-action-description', window.reedcrm.pocketRecording.setText);
+    $(document).on('change.pocketRecording', '.pocket-action-priority', window.reedcrm.pocketRecording.setPriority);
+    $(document).on('click.pocketRecording', '.reedcrm-pocket-status-badge', window.reedcrm.pocketRecording.toggleStatusMenu);
+    $(document).on('click.pocketRecording', '.reedcrm-pocket-status-menu li', window.reedcrm.pocketRecording.setStatus);
+    $(document).on('click.pocketRecording', '.reedcrm-pocket-summary-block[data-url] .reedcrm-pocket-summary', window.reedcrm.pocketRecording.editSummary);
+    $(document).on('blur.pocketRecording', '.reedcrm-pocket-summary-edit', window.reedcrm.pocketRecording.saveSummary);
+    $(document).on('keydown.pocketRecording', '.reedcrm-pocket-summary-edit', window.reedcrm.pocketRecording.cancelSummary);
+    // A click outside the picker closes the menu. Both handlers are delegated on the document, and
+    // jQuery runs the delegated one first, so stopping the propagation would not spare the opening
+    // click: the target is tested instead.
+    $(document).on('click.pocketRecording', function(event) {
+      if (!$(event.target).closest('.reedcrm-pocket-status').length) {
+        $('.reedcrm-pocket-status').removeClass('open');
+      }
+    });
+  },
+
+  /**
+   * Swap the rendered summary for its markdown source, ready to be edited.
+   *
+   * A link inside the summary keeps its own job: clicking it opens the target instead of the editor.
+   */
+  editSummary: function(event) {
+    if ($(event.target).closest('a').length) {
+      return;
+    }
+
+    var $block    = $(this).closest('.reedcrm-pocket-summary-block');
+    var $textarea = $block.find('.reedcrm-pocket-summary-edit');
+
+    // The source keeps the height the rendered block had, so the page does not jump on a click
+    $textarea.css('min-height', Math.max($(this).outerHeight(), 120) + 'px');
+
+    $(this).prop('hidden', true);
+    $block.find('.reedcrm-pocket-summary-edited').prop('hidden', true);
+    $block.find('.reedcrm-pocket-summary-help').prop('hidden', false);
+    $textarea.prop('hidden', false).focus();
+  },
+
+  /**
+   * Close the editor without saving, and put back the summary as it was.
+   */
+  cancelSummary: function(event) {
+    if (event.key !== 'Escape') {
+      return;
+    }
+
+    var $textarea = $(this);
+    var $block    = $textarea.closest('.reedcrm-pocket-summary-block');
+
+    // The saved source is the one the block was rendered from, typing again is undone by leaving
+    $textarea.val($textarea.data('pocket-saved') !== undefined ? $textarea.data('pocket-saved') : $textarea.prop('defaultValue'));
+    window.reedcrm.pocketRecording.closeSummaryEditor($block);
+  },
+
+  /**
+   * Save the summary when the editor loses the focus, then show what the server rendered.
+   */
+  saveSummary: function() {
+    var $textarea = $(this);
+    var $block    = $textarea.closest('.reedcrm-pocket-summary-block');
+    var $summary  = $block.find('.reedcrm-pocket-summary');
+
+    window.reedcrm.pocketRecording.closeSummaryEditor($block);
+
+    // Nothing was rewritten, the block already shows the right text
+    var saved = $textarea.data('pocket-saved') !== undefined ? $textarea.data('pocket-saved') : $textarea.prop('defaultValue');
+    if (saved === $textarea.val()) {
+      return;
+    }
+
+    $block.addClass('opacitymedium');
+
+    $.post($block.data('url'), {
+      subaction:    'set_summary',
+      recording_id: $block.data('recording-id'),
+      summary:      $textarea.val(),
+      token:        $block.data('token')
+    }, null, 'json').done(function(data) {
+      $block.removeClass('opacitymedium');
+      if (data && data.success) {
+        $textarea.data('pocket-saved', data.summary);
+        $summary.html(data.summary_html).removeClass('error');
+        $block.find('.reedcrm-pocket-summary-edited').prop('hidden', !data.edited);
+      } else {
+        $summary.addClass('error');
+      }
+    }).fail(function() {
+      $block.removeClass('opacitymedium');
+      $summary.addClass('error');
+    });
+  },
+
+  /**
+   * Put the summary block back in reading mode.
+   */
+  closeSummaryEditor: function($block) {
+    $block.find('.reedcrm-pocket-summary-edit').prop('hidden', true);
+    $block.find('.reedcrm-pocket-summary-help').prop('hidden', true);
+    $block.find('.reedcrm-pocket-summary').prop('hidden', false);
+  },
+
+  /**
+   * Hang the status choices under the badge of the banner.
+   *
+   * The banner is printed by Dolibarr, the card only leaves the data next to it: the badge is the
+   * place where the status is read, so it is also the place where it is changed.
+   */
+  buildStatusPicker: function() {
+    var $picker = $('.reedcrm-pocket-status-picker');
+    var $status = $('.arearef .statusref').first();
+
+    if (!$picker.length || !$status.length || $status.hasClass('reedcrm-pocket-status')) {
+      return;
+    }
+
+    var statuses = $picker.data('statuses') || [];
+    if (!statuses.length) {
+      return;
+    }
+
+    var $menu = $('<ul class="reedcrm-pocket-status-menu"></ul>');
+    $.each(statuses, function(index, status) {
+      $menu.append($('<li></li>').attr('data-status', status.key).text(status.label));
+    });
+
+    $status.addClass('reedcrm-pocket-status');
+    $status.wrapInner('<span class="reedcrm-pocket-status-badge" title="' + $picker.data('title') + '"></span>');
+    $status.find('.reedcrm-pocket-status-badge').append('<i class="fas fa-caret-down"></i>');
+    $status.append($menu);
+  },
+
+  /**
+   * Open the status menu, and close any other one already open.
+   */
+  toggleStatusMenu: function() {
+    $(this).closest('.reedcrm-pocket-status').toggleClass('open');
+  },
+
+  /**
+   * Save the status picked in the menu, then repaint the badge with the answer of the server.
+   */
+  setStatus: function() {
+    var $item   = $(this);
+    var $status = $item.closest('.reedcrm-pocket-status');
+    var $picker = $('.reedcrm-pocket-status-picker');
+
+    $status.removeClass('open').addClass('opacitymedium');
+
+    $.post($picker.data('url'), {
+      subaction:    'set_status',
+      recording_id: $picker.data('recording-id'),
+      status:       $item.data('status'),
+      token:        $picker.data('token')
+    }, null, 'json').done(function(data) {
+      $status.removeClass('opacitymedium');
+      if (data && data.success) {
+        $status.find('.reedcrm-pocket-status-badge').html(data.status_html + '<i class="fas fa-caret-down"></i>');
+      } else {
+        $status.addClass('error');
+      }
+    }).fail(function() {
+      $status.removeClass('opacitymedium').addClass('error');
+    });
   },
 
   /**

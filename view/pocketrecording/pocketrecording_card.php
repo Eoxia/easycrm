@@ -78,41 +78,9 @@ if ($id > 0 && $object->fetch($id) <= 0) {
  * Actions
  */
 
-if ($action == 'set_status' && $permissiontoadd) {
-    $object->status = GETPOSTINT('status');
-    if ($object->update($user) > 0) {
-        setEventMessage($langs->trans('SavedConfig'));
-    } else {
-        setEventMessages($object->error, $object->errors, 'errors');
-    }
-
-    header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $object->id);
-    exit;
-}
-
 // The thirdparty is set from the banner, as on every Saturne card. The template writes the field
 // the banner form names and reloads the object, so the view below already shows the new value.
 require_once __DIR__ . '/../../../saturne/core/tpl/actions/banner_actions.tpl.php';
-
-// Pocket writes the summary, the user owns it afterwards: emptying it hands it back to Pocket,
-// which fills it again on the next synchronisation
-if ($action == 'set_summary' && $permissiontoadd) {
-    // restricthtml encodes the ampersands and the quotes of the markdown, which the card escapes
-    // again when it prints it: without the decoding, an edit saved twice would store its own source
-    $summary = htmlspecialchars_decode(GETPOST('summary', 'restricthtml'), ENT_QUOTES);
-
-    $object->summary        = trim($summary);
-    $object->summary_edited = $object->summary !== '' ? 1 : 0;
-
-    if ($object->update($user) > 0) {
-        setEventMessage($langs->trans('SavedConfig'));
-    } else {
-        setEventMessages($object->error, $object->errors, 'errors');
-    }
-
-    header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $object->id);
-    exit;
-}
 
 // Attaching from the card: the objects offered are the ones of the thirdparty of the recording
 if ($action == 'link_object' && $permissiontoadd) {
@@ -219,6 +187,24 @@ $moreHtmlRef .= '</div>';
 $linkBack = '<a href="' . dol_buildpath('/custom/reedcrm/view/pocketrecording/pocketrecording_list.php', 1) . '?restore_lastsearch_values=1">' . $langs->trans('BackToList') . '</a>';
 saturne_banner_tab($object, 'id', $linkBack, 1, 'rowid', 'ref', $moreHtmlRef);
 
+// The status is changed on the badge of the banner, where it is read, instead of taking a row of
+// the table below. The banner is printed by Dolibarr, so the data the picker needs travels through
+// this block and the script hangs the choices under the badge it finds.
+if ($permissiontoadd) {
+    $statusChoices = [];
+    foreach ($object->fields['status']['arrayofkeyval'] as $statusKey => $statusLabel) {
+        $statusChoices[] = ['key' => (int) $statusKey, 'label' => $langs->transnoentities($statusLabel)];
+    }
+
+    print '<span class="reedcrm-pocket-status-picker" hidden';
+    print ' data-url="' . dol_escape_htmltag(dol_buildpath('/custom/reedcrm/ajax/pocket_recording.php', 1)) . '"';
+    print ' data-recording-id="' . $object->id . '"';
+    print ' data-token="' . newToken() . '"';
+    print ' data-title="' . dol_escape_htmltag($langs->trans('PocketChangeStatus')) . '"';
+    print ' data-statuses="' . dol_escape_htmltag(json_encode($statusChoices)) . '"';
+    print '></span>';
+}
+
 if ($action == 'delete') {
     print $form->formconfirm($_SERVER['PHP_SELF'] . '?id=' . $object->id, $langs->trans('DeletePocketRecording'), $langs->trans('ConfirmDeletePocketRecording'), 'confirm_delete', '', 'no', 1);
 }
@@ -236,18 +222,7 @@ if ($show == 'transcript') {
     print '<div class="underbanner clearboth"></div>';
     print '<table class="border centpercent tableforfield">';
 
-    print '<tr><td class="titlefield">' . $langs->trans('Status') . '</td><td>';
-    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
-    print '<input type="hidden" name="token" value="' . newToken() . '">';
-    print '<input type="hidden" name="action" value="set_status">';
-    print $form->selectarray('status', $object->fields['status']['arrayofkeyval'], $object->status, 0, 0, 0, '', 1);
-    if ($permissiontoadd) {
-        print ' <input type="submit" class="button smallpaddingimp" value="' . $langs->trans('Modify') . '">';
-    }
-    print '</form>';
-    print '</td></tr>';
-
-    print '<tr><td>' . $langs->trans('PocketTags') . '</td><td>' . dol_escape_htmltag($object->pocket_tags) . '</td></tr>';
+    print '<tr><td class="titlefield">' . $langs->trans('PocketTags') . '</td><td>' . dol_escape_htmltag($object->pocket_tags) . '</td></tr>';
 
     // The URL Pocket signs expires within the hour, so the player carries the endpoint that
     // resolves it rather than the URL itself: the native <audio> is injected on the first play
@@ -261,35 +236,34 @@ if ($show == 'transcript') {
 
     print '</table>';
 
-    // Summary. Pocket writes markdown, so the edition happens on that source and not on the
-    // rendered HTML: the blocks the summary embeds would not survive a round trip through an editor
+    // Summary, edited in place like the action items: a click on the text swaps the rendered
+    // markdown for its source, and leaving the field saves it. The edition stays on the markdown
+    // because the Pocket blocks it embeds would not survive a round trip through a rich editor.
     print '<br>';
-    $summaryTitleButton = '';
-    if ($permissiontoadd && $action != 'edit_summary') {
-        $summaryTitleButton = dolGetButtonTitle($langs->trans('Modify'), '', 'fa fa-pencil-alt', $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=edit_summary&token=' . newToken());
-    }
-    print load_fiche_titre($langs->trans('PocketSummary'), $summaryTitleButton, '');
+    print load_fiche_titre($langs->trans('PocketSummary'), '', '');
     print '<div class="underbanner clearboth"></div>';
 
-    if ($action == 'edit_summary' && $permissiontoadd) {
-        print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
-        print '<input type="hidden" name="token" value="' . newToken() . '">';
-        print '<input type="hidden" name="action" value="set_summary">';
-        print '<textarea class="reedcrm-pocket-summary-edit" name="summary" rows="20">' . dol_escape_htmltag((string) $object->summary, 0, 1) . '</textarea>';
-        print '<div class="center">';
-        print '<input type="submit" class="button" value="' . $langs->trans('Save') . '">';
-        print ' <a class="button button-cancel" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">' . $langs->trans('Cancel') . '</a>';
-        print '</div>';
-        print '<div class="opacitymedium small">' . $langs->trans('PocketSummaryEditHelp') . '</div>';
-        print '</form>';
-    } else {
-        print '<div class="reedcrm-pocket-summary">';
-        print !empty($object->summary) ? reedcrm_pocket_summary_to_html($object->summary) : '<span class="opacitymedium">' . $langs->trans('PocketNoSummary') . '</span>';
-        print '</div>';
-        if (!empty($object->summary_edited)) {
-            print '<div class="opacitymedium small">' . $langs->trans('PocketSummaryEditedHint') . '</div>';
-        }
+    print '<div class="reedcrm-pocket-summary-block"';
+    if ($permissiontoadd) {
+        print ' data-url="' . dol_escape_htmltag(dol_buildpath('/custom/reedcrm/ajax/pocket_recording.php', 1)) . '"';
+        print ' data-recording-id="' . $object->id . '"';
+        print ' data-token="' . newToken() . '"';
     }
+    print '>';
+
+    print '<div class="reedcrm-pocket-summary"' . ($permissiontoadd ? ' title="' . dol_escape_htmltag($langs->trans('PocketEditSummary')) . '"' : '') . '>';
+    print !empty($object->summary) ? reedcrm_pocket_summary_to_html($object->summary) : '<span class="opacitymedium">' . $langs->trans('PocketNoSummary') . '</span>';
+    print '</div>';
+
+    if ($permissiontoadd) {
+        // The source travels in its own field rather than in an attribute: it is a multi line text
+        print '<textarea class="reedcrm-pocket-summary-edit" hidden>' . dol_escape_htmltag((string) $object->summary, 0, 1) . '</textarea>';
+        print '<div class="opacitymedium small reedcrm-pocket-summary-help" hidden>' . $langs->trans('PocketSummaryEditHelp') . '</div>';
+    }
+
+    print '<div class="opacitymedium small reedcrm-pocket-summary-edited"' . (empty($object->summary_edited) ? ' hidden' : '') . '>' . $langs->trans('PocketSummaryEditedHint') . '</div>';
+
+    print '</div>';
 
     // Action items. Read from their own rows and not from the recording JSON: the assigned user
     // and the created event belong to Dolibarr and must survive a re-import from Pocket.

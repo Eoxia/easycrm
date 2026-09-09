@@ -900,12 +900,14 @@ PocketActionItemId = Pocket action identifier
 PocketActionItemTodo = To do
 PocketActionItemDone = Done
 PocketActionItemEdited = Rewritten action
+PocketChangeStatus = Change the status
 PocketPriorityLow = Low
 PocketPriorityMedium = Medium
 PocketPriorityHigh = High
 PocketSummaryEdited = Rewritten summary
 PocketSummaryEditedHint = This summary was rewritten in Dolibarr: Pocket synchronisations no longer overwrite it.
-PocketSummaryEditHelp = The summary is written in markdown, Pocket blocks included. Once saved, it is no longer overwritten by the synchronisations: empty it and save to get the Pocket one back.
+PocketEditSummary = Click to edit the summary
+PocketSummaryEditHelp = The summary is written in markdown, Pocket blocks included. It is saved when the field loses the focus, and is no longer overwritten by the synchronisations: empty it to get the Pocket one back.
 
 #
 # Pocket - attach from the business objects

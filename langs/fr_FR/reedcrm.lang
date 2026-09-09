@@ -988,12 +988,14 @@ PocketActionItemId = Identifiant de l'action Pocket
 PocketActionItemTodo = À faire
 PocketActionItemDone = Faite
 PocketActionItemEdited = Action réécrite
+PocketChangeStatus = Changer l'état
 PocketPriorityLow = Basse
 PocketPriorityMedium = Moyenne
 PocketPriorityHigh = Haute
 PocketSummaryEdited = Résumé réécrit
 PocketSummaryEditedHint = Ce résumé a été réécrit dans Dolibarr : les synchronisations Pocket ne l'écrasent plus.
-PocketSummaryEditHelp = Le résumé est écrit en markdown, blocs Pocket compris. Une fois enregistré, il n'est plus écrasé par les synchronisations : videz-le et enregistrez pour reprendre celui de Pocket.
+PocketEditSummary = Cliquer pour modifier le résumé
+PocketSummaryEditHelp = Le résumé est écrit en markdown, blocs Pocket compris. Il est enregistré en quittant le champ, et n'est plus écrasé par les synchronisations : videz-le pour reprendre celui de Pocket.
 
 #
 # Pocket - rattachement depuis les objets

@@ -24,12 +24,81 @@
     }
 }
 
-// The summary is rewritten on its markdown source and not on the rendered HTML: a monospaced block
-// keeps the lists and the Pocket blocks it embeds readable while they are edited
+// Status of a recording: it is read on the badge of the banner, so it is changed there too. The
+// menu is positioned against the banner block Dolibarr prints, which the script only decorates.
+.reedcrm-pocket-status {
+    position: relative;
+
+    .reedcrm-pocket-status-badge {
+        cursor: pointer;
+
+        i {
+            margin-left: 6px;
+            font-size: 11px;
+        }
+    }
+
+    &.error .reedcrm-pocket-status-badge {
+        color: #c0392b;
+    }
+}
+
+.reedcrm-pocket-status-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    z-index: 10;
+    margin: 4px 0 0;
+    padding: 4px 0;
+    min-width: 140px;
+    list-style: none;
+    text-align: left;
+    background: #ffffff;
+    border: 1px solid #e3e6ea;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    li {
+        padding: 5px 14px;
+        cursor: pointer;
+        white-space: nowrap;
+
+        &:hover {
+            background: #f0f4f8;
+        }
+    }
+
+    .reedcrm-pocket-status.open & {
+        display: block;
+    }
+}
+
+// The summary is edited in place, like the action items: the rendered block stays flat until it is
+// hovered, and the click swaps it for its markdown source
+.reedcrm-pocket-summary-block {
+
+    [hidden] {
+        display: none;
+    }
+
+    &[data-url] .reedcrm-pocket-summary {
+        cursor: text;
+
+        &:hover {
+            border-color: #63acc9;
+        }
+
+        &.error {
+            border-color: #c0392b;
+        }
+    }
+}
+
+// A monospaced source keeps the lists and the Pocket blocks readable while they are edited
 .reedcrm-pocket-summary-edit {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #e3e6ea;
+    border: 1px solid #63acc9;
     border-radius: 4px;
     font-family: monospace;
     font-size: 12px;
