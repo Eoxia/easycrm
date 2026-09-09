@@ -44,7 +44,6 @@ window.reedcrm.pocketRecording = {
     $(document).on('click.pocketRecording', '.reedcrm-pocket-audio-load', window.reedcrm.pocketRecording.loadAudio);
     $(document).on('change.pocketRecording', '.pocket-action-due-date', window.reedcrm.pocketRecording.setDueDate);
     $(document).on('change.pocketRecording', '.pocket-action-label, .pocket-action-description', window.reedcrm.pocketRecording.setText);
-    $(document).on('change.pocketRecording', '.pocket-action-priority', window.reedcrm.pocketRecording.setPriority);
     $(document).on('click.pocketRecording', '.reedcrm-pocket-status-badge', window.reedcrm.pocketRecording.toggleStatusMenu);
     $(document).on('click.pocketRecording', '.reedcrm-pocket-status-menu li', window.reedcrm.pocketRecording.setStatus);
     $(document).on('click.pocketRecording', '.reedcrm-pocket-summary-block[data-url] .reedcrm-pocket-summary', window.reedcrm.pocketRecording.editSummary);
@@ -206,29 +205,6 @@ window.reedcrm.pocketRecording = {
       }
     }).fail(function() {
       $status.removeClass('opacitymedium').addClass('error');
-    });
-  },
-
-  /**
-   * Save the priority of an action item as soon as another one is picked.
-   */
-  setPriority: function() {
-    var $select = $(this);
-    var $row    = $select.closest('tr');
-
-    $row.addClass('opacitymedium');
-
-    $.post($row.data('url'), {
-      subaction:      'set_priority',
-      action_item_id: $row.data('action-item-id'),
-      priority:       $select.val(),
-      token:          $row.data('token')
-    }, null, 'json').done(function(data) {
-      $row.removeClass('opacitymedium');
-      $select.toggleClass('error', !(data && data.success));
-    }).fail(function() {
-      $row.removeClass('opacitymedium');
-      $select.addClass('error');
     });
   },
 

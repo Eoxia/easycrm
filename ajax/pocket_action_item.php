@@ -134,32 +134,6 @@ if ($subAction === 'set_due_date') {
     exit;
 }
 
-if ($subAction === 'set_priority') {
-    // Only the wordings the module knows are accepted, and they are read from the field definition
-    // so a priority added there needs nothing here. The empty option of a Dolibarr selector is
-    // worth -1 and clears the priority.
-    $priority   = strtolower(trim(GETPOST('priority', 'alphanohtml')));
-    $priority   = $priority === '-1' ? '' : $priority;
-    $priorities = $actionItem->fields['priority']['arrayofkeyval'] ?? [];
-
-    // The one Pocket sent is kept selectable even when unknown, so it can be picked back
-    if ($priority !== '' && !isset($priorities[$priority]) && $priority !== strtolower(trim((string) $actionItem->priority))) {
-        echo json_encode(['success' => false, 'error' => $langs->trans('ErrorBadValue')]);
-        exit;
-    }
-
-    $actionItem->priority    = $priority;
-    $actionItem->user_edited = 1;
-
-    if ($actionItem->update($user) <= 0) {
-        echo json_encode(['success' => false, 'error' => $actionItem->error]);
-        exit;
-    }
-
-    echo json_encode(['success' => true]);
-    exit;
-}
-
 if ($subAction === 'create_event') {
     // One event per action: a second click must land on the existing one, not create a duplicate
     if ($actionItem->fk_actioncomm > 0) {

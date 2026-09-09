@@ -80,7 +80,7 @@ class PocketActionItem extends SaturneObject
         'label'               => ['type' => 'varchar(255)', 'label' => 'Label',              'enabled' => 1, 'position' => 80,  'notnull' => 0, 'visible' => 1],
         'description'         => ['type' => 'text',         'label' => 'Description',        'enabled' => 1, 'position' => 90,  'notnull' => 0, 'visible' => 0],
         'due_date'            => ['type' => 'datetime',     'label' => 'Deadline',           'enabled' => 1, 'position' => 100, 'notnull' => 0, 'visible' => 1],
-        'priority'            => ['type' => 'varchar(16)',  'label' => 'Priority',           'enabled' => 1, 'position' => 110, 'notnull' => 0, 'visible' => 1, 'arrayofkeyval' => ['low' => 'PocketPriorityLow', 'medium' => 'PocketPriorityMedium', 'high' => 'PocketPriorityHigh']],
+        'priority'            => ['type' => 'varchar(16)',  'label' => 'Priority',           'enabled' => 1, 'position' => 110, 'notnull' => 0, 'visible' => 1],
         'user_edited'         => ['type' => 'smallint',     'label' => 'PocketActionItemEdited', 'enabled' => 1, 'position' => 115, 'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'default' => 0],
         'pocket_assignee'     => ['type' => 'varchar(128)', 'label' => 'PocketAssignee',     'enabled' => 1, 'position' => 120, 'notnull' => 0, 'visible' => 1, 'noteditable' => 1],
         'pocket_status'       => ['type' => 'varchar(32)',  'label' => 'PocketState',        'enabled' => 1, 'position' => 130, 'notnull' => 0, 'visible' => 0, 'noteditable' => 1],
@@ -198,28 +198,5 @@ class PocketActionItem extends SaturneObject
     public function fetchAllByRecording(int $recordingId)
     {
         return $this->fetchAll('ASC', 't.rowid', 0, 0, ['customsql' => 't.fk_pocket_recording = ' . ((int) $recordingId)]);
-    }
-
-    /**
-     * Translate the priority Pocket assigned to the action.
-     *
-     * Pocket writes it in English and in its own vocabulary: a value the module does not know is
-     * shown as it comes rather than dropped, so a new Pocket wording stays readable.
-     *
-     * @param  string $priority Priority to translate, the one of the object when empty.
-     * @return string           Translated priority, empty string when the action carries none.
-     */
-    public function getPriorityLabel(string $priority = ''): string
-    {
-        global $langs;
-
-        $priority = strtolower(trim($priority !== '' ? $priority : (string) $this->priority));
-        if ($priority === '') {
-            return '';
-        }
-
-        $labels = $this->fields['priority']['arrayofkeyval'] ?? [];
-
-        return isset($labels[$priority]) ? $langs->trans($labels[$priority]) : $priority;
     }
 }

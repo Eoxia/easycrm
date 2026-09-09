@@ -279,7 +279,6 @@ if ($show == 'transcript') {
     print '<tr class="liste_titre">';
     print '<td>' . $langs->trans('Label') . '</td>';
     print '<td class="center">' . $langs->trans('Deadline') . '</td>';
-    print '<td class="center">' . $langs->trans('Priority') . '</td>';
     print '<td>' . $langs->trans('PocketAssignedUser') . '</td>';
     print '<td class="center">' . $langs->trans('Event') . '</td>';
     print '</tr>';
@@ -308,25 +307,6 @@ if ($show == 'transcript') {
                 print '<input type="date" class="flat pocket-action-due-date" value="' . (!empty($actionItem->due_date) ? dol_print_date($actionItem->due_date, '%Y-%m-%d') : '') . '">';
             } else {
                 print !empty($actionItem->due_date) ? dol_print_date($actionItem->due_date, 'day') : '';
-            }
-            print '</td>';
-            // Pocket rates the urgency of each action in its own English wording, which reads as
-            // raw data on the card: it is translated, and owned by the user like the rest of the row
-            print '<td class="center nowraponall">';
-            if ($permissiontoadd) {
-                $priorities = [];
-                foreach ($actionItem->fields['priority']['arrayofkeyval'] as $priorityKey => $priorityLabel) {
-                    $priorities[$priorityKey] = $langs->trans($priorityLabel);
-                }
-                // A wording Pocket sends and the module does not know stays selectable, so opening
-                // the list never silently drops the priority it came with
-                $currentPriority = strtolower(trim((string) $actionItem->priority));
-                if ($currentPriority !== '' && !isset($priorities[$currentPriority])) {
-                    $priorities[$currentPriority] = $currentPriority;
-                }
-                print $form->selectarray('priority_' . $actionItem->id, $priorities, $currentPriority, 1, 0, 0, '', 0, 0, 0, '', 'pocket-action-priority minwidth75');
-            } else {
-                print dol_escape_htmltag($actionItem->getPriorityLabel());
             }
             print '</td>';
 
@@ -359,7 +339,7 @@ if ($show == 'transcript') {
     }
 
     if (empty($actionItems)) {
-        print '<tr><td colspan="5" class="opacitymedium center">' . $langs->trans('PocketNoActionItem') . '</td></tr>';
+        print '<tr><td colspan="4" class="opacitymedium center">' . $langs->trans('PocketNoActionItem') . '</td></tr>';
     }
 
     print '</table>';

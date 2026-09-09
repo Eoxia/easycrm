@@ -234,10 +234,11 @@ class PocketSync
             if (empty($actionItem->user_edited)) {
                 $actionItem->label       = dol_trunc((string) ($action['label'] ?? ''), 255, 'right', 'UTF-8', 1);
                 $actionItem->description = (string) ($action['context'] ?? '');
-                $actionItem->priority    = (string) ($action['priority'] ?? '');
                 $actionItem->due_date    = !empty($action['dueDate']) ? dol_stringtotime($action['dueDate']) : null;
             }
 
+            // The priority is not shown nor edited on the card, it stays what Pocket says it is
+            $actionItem->priority        = (string) ($action['priority'] ?? '');
             $actionItem->pocket_assignee = dol_trunc((string) ($action['assignee'] ?? ''), 128, 'right', 'UTF-8', 1);
             $actionItem->pocket_status   = (string) ($action['status'] ?? '');
 
