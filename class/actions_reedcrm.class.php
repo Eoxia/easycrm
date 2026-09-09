@@ -68,13 +68,18 @@ class ActionsReedcrm
      * or 'invoicereccard' also matches 'supplierinvoicelist' or 'supplierinvoicereccard'
      * and runs the code on a supplier object.
      *
+     * The generic Saturne views suffix their own context ('projectlist_saturne'), where the
+     * module behaves like on the native page, so the suffix is dropped before matching.
+     *
      * @param  array $parameters Hook metadatas (context, etc...)
      * @param  array $names      Context names to look for
      * @return bool              True when one of the names is one of the current contexts
      */
     protected function isContext(array $parameters, array $names): bool
     {
-        return count(array_intersect(explode(':', $parameters['context'] ?? ''), $names)) > 0;
+        $contexts = preg_replace('/_saturne$/', '', explode(':', $parameters['context'] ?? ''));
+
+        return count(array_intersect($contexts, $names)) > 0;
     }
 
     /**
