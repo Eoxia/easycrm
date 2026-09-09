@@ -386,34 +386,42 @@ function reedcrm_pocket_get_linked_object_keys(PocketRecording $recording): arra
 }
 
 /**
- * Get the objects of the thirdparty of a recording that may still be attached to it.
+ * Search the objects a recording may still be attached to.
  *
- * The conversation was held with a thirdparty, so what it talks about belongs to that thirdparty:
- * its proposals, its orders, its invoices, its tickets. Reading them from the thirdparty is what
- * makes the link usable from the card, where the user has no other context to pick from.
+ * The conversation was usually held with a thirdparty, so with no search term the objects of that
+ * thirdparty come first: they are what the recording talks about nine times out of ten. A term
+ * searches every object of the type instead, whoever it belongs to, because a recording sometimes
+ * talks about the ticket of somebody else.
  *
- * Only the object types enabled in the module configuration are offered, and only those whose table
- * carries a thirdparty: a product or a warehouse belongs to nobody in particular.
+ * Only the object types enabled in the module configuration are searched. The tables are read
+ * directly: each one names its reference, its date and its amount its own way, and those columns
+ * are resolved from the table itself rather than from a mapping kept by hand.
  *
- * @param  PocketRecording $recording    Recording the objects are offered for.
- * @param  int             $limitPerType Most recent objects read per type.
- * @return array<int,array{key:string,link_name:string,id:int,type_label:string,picto:string,ref:string,date:int,amount:float|null}> Objects, most recent first.
+ * @param  PocketRecording $recording  Recording the objects are offered for.
+ * @param  string          $objectType Object type to search, every enabled one when empty.
+ * @param  string          $search     Search term, empty to list the objects of the thirdparty.
+ * @param  int             $limit      Most objects read per type.
+ * @return array<int,array{key:string,link_name:string,id:int,type_label:string,picto:string,ref:string,thirdparty:string,date:int,amount:float|null}> Objects, most recent first.
  */
-function reedcrm_pocket_get_thirdparty_objects(PocketRecording $recording, int $limitPerType = 50): array
+function reedcrm_pocket_search_objects(PocketRecording $recording, string $objectType = '', string $search = '', int $limit = 50): array
 {
     global $db, $langs;
 
-    $objects = [];
-    if ($recording->fk_soc <= 0) {
-        return $objects;
-    }
-
+    $objects         = [];
     $linkableObjects = reedcrm_pocket_get_linkable_objects();
     $enabledTypes    = reedcrm_pocket_get_enabled_linked_object_types();
     $alreadyLinked   = reedcrm_pocket_get_linked_object_keys($recording);
+    $search          = trim($search);
 
-    foreach ($enabledTypes as $objectType) {
-        $objectMetadata = $linkableObjects[$objectType] ?? [];
+    if ($objectType !== '') {
+        if (!in_array($objectType, $enabledTypes, true)) {
+            return $objects;
+        }
+        $enabledTypes = [$objectType];
+    }
+
+    foreach ($enabledTypes as $enabledType) {
+        $objectMetadata = $linkableObjects[$enabledType] ?? [];
         $table          = $objectMetadata['table_element'] ?? '';
         $linkName       = $objectMetadata['link_name'] ?? '';
 
@@ -422,16 +430,13 @@ function reedcrm_pocket_get_thirdparty_objects(PocketRecording $recording, int $
         }
 
         $columns = reedcrm_pocket_get_table_columns($table);
-        if (!isset($columns['fk_soc'])) {
-            continue;
-        }
 
         // Business date first, creation date as a fallback: the user recognises an invoice by the
         // date it carries, not by the day the row was written
         $dateColumn   = reedcrm_pocket_pick_column($columns, ['datep', 'datef', 'date_commande', 'date_contrat', 'datei', 'date_expedition', 'date_reception', 'dateo', 'date_valid', 'datec', 'date_creation']);
         $amountColumn = reedcrm_pocket_pick_column($columns, ['total_ttc', 'total_ht', 'opp_amount']);
 
-        // name_field holds one or several columns (ex. 'ref, title'), joined into the shown label
+        // name_field holds one or several columns (ex. 'ref, title'), shown and searched together
         $nameColumns = [];
         foreach (explode(',', (string) ($objectMetadata['name_field'] ?? 'ref')) as $nameColumn) {
             $nameColumn = trim($nameColumn);
@@ -446,16 +451,35 @@ function reedcrm_pocket_get_thirdparty_objects(PocketRecording $recording, int $
             continue;
         }
 
+        $hasThirdParty = isset($columns['fk_soc']);
+
+        // With no term the list is the one of the thirdparty of the recording: a type that belongs
+        // to nobody, a thirdparty itself for instance, would fill it with unrelated rows
+        if ($search === '' && $recording->fk_soc > 0 && !$hasThirdParty) {
+            continue;
+        }
+
         $sql  = 'SELECT t.rowid, t.' . implode(', t.', $nameColumns);
         $sql .= $dateColumn !== '' ? ', t.' . $dateColumn . ' as object_date' : ', NULL as object_date';
         $sql .= $amountColumn !== '' ? ', t.' . $amountColumn . ' as object_amount' : ', NULL as object_amount';
+        $sql .= $hasThirdParty ? ', s.nom as thirdparty_name' : ", '' as thirdparty_name";
         $sql .= ' FROM ' . MAIN_DB_PREFIX . $table . ' as t';
-        $sql .= ' WHERE t.fk_soc = ' . ((int) $recording->fk_soc);
+        if ($hasThirdParty) {
+            $sql .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'societe as s ON s.rowid = t.fk_soc';
+        }
+        $sql .= ' WHERE 1 = 1';
         if (isset($columns['entity'])) {
             $sql .= ' AND t.entity IN (' . getEntity($linkName) . ')';
         }
+        if ($search !== '') {
+            $sql .= natural_search(array_map(function (string $nameColumn) {
+                return 't.' . $nameColumn;
+            }, $nameColumns), $search);
+        } elseif ($hasThirdParty && $recording->fk_soc > 0) {
+            $sql .= ' AND t.fk_soc = ' . ((int) $recording->fk_soc);
+        }
         $sql .= $dateColumn !== '' ? ' ORDER BY t.' . $dateColumn . ' DESC' : ' ORDER BY t.rowid DESC';
-        $sql .= $db->plimit($limitPerType);
+        $sql .= $db->plimit($limit);
 
         $resql = $db->query($sql);
         if (!$resql) {
@@ -483,6 +507,7 @@ function reedcrm_pocket_get_thirdparty_objects(PocketRecording $recording, int $
                 'type_label' => $typeLabel,
                 'picto'      => (string) ($objectMetadata['picto'] ?? ''),
                 'ref'        => implode(' - ', $names),
+                'thirdparty' => (string) ($obj->thirdparty_name ?? ''),
                 'date'       => !empty($obj->object_date) ? (int) $db->jdate($obj->object_date) : 0,
                 'amount'     => $obj->object_amount !== null ? (float) $obj->object_amount : null
             ];
@@ -490,13 +515,41 @@ function reedcrm_pocket_get_thirdparty_objects(PocketRecording $recording, int $
         $db->free($resql);
     }
 
-    // The types are read one after the other, the user reads one list: the most recent objects of
-    // the thirdparty come first whatever their type
+    // The types are read one after the other, the user reads one list: the most recent objects
+    // come first whatever their type
     usort($objects, function (array $first, array $second) {
         return $second['date'] <=> $first['date'];
     });
 
     return $objects;
+}
+
+/**
+ * Build the line shown for an object offered as a link target.
+ *
+ * The thirdparty is part of the line: a search runs across every thirdparty, and two objects of the
+ * same type are told apart by who they belong to before anything else.
+ *
+ * @param  array<string,mixed> $object Object as returned by reedcrm_pocket_search_objects().
+ * @return string                      Ready to print label.
+ */
+function reedcrm_pocket_format_object_choice(array $object): string
+{
+    global $conf, $langs;
+
+    $choice = $object['type_label'] . ' - ' . $object['ref'];
+
+    if (!empty($object['thirdparty'])) {
+        $choice .= ' - ' . $object['thirdparty'];
+    }
+    if (!empty($object['date'])) {
+        $choice .= ' - ' . dol_print_date($object['date'], 'day');
+    }
+    if ($object['amount'] !== null) {
+        $choice .= ' - ' . price($object['amount'], 0, $langs, 0, -1, -1, $conf->currency);
+    }
+
+    return $choice;
 }
 
 /**

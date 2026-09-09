@@ -47,6 +47,10 @@ window.reedcrm.pocketRecording = {
     $(document).on('click.pocketRecording', '.reedcrm-pocket-status-badge', window.reedcrm.pocketRecording.toggleStatusMenu);
     $(document).on('click.pocketRecording', '.reedcrm-pocket-status-menu li', window.reedcrm.pocketRecording.setStatus);
     $(document).on('click.pocketRecording', '.reedcrm-pocket-summary-block[data-url] .reedcrm-pocket-summary', window.reedcrm.pocketRecording.editSummary);
+    $(document).on('focus.pocketRecording', '.reedcrm-pocket-object-search', window.reedcrm.pocketRecording.openObjectResults);
+    $(document).on('input.pocketRecording', '.reedcrm-pocket-object-search', window.reedcrm.pocketRecording.searchObjects);
+    $(document).on('change.pocketRecording', '.reedcrm-pocket-object-type', window.reedcrm.pocketRecording.searchObjects);
+    $(document).on('click.pocketRecording', '.reedcrm-pocket-object-results li[data-key]', window.reedcrm.pocketRecording.pickObject);
     $(document).on('blur.pocketRecording', '.reedcrm-pocket-summary-edit', window.reedcrm.pocketRecording.saveSummary);
     $(document).on('keydown.pocketRecording', '.reedcrm-pocket-summary-edit', window.reedcrm.pocketRecording.cancelSummary);
     // A click outside the picker closes the menu. Both handlers are delegated on the document, and
@@ -56,7 +60,77 @@ window.reedcrm.pocketRecording = {
       if (!$(event.target).closest('.reedcrm-pocket-status').length) {
         $('.reedcrm-pocket-status').removeClass('open');
       }
+      if (!$(event.target).closest('.reedcrm-pocket-object-search-wrapper').length) {
+        $('.reedcrm-pocket-object-results').prop('hidden', true);
+      }
     });
+  },
+
+  /**
+   * Show the objects already loaded when the search field takes the focus.
+   */
+  openObjectResults: function() {
+    $(this).closest('.reedcrm-pocket-object-search-wrapper').find('.reedcrm-pocket-object-results').prop('hidden', false);
+  },
+
+  /**
+   * Search the objects that may be attached, on the type and the term the user gives.
+   *
+   * The search is asked to the module and not to the native link block of Dolibarr: it only offers
+   * the types enabled for the recordings, and it reaches every thirdparty, not only the one of the
+   * recording. With an empty term it answers the objects of that thirdparty.
+   */
+  searchObjects: function() {
+    var $form   = $(this).closest('.reedcrm-pocket-link-form');
+    var $input  = $form.find('.reedcrm-pocket-object-search');
+    var $result = $form.find('.reedcrm-pocket-object-results');
+    var $submit = $form.find('input[type="submit"]');
+
+    // Picking again starts from a blank choice, the button waits for a new one
+    $form.closest('form').find('input[name="object_to_link"]').val('');
+    $submit.prop('disabled', true);
+
+    // The empty option of a Dolibarr selector is worth -1 and means every type here
+    var objectType = $form.find('.reedcrm-pocket-object-type').val();
+
+    clearTimeout(window.reedcrm.pocketRecording.searchTimer);
+    window.reedcrm.pocketRecording.searchTimer = setTimeout(function() {
+      $result.prop('hidden', false).addClass('opacitymedium');
+
+      $.post($form.data('url'), {
+        subaction:    'search_objects',
+        recording_id: $form.data('recording-id'),
+        object_type:  (objectType === '-1' ? '' : objectType),
+        search:       $input.val(),
+        token:        $form.data('token')
+      }, null, 'json').done(function(data) {
+        $result.removeClass('opacitymedium').empty();
+
+        if (!data || !data.success || !data.objects.length) {
+          $result.append($('<li class="opacitymedium reedcrm-pocket-object-empty"></li>').text($result.data('empty-label') || ''));
+          return;
+        }
+
+        $.each(data.objects, function(index, object) {
+          $result.append($('<li></li>').attr('data-key', object.key).text(object.label));
+        });
+      }).fail(function() {
+        $result.removeClass('opacitymedium');
+      });
+    }, 250);
+  },
+
+  /**
+   * Keep the object picked in the list, and let the form be submitted.
+   */
+  pickObject: function() {
+    var $item = $(this);
+    var $form = $item.closest('.reedcrm-pocket-link-form');
+
+    $form.closest('form').find('input[name="object_to_link"]').val($item.data('key'));
+    $form.find('.reedcrm-pocket-object-search').val($item.text());
+    $form.find('input[type="submit"]').prop('disabled', false);
+    $form.find('.reedcrm-pocket-object-results').prop('hidden', true);
   },
 
   /**

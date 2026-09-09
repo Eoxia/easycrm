@@ -999,17 +999,17 @@ PocketSummaryEditHelp = Le résumé est écrit en markdown, blocs Pocket compris
 #
 PocketLinkedObjects = Objets liés
 PocketNoLinkedObject = Aucun objet lié à cet enregistrement
-PocketLinkFromObjectHint = Un objet d'un autre tiers se rattache depuis sa propre fiche, avec son onglet « Enregistrements Pocket ».
 PocketLinkRecording = Rattacher un enregistrement
 PocketUnlinkRecording = Détacher cet enregistrement
 PocketNoRecordingToLink = Tous les enregistrements disponibles sont déjà rattachés
 PocketRecordingLinked = Enregistrement rattaché
 PocketRecordingUnlinked = Enregistrement détaché
 PocketRecordingLinkFailed = L'opération de rattachement a échoué
-PocketLinkObject = Rattacher un objet du tiers
+PocketLinkObject = Rattacher un objet
 PocketUnlinkObject = Détacher cet objet
-PocketNoObjectToLink = Aucun objet de ce tiers à rattacher
-PocketLinkNeedsThirdParty = Choisissez le tiers de l'enregistrement pour lui rattacher ses objets
+PocketAllObjectTypes = Tous les types
+PocketSearchObject = Rechercher par référence ou libellé
+PocketNoObjectFound = Aucun objet trouvé
 PocketObjectLinked = Objet rattaché
 PocketObjectUnlinked = Objet détaché
 

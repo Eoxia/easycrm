@@ -117,5 +117,24 @@ if ($subAction === 'set_summary') {
     exit;
 }
 
+if ($subAction === 'search_objects') {
+    // With no term, the objects of the thirdparty of the recording are listed: that is what the
+    // conversation is about most of the time, and it saves the user from typing to get started
+    $objects = reedcrm_pocket_search_objects(
+        $recording,
+        GETPOST('object_type', 'aZ09'),
+        GETPOST('search', 'alphanohtml'),
+        20
+    );
+
+    $choices = [];
+    foreach (array_slice($objects, 0, 20) as $object) {
+        $choices[] = ['key' => $object['key'], 'label' => reedcrm_pocket_format_object_choice($object)];
+    }
+
+    echo json_encode(['success' => true, 'objects' => $choices]);
+    exit;
+}
+
 echo json_encode(['success' => false, 'error' => 'Unknown subaction']);
 exit;

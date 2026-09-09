@@ -911,17 +911,17 @@ PocketSummaryEditHelp = The summary is written in markdown, Pocket blocks includ
 #
 PocketLinkedObjects = Linked objects
 PocketNoLinkedObject = No object linked to this recording
-PocketLinkFromObjectHint = An object of another thirdparty is attached from its own card, through its "Pocket recordings" tab.
 PocketLinkRecording = Attach a recording
 PocketUnlinkRecording = Detach this recording
 PocketNoRecordingToLink = Every available recording is already attached
 PocketRecordingLinked = Recording attached
 PocketRecordingUnlinked = Recording detached
 PocketRecordingLinkFailed = The attach operation failed
-PocketLinkObject = Attach an object of the thirdparty
+PocketLinkObject = Attach an object
 PocketUnlinkObject = Detach this object
-PocketNoObjectToLink = No object of this thirdparty left to attach
-PocketLinkNeedsThirdParty = Pick the thirdparty of the recording to attach its objects
+PocketAllObjectTypes = Every type
+PocketSearchObject = Search by reference or label
+PocketNoObjectFound = No object found
 PocketObjectLinked = Object attached
 PocketObjectUnlinked = Object detached
 

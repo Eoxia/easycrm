@@ -377,41 +377,45 @@ if ($show != 'transcript') {
 
     print load_fiche_titre($langs->trans('PocketLinkedObjects'), '', '');
 
+    // Attach form. The objects are searched by the module and not through the native link block:
+    // the search runs on the types enabled for the recordings, across every thirdparty, and the
+    // list opens already filled with the objects of the thirdparty of the recording.
     if ($permissiontoadd) {
-        print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
-        print '<input type="hidden" name="token" value="' . newToken() . '">';
-        print '<input type="hidden" name="action" value="link_object">';
-        print '<div class="reedcrm-pocket-link-form">';
-
-        if ($object->fk_soc <= 0) {
-            print '<span class="opacitymedium">' . $langs->trans('PocketLinkNeedsThirdParty') . '</span>';
-        } else {
-            $linkableThirdPartyObjects = reedcrm_pocket_get_thirdparty_objects($object);
-
-            if (empty($linkableThirdPartyObjects)) {
-                print '<span class="opacitymedium">' . $langs->trans('PocketNoObjectToLink') . '</span>';
-            } else {
-                // One flat list rather than one selector per type: the user looks for the object
-                // they talked about, they do not know beforehand whether it is a proposal or a ticket
-                $linkChoices = [];
-                foreach ($linkableThirdPartyObjects as $linkableObject) {
-                    $choice = $linkableObject['type_label'] . ' - ' . $linkableObject['ref'];
-                    if (!empty($linkableObject['date'])) {
-                        $choice .= ' - ' . dol_print_date($linkableObject['date'], 'day');
-                    }
-                    if ($linkableObject['amount'] !== null) {
-                        $choice .= ' - ' . price($linkableObject['amount'], 0, $langs, 0, -1, -1, $conf->currency);
-                    }
-
-                    $linkChoices[$linkableObject['key']] = $choice;
-                }
-
-                print '<span>' . $langs->trans('PocketLinkObject') . '</span>';
-                print $form->selectarray('object_to_link', $linkChoices, '', 1, 0, 0, '', 0, 0, 0, '', 'minwidth300', 1);
-                print '<input type="submit" class="button smallpaddingimp" value="' . $langs->trans('Add') . '">';
+        $linkableObjectTypes = [];
+        foreach (reedcrm_pocket_get_enabled_linked_object_types() as $linkableType) {
+            $linkableMetadata = reedcrm_pocket_get_linkable_objects()[$linkableType] ?? [];
+            if (!empty($linkableMetadata['langs'])) {
+                $linkableObjectTypes[$linkableType] = $langs->trans($linkableMetadata['langs']);
             }
         }
 
+        $initialObjects = reedcrm_pocket_search_objects($object, '', '', 20);
+
+        print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
+        print '<input type="hidden" name="token" value="' . newToken() . '">';
+        print '<input type="hidden" name="action" value="link_object">';
+        print '<input type="hidden" name="object_to_link" value="">';
+        print '<div class="reedcrm-pocket-link-form" data-url="' . dol_escape_htmltag(dol_buildpath('/custom/reedcrm/ajax/pocket_recording.php', 1)) . '"';
+        print ' data-recording-id="' . $object->id . '" data-token="' . newToken() . '">';
+
+        print '<span>' . $langs->trans('PocketLinkObject') . '</span>';
+        print $form->selectarray('object_type', $linkableObjectTypes, '', $langs->trans('PocketAllObjectTypes'), 0, 0, '', 0, 0, 0, '', 'reedcrm-pocket-object-type minwidth150', 0);
+
+        print '<div class="reedcrm-pocket-object-search-wrapper">';
+        print '<input type="text" class="reedcrm-pocket-object-search minwidth300" autocomplete="off" placeholder="' . dol_escape_htmltag($langs->trans('PocketSearchObject')) . '">';
+
+        // The list is printed already filled, so it is usable before a single key is pressed
+        print '<ul class="reedcrm-pocket-object-results" hidden data-empty-label="' . dol_escape_htmltag($langs->trans('PocketNoObjectFound')) . '">';
+        foreach ($initialObjects as $initialObject) {
+            print '<li data-key="' . dol_escape_htmltag($initialObject['key']) . '">' . dol_escape_htmltag(reedcrm_pocket_format_object_choice($initialObject)) . '</li>';
+        }
+        if (empty($initialObjects)) {
+            print '<li class="opacitymedium reedcrm-pocket-object-empty">' . $langs->trans('PocketNoObjectFound') . '</li>';
+        }
+        print '</ul>';
+        print '</div>';
+
+        print '<input type="submit" class="button smallpaddingimp" value="' . $langs->trans('Add') . '" disabled>';
         print '</div>';
         print '</form>';
     }
@@ -457,7 +461,6 @@ if ($show != 'transcript') {
 
     print '</table>';
     print '</div>';
-    print '<div class="opacitymedium small">' . $langs->trans('PocketLinkFromObjectHint') . '</div>';
 }
 
 llxFooter();

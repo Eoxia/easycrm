@@ -207,6 +207,44 @@
     padding: 10px 0;
 }
 
+// Object search: the results hang under the field, they are drawn here rather than taken from a
+// component, so the list shows the whole line (type, reference, thirdparty, date and amount)
+.reedcrm-pocket-object-search-wrapper {
+    position: relative;
+}
+
+.reedcrm-pocket-object-results {
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    margin: 2px 0 0;
+    padding: 4px 0;
+    max-height: 260px;
+    overflow-y: auto;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #e3e6ea;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    &[hidden] {
+        display: none;
+    }
+
+    li {
+        padding: 5px 12px;
+
+        &[data-key] {
+            cursor: pointer;
+
+            &:hover {
+                background: #f0f4f8;
+            }
+        }
+    }
+}
+
 // Pocket blocks: the chart, flowchart, timeline and decision tree the summary embeds through its
 // own tags. The PHP only emits the data, every arrow and marker is drawn here
 .reedcrm-pocket-block {
