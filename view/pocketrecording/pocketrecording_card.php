@@ -78,24 +78,36 @@ if ($id > 0 && $object->fetch($id) <= 0) {
  * Actions
  */
 
-if ($action == 'set_status' && $permissiontoadd) {
-    $object->status = GETPOSTINT('status');
-    if ($object->update($user) > 0) {
-        setEventMessage($langs->trans('SavedConfig'));
-    } else {
-        setEventMessages($object->error, $object->errors, 'errors');
+// The thirdparty is set from the banner, as on every Saturne card. The template writes the field
+// the banner form names and reloads the object, so the view below already shows the new value.
+require_once __DIR__ . '/../../../saturne/core/tpl/actions/banner_actions.tpl.php';
+
+// Attaching from the card: the objects offered are the ones of the thirdparty of the recording
+if ($action == 'link_object' && $permissiontoadd) {
+    // The selector carries 'linkName:objectId', the empty option of Dolibarr carries -1 and means
+    // the form was submitted without a choice: nothing to attach, and nothing to complain about
+    list($linkName, $linkedObjectId) = array_pad(explode(':', GETPOST('object_to_link', 'alphanohtml'), 2), 2, '');
+
+    if (!empty($linkName) && (int) $linkedObjectId > 0) {
+        if (reedcrm_pocket_link_recording($object, $linkName, (int) $linkedObjectId) > 0) {
+            setEventMessage($langs->trans('PocketObjectLinked'));
+        } else {
+            setEventMessages($langs->trans('PocketRecordingLinkFailed'), [], 'errors');
+        }
     }
 
     header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $object->id);
     exit;
 }
 
-if ($action == 'set_thirdparty' && $permissiontoadd) {
-    $object->fk_soc = GETPOSTINT('socid') ?: null;
-    if ($object->update($user) > 0) {
-        setEventMessage($langs->trans('SavedConfig'));
+if ($action == 'unlink_object' && $permissiontoadd) {
+    $linkName       = GETPOST('link_name', 'alphanohtml');
+    $linkedObjectId = GETPOSTINT('linked_object_id');
+
+    if (!empty($linkName) && $linkedObjectId > 0 && reedcrm_pocket_unlink_recording($object, $linkName, $linkedObjectId) > 0) {
+        setEventMessage($langs->trans('PocketObjectUnlinked'));
     } else {
-        setEventMessages($object->error, $object->errors, 'errors');
+        setEventMessages($langs->trans('PocketRecordingLinkFailed'), [], 'errors');
     }
 
     header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $object->id);
@@ -175,6 +187,24 @@ $moreHtmlRef .= '</div>';
 $linkBack = '<a href="' . dol_buildpath('/custom/reedcrm/view/pocketrecording/pocketrecording_list.php', 1) . '?restore_lastsearch_values=1">' . $langs->trans('BackToList') . '</a>';
 saturne_banner_tab($object, 'id', $linkBack, 1, 'rowid', 'ref', $moreHtmlRef);
 
+// The status is changed on the badge of the banner, where it is read, instead of taking a row of
+// the table below. The banner is printed by Dolibarr, so the data the picker needs travels through
+// this block and the script hangs the choices under the badge it finds.
+if ($permissiontoadd) {
+    $statusChoices = [];
+    foreach ($object->fields['status']['arrayofkeyval'] as $statusKey => $statusLabel) {
+        $statusChoices[] = ['key' => (int) $statusKey, 'label' => $langs->transnoentities($statusLabel)];
+    }
+
+    print '<span class="reedcrm-pocket-status-picker" hidden';
+    print ' data-url="' . dol_escape_htmltag(dol_buildpath('/custom/reedcrm/ajax/pocket_recording.php', 1)) . '"';
+    print ' data-recording-id="' . $object->id . '"';
+    print ' data-token="' . newToken() . '"';
+    print ' data-title="' . dol_escape_htmltag($langs->trans('PocketChangeStatus')) . '"';
+    print ' data-statuses="' . dol_escape_htmltag(json_encode($statusChoices)) . '"';
+    print '></span>';
+}
+
 if ($action == 'delete') {
     print $form->formconfirm($_SERVER['PHP_SELF'] . '?id=' . $object->id, $langs->trans('DeletePocketRecording'), $langs->trans('ConfirmDeletePocketRecording'), 'confirm_delete', '', 'no', 1);
 }
@@ -192,29 +222,7 @@ if ($show == 'transcript') {
     print '<div class="underbanner clearboth"></div>';
     print '<table class="border centpercent tableforfield">';
 
-    print '<tr><td class="titlefield">' . $langs->trans('Status') . '</td><td>';
-    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
-    print '<input type="hidden" name="token" value="' . newToken() . '">';
-    print '<input type="hidden" name="action" value="set_status">';
-    print $form->selectarray('status', $object->fields['status']['arrayofkeyval'], $object->status, 0, 0, 0, '', 1);
-    if ($permissiontoadd) {
-        print ' <input type="submit" class="button smallpaddingimp" value="' . $langs->trans('Modify') . '">';
-    }
-    print '</form>';
-    print '</td></tr>';
-
-    print '<tr><td>' . $langs->trans('ThirdParty') . '</td><td>';
-    print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
-    print '<input type="hidden" name="token" value="' . newToken() . '">';
-    print '<input type="hidden" name="action" value="set_thirdparty">';
-    print $form->select_company($object->fk_soc, 'socid', '', 'SelectThirdParty', 0, 0, [], 0, 'minwidth200');
-    if ($permissiontoadd) {
-        print ' <input type="submit" class="button smallpaddingimp" value="' . $langs->trans('Modify') . '">';
-    }
-    print '</form>';
-    print '</td></tr>';
-
-    print '<tr><td>' . $langs->trans('PocketTags') . '</td><td>' . dol_escape_htmltag($object->pocket_tags) . '</td></tr>';
+    print '<tr><td class="titlefield">' . $langs->trans('PocketTags') . '</td><td>' . dol_escape_htmltag($object->pocket_tags) . '</td></tr>';
 
     // The URL Pocket signs expires within the hour, so the player carries the endpoint that
     // resolves it rather than the URL itself: the native <audio> is injected on the first play
@@ -228,12 +236,33 @@ if ($show == 'transcript') {
 
     print '</table>';
 
-    // Summary
+    // Summary, edited in place like the action items: a click on the text swaps the rendered
+    // markdown for its source, and leaving the field saves it. The edition stays on the markdown
+    // because the Pocket blocks it embeds would not survive a round trip through a rich editor.
     print '<br>';
     print load_fiche_titre($langs->trans('PocketSummary'), '', '');
     print '<div class="underbanner clearboth"></div>';
-    print '<div class="reedcrm-pocket-summary">';
+
+    print '<div class="reedcrm-pocket-summary-block"';
+    if ($permissiontoadd) {
+        print ' data-url="' . dol_escape_htmltag(dol_buildpath('/custom/reedcrm/ajax/pocket_recording.php', 1)) . '"';
+        print ' data-recording-id="' . $object->id . '"';
+        print ' data-token="' . newToken() . '"';
+    }
+    print '>';
+
+    print '<div class="reedcrm-pocket-summary"' . ($permissiontoadd ? ' title="' . dol_escape_htmltag($langs->trans('PocketEditSummary')) . '"' : '') . '>';
     print !empty($object->summary) ? reedcrm_pocket_summary_to_html($object->summary) : '<span class="opacitymedium">' . $langs->trans('PocketNoSummary') . '</span>';
+    print '</div>';
+
+    if ($permissiontoadd) {
+        // The source travels in its own field rather than in an attribute: it is a multi line text
+        print '<textarea class="reedcrm-pocket-summary-edit" hidden>' . dol_escape_htmltag((string) $object->summary, 0, 1) . '</textarea>';
+        print '<div class="opacitymedium small reedcrm-pocket-summary-help" hidden>' . $langs->trans('PocketSummaryEditHelp') . '</div>';
+    }
+
+    print '<div class="opacitymedium small reedcrm-pocket-summary-edited"' . (empty($object->summary_edited) ? ' hidden' : '') . '>' . $langs->trans('PocketSummaryEditedHint') . '</div>';
+
     print '</div>';
 
     // Action items. Read from their own rows and not from the recording JSON: the assigned user
@@ -250,7 +279,6 @@ if ($show == 'transcript') {
     print '<tr class="liste_titre">';
     print '<td>' . $langs->trans('Label') . '</td>';
     print '<td class="center">' . $langs->trans('Deadline') . '</td>';
-    print '<td class="center">' . $langs->trans('Priority') . '</td>';
     print '<td>' . $langs->trans('PocketAssignedUser') . '</td>';
     print '<td class="center">' . $langs->trans('Event') . '</td>';
     print '</tr>';
@@ -281,7 +309,6 @@ if ($show == 'transcript') {
                 print !empty($actionItem->due_date) ? dol_print_date($actionItem->due_date, 'day') : '';
             }
             print '</td>';
-            print '<td class="center">' . dol_escape_htmltag((string) $actionItem->priority) . '</td>';
 
             print '<td>';
             if ($permissiontoadd) {
@@ -312,7 +339,7 @@ if ($show == 'transcript') {
     }
 
     if (empty($actionItems)) {
-        print '<tr><td colspan="5" class="opacitymedium center">' . $langs->trans('PocketNoActionItem') . '</td></tr>';
+        print '<tr><td colspan="4" class="opacitymedium center">' . $langs->trans('PocketNoActionItem') . '</td></tr>';
     }
 
     print '</table>';
@@ -343,17 +370,64 @@ print '</div>';
  * Linked objects
  */
 
-// The card only reports the links: attaching a recording is a gesture made from the business
-// object, through its own "Pocket recordings" tab, where the user already has the context
+// A recording is attached either from the tab of the business object, or from here: the
+// conversation was held with a thirdparty, so what it talks about is one of its objects
 if ($show != 'transcript') {
     $object->fetchObjectLinked();
 
     print load_fiche_titre($langs->trans('PocketLinkedObjects'), '', '');
+
+    // Attach form. The objects are searched by the module and not through the native link block:
+    // the search runs on the types enabled for the recordings, across every thirdparty, and the
+    // list opens already filled with the objects of the thirdparty of the recording.
+    if ($permissiontoadd) {
+        $linkableObjectTypes = [];
+        foreach (reedcrm_pocket_get_enabled_linked_object_types() as $linkableType) {
+            $linkableMetadata = reedcrm_pocket_get_linkable_objects()[$linkableType] ?? [];
+            if (!empty($linkableMetadata['langs'])) {
+                $linkableObjectTypes[$linkableType] = $langs->trans($linkableMetadata['langs']);
+            }
+        }
+
+        $initialObjects = reedcrm_pocket_search_objects($object, '', '', 20);
+
+        print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
+        print '<input type="hidden" name="token" value="' . newToken() . '">';
+        print '<input type="hidden" name="action" value="link_object">';
+        print '<input type="hidden" name="object_to_link" value="">';
+        print '<div class="reedcrm-pocket-link-form" data-url="' . dol_escape_htmltag(dol_buildpath('/custom/reedcrm/ajax/pocket_recording.php', 1)) . '"';
+        print ' data-recording-id="' . $object->id . '" data-token="' . newToken() . '">';
+
+        print '<span>' . $langs->trans('PocketLinkObject') . '</span>';
+        print $form->selectarray('object_type', $linkableObjectTypes, '', $langs->trans('PocketAllObjectTypes'), 0, 0, '', 0, 0, 0, '', 'reedcrm-pocket-object-type minwidth150', 0);
+
+        print '<div class="reedcrm-pocket-object-search-wrapper">';
+        print '<input type="text" class="reedcrm-pocket-object-search minwidth300" autocomplete="off" placeholder="' . dol_escape_htmltag($langs->trans('PocketSearchObject')) . '">';
+
+        // The list is printed already filled, so it is usable before a single key is pressed
+        print '<ul class="reedcrm-pocket-object-results" hidden data-empty-label="' . dol_escape_htmltag($langs->trans('PocketNoObjectFound')) . '">';
+        foreach ($initialObjects as $initialObject) {
+            print '<li data-key="' . dol_escape_htmltag($initialObject['key']) . '">' . dol_escape_htmltag(reedcrm_pocket_format_object_choice($initialObject)) . '</li>';
+        }
+        if (empty($initialObjects)) {
+            print '<li class="opacitymedium reedcrm-pocket-object-empty">' . $langs->trans('PocketNoObjectFound') . '</li>';
+        }
+        print '</ul>';
+        print '</div>';
+
+        print '<input type="submit" class="button smallpaddingimp" value="' . $langs->trans('Add') . '" disabled>';
+        print '</div>';
+        print '</form>';
+    }
+
     print '<div class="div-table-responsive-no-min">';
     print '<table class="noborder centpercent">';
     print '<tr class="liste_titre">';
     print '<td>' . $langs->trans('Type') . '</td>';
     print '<td>' . $langs->trans('Ref') . '</td>';
+    print '<td class="center">' . $langs->trans('Date') . '</td>';
+    print '<td class="right">' . $langs->trans('Amount') . '</td>';
+    print '<td class="center"></td>';
     print '</tr>';
 
     $linkedCount = 0;
@@ -362,21 +436,31 @@ if ($show != 'transcript') {
         $typeLabel      = !empty($linkedMetadata['langs']) ? $langs->trans($linkedMetadata['langs']) : $linkedType;
 
         foreach ($linkedInstances as $linkedInstance) {
+            $linkedData = reedcrm_pocket_get_object_date_and_amount($linkedInstance);
+
             print '<tr class="oddeven">';
             print '<td class="minwidth100">' . dol_escape_htmltag($typeLabel) . '</td>';
             print '<td>' . $linkedInstance->getNomUrl(1) . '</td>';
+            print '<td class="center nowraponall">' . (!empty($linkedData['date']) ? dol_print_date($linkedData['date'], 'day') : '') . '</td>';
+            print '<td class="right nowraponall">' . ($linkedData['amount'] !== null ? price($linkedData['amount'], 0, $langs, 1, -1, -1, $conf->currency) : '') . '</td>';
+            print '<td class="center">';
+            if ($permissiontoadd) {
+                print '<a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=unlink_object&link_name=' . urlencode($linkedType) . '&linked_object_id=' . $linkedInstance->id . '&token=' . newToken() . '" title="' . dol_escape_htmltag($langs->trans('PocketUnlinkObject')) . '">';
+                print img_picto($langs->trans('PocketUnlinkObject'), 'unlink');
+                print '</a>';
+            }
+            print '</td>';
             print '</tr>';
             $linkedCount++;
         }
     }
 
     if ($linkedCount == 0) {
-        print '<tr><td colspan="2" class="opacitymedium center">' . $langs->trans('PocketNoLinkedObject') . '</td></tr>';
+        print '<tr><td colspan="5" class="opacitymedium center">' . $langs->trans('PocketNoLinkedObject') . '</td></tr>';
     }
 
     print '</table>';
     print '</div>';
-    print '<div class="opacitymedium small">' . $langs->trans('PocketLinkFromObjectHint') . '</div>';
 }
 
 llxFooter();

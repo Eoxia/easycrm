@@ -297,6 +297,293 @@ function reedcrm_pocket_get_linkable_recordings(string $linkName, int $objectId,
 }
 
 /**
+ * Get the columns a table actually holds.
+ *
+ * The objects a recording may be linked to are spread over a dozen tables, each naming its business
+ * date and its amount its own way. Rather than maintaining that mapping by hand, the columns are
+ * read once per table and cached for the request.
+ *
+ * @param  string               $table Table name without the Dolibarr prefix, ex. 'facture'.
+ * @return array<string,bool>          Column name in lower case => true.
+ */
+function reedcrm_pocket_get_table_columns(string $table): array
+{
+    global $conf, $db;
+
+    if (!isset($conf->cache['reedcrmPocketTableColumns'][$table])) {
+        $columns = [];
+
+        $resql = $db->DDLDescTable(MAIN_DB_PREFIX . $table);
+        if ($resql) {
+            while ($obj = $db->fetch_object($resql)) {
+                $column = strtolower((string) ($obj->Field ?? ''));
+                if ($column !== '') {
+                    $columns[$column] = true;
+                }
+            }
+        }
+
+        $conf->cache['reedcrmPocketTableColumns'][$table] = $columns;
+    }
+
+    return $conf->cache['reedcrmPocketTableColumns'][$table];
+}
+
+/**
+ * Pick the first column a table holds among a list of candidates.
+ *
+ * @param  array<string,bool> $columns    Columns of the table.
+ * @param  string[]           $candidates Candidate columns, most meaningful first.
+ * @return string                         Matching column, empty string when the table holds none.
+ */
+function reedcrm_pocket_pick_column(array $columns, array $candidates): string
+{
+    foreach ($candidates as $candidate) {
+        if (isset($columns[$candidate])) {
+            return $candidate;
+        }
+    }
+
+    return '';
+}
+
+/**
+ * Get the objects already linked to a recording, as a set of keys.
+ *
+ * A link is stored in the direction Dolibarr chose when it was created, both are read.
+ *
+ * @param  PocketRecording $recording Recording the links are read for.
+ * @return array<string,bool>         'linkName:objectId' => true.
+ */
+function reedcrm_pocket_get_linked_object_keys(PocketRecording $recording): array
+{
+    global $db;
+
+    $keys = [];
+    if ($recording->id <= 0) {
+        return $keys;
+    }
+
+    $sql  = 'SELECT sourcetype, fk_source, targettype, fk_target FROM ' . MAIN_DB_PREFIX . 'element_element';
+    $sql .= " WHERE (sourcetype = '" . $db->escape(REEDCRM_POCKET_LINK_ELEMENT_TYPE) . "' AND fk_source = " . ((int) $recording->id) . ')';
+    $sql .= " OR (targettype = '" . $db->escape(REEDCRM_POCKET_LINK_ELEMENT_TYPE) . "' AND fk_target = " . ((int) $recording->id) . ')';
+
+    $resql = $db->query($sql);
+    if (!$resql) {
+        return $keys;
+    }
+
+    while ($obj = $db->fetch_object($resql)) {
+        if ($obj->sourcetype == REEDCRM_POCKET_LINK_ELEMENT_TYPE) {
+            $keys[$obj->targettype . ':' . $obj->fk_target] = true;
+        } else {
+            $keys[$obj->sourcetype . ':' . $obj->fk_source] = true;
+        }
+    }
+    $db->free($resql);
+
+    return $keys;
+}
+
+/**
+ * Search the objects a recording may still be attached to.
+ *
+ * The conversation was usually held with a thirdparty, so with no search term the objects of that
+ * thirdparty come first: they are what the recording talks about nine times out of ten. A term
+ * searches every object of the type instead, whoever it belongs to, because a recording sometimes
+ * talks about the ticket of somebody else.
+ *
+ * Only the object types enabled in the module configuration are searched. The tables are read
+ * directly: each one names its reference, its date and its amount its own way, and those columns
+ * are resolved from the table itself rather than from a mapping kept by hand.
+ *
+ * @param  PocketRecording $recording  Recording the objects are offered for.
+ * @param  string          $objectType Object type to search, every enabled one when empty.
+ * @param  string          $search     Search term, empty to list the objects of the thirdparty.
+ * @param  int             $limit      Most objects read per type.
+ * @return array<int,array{key:string,link_name:string,id:int,type_label:string,picto:string,ref:string,thirdparty:string,date:int,amount:float|null}> Objects, most recent first.
+ */
+function reedcrm_pocket_search_objects(PocketRecording $recording, string $objectType = '', string $search = '', int $limit = 50): array
+{
+    global $db, $langs;
+
+    $objects         = [];
+    $linkableObjects = reedcrm_pocket_get_linkable_objects();
+    $enabledTypes    = reedcrm_pocket_get_enabled_linked_object_types();
+    $alreadyLinked   = reedcrm_pocket_get_linked_object_keys($recording);
+    $search          = trim($search);
+
+    if ($objectType !== '') {
+        if (!in_array($objectType, $enabledTypes, true)) {
+            return $objects;
+        }
+        $enabledTypes = [$objectType];
+    }
+
+    foreach ($enabledTypes as $enabledType) {
+        $objectMetadata = $linkableObjects[$enabledType] ?? [];
+        $table          = $objectMetadata['table_element'] ?? '';
+        $linkName       = $objectMetadata['link_name'] ?? '';
+
+        if (empty($table) || empty($linkName)) {
+            continue;
+        }
+
+        $columns = reedcrm_pocket_get_table_columns($table);
+
+        // Business date first, creation date as a fallback: the user recognises an invoice by the
+        // date it carries, not by the day the row was written
+        $dateColumn   = reedcrm_pocket_pick_column($columns, ['datep', 'datef', 'date_commande', 'date_contrat', 'datei', 'date_expedition', 'date_reception', 'dateo', 'date_valid', 'datec', 'date_creation']);
+        $amountColumn = reedcrm_pocket_pick_column($columns, ['total_ttc', 'total_ht', 'opp_amount']);
+
+        // name_field holds one or several columns (ex. 'ref, title'), shown and searched together
+        $nameColumns = [];
+        foreach (explode(',', (string) ($objectMetadata['name_field'] ?? 'ref')) as $nameColumn) {
+            $nameColumn = trim($nameColumn);
+            if ($nameColumn !== '' && isset($columns[$nameColumn])) {
+                $nameColumns[] = $nameColumn;
+            }
+        }
+        if (empty($nameColumns)) {
+            $nameColumns = isset($columns['ref']) ? ['ref'] : [];
+        }
+        if (empty($nameColumns)) {
+            continue;
+        }
+
+        $hasThirdParty = isset($columns['fk_soc']);
+
+        // With no term the list is the one of the thirdparty of the recording: a type that belongs
+        // to nobody, a thirdparty itself for instance, would fill it with unrelated rows
+        if ($search === '' && $recording->fk_soc > 0 && !$hasThirdParty) {
+            continue;
+        }
+
+        $sql  = 'SELECT t.rowid, t.' . implode(', t.', $nameColumns);
+        $sql .= $dateColumn !== '' ? ', t.' . $dateColumn . ' as object_date' : ', NULL as object_date';
+        $sql .= $amountColumn !== '' ? ', t.' . $amountColumn . ' as object_amount' : ', NULL as object_amount';
+        $sql .= $hasThirdParty ? ', s.nom as thirdparty_name' : ", '' as thirdparty_name";
+        $sql .= ' FROM ' . MAIN_DB_PREFIX . $table . ' as t';
+        if ($hasThirdParty) {
+            $sql .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'societe as s ON s.rowid = t.fk_soc';
+        }
+        $sql .= ' WHERE 1 = 1';
+        if (isset($columns['entity'])) {
+            $sql .= ' AND t.entity IN (' . getEntity($linkName) . ')';
+        }
+        if ($search !== '') {
+            $sql .= natural_search(array_map(function (string $nameColumn) {
+                return 't.' . $nameColumn;
+            }, $nameColumns), $search);
+        } elseif ($hasThirdParty && $recording->fk_soc > 0) {
+            $sql .= ' AND t.fk_soc = ' . ((int) $recording->fk_soc);
+        }
+        $sql .= $dateColumn !== '' ? ' ORDER BY t.' . $dateColumn . ' DESC' : ' ORDER BY t.rowid DESC';
+        $sql .= $db->plimit($limit);
+
+        $resql = $db->query($sql);
+        if (!$resql) {
+            continue;
+        }
+
+        $typeLabel = !empty($objectMetadata['langs']) ? $langs->trans($objectMetadata['langs']) : $linkName;
+
+        while ($obj = $db->fetch_object($resql)) {
+            if (isset($alreadyLinked[$linkName . ':' . $obj->rowid])) {
+                continue;
+            }
+
+            $names = [];
+            foreach ($nameColumns as $nameColumn) {
+                if (!empty($obj->$nameColumn)) {
+                    $names[] = (string) $obj->$nameColumn;
+                }
+            }
+
+            $objects[] = [
+                'key'        => $linkName . ':' . $obj->rowid,
+                'link_name'  => $linkName,
+                'id'         => (int) $obj->rowid,
+                'type_label' => $typeLabel,
+                'picto'      => (string) ($objectMetadata['picto'] ?? ''),
+                'ref'        => implode(' - ', $names),
+                'thirdparty' => (string) ($obj->thirdparty_name ?? ''),
+                'date'       => !empty($obj->object_date) ? (int) $db->jdate($obj->object_date) : 0,
+                'amount'     => $obj->object_amount !== null ? (float) $obj->object_amount : null
+            ];
+        }
+        $db->free($resql);
+    }
+
+    // The types are read one after the other, the user reads one list: the most recent objects
+    // come first whatever their type
+    usort($objects, function (array $first, array $second) {
+        return $second['date'] <=> $first['date'];
+    });
+
+    return $objects;
+}
+
+/**
+ * Build the line shown for an object offered as a link target.
+ *
+ * The thirdparty is part of the line: a search runs across every thirdparty, and two objects of the
+ * same type are told apart by who they belong to before anything else.
+ *
+ * @param  array<string,mixed> $object Object as returned by reedcrm_pocket_search_objects().
+ * @return string                      Ready to print label.
+ */
+function reedcrm_pocket_format_object_choice(array $object): string
+{
+    global $conf, $langs;
+
+    $choice = $object['type_label'] . ' - ' . $object['ref'];
+
+    if (!empty($object['thirdparty'])) {
+        $choice .= ' - ' . $object['thirdparty'];
+    }
+    if (!empty($object['date'])) {
+        $choice .= ' - ' . dol_print_date($object['date'], 'day');
+    }
+    if ($object['amount'] !== null) {
+        $choice .= ' - ' . price($object['amount'], 0, $langs, 0, -1, -1, $conf->currency);
+    }
+
+    return $choice;
+}
+
+/**
+ * Read the business date and the amount an already linked object carries.
+ *
+ * The instances come from fetchObjectLinked(), so the values are read from the loaded object and
+ * not from the database again. Each Dolibarr class names them its own way.
+ *
+ * @param  CommonObject $object Linked object.
+ * @return array{date:int,amount:float|null} Date as a timestamp, amount when the object carries one.
+ */
+function reedcrm_pocket_get_object_date_and_amount(CommonObject $object): array
+{
+    $date   = 0;
+    $amount = null;
+
+    foreach (['date', 'datep', 'datef', 'date_commande', 'date_contrat', 'datei', 'date_start', 'dateo', 'date_creation', 'datec'] as $property) {
+        if (!empty($object->$property)) {
+            $date = is_numeric($object->$property) ? (int) $object->$property : (int) dol_stringtotime($object->$property);
+            break;
+        }
+    }
+
+    foreach (['total_ttc', 'total_ht', 'opp_amount'] as $property) {
+        if (isset($object->$property) && $object->$property !== '' && $object->$property !== null) {
+            $amount = (float) $object->$property;
+            break;
+        }
+    }
+
+    return ['date' => $date, 'amount' => $amount];
+}
+
+/**
  * Format a duration in seconds the way the recordings list shows it.
  *
  * @param  int    $duration Duration in seconds.
@@ -389,7 +676,7 @@ function reedcrm_pocket_render_block(string $type, string $rawAttributes, string
 
     switch (strtolower($type)) {
         case 'chart':
-            $body = reedcrm_pocket_render_chart($lines);
+            $body = reedcrm_pocket_render_chart($lines, $attributes);
             break;
         case 'flowchart':
             $body = reedcrm_pocket_render_flowchart($lines);
@@ -422,16 +709,22 @@ function reedcrm_pocket_render_block(string $type, string $rawAttributes, string
 /**
  * Render a Pocket chart as one bar per value.
  *
- * Lines read 'Label | value | #color', the colour being optional. The share and the colour are the
- * only data driven parts, they travel as CSS variables so the styling itself stays in the SCSS.
+ * Lines read 'Label | value | #color', the colour being optional. The bar length and the colour are
+ * the only data driven parts, they travel as CSS variables so the styling itself stays in the SCSS.
  *
- * @param  string[] $lines Lines of the block.
- * @return string          HTML, empty string when the lines are not chart data.
+ * The bar is drawn against the scale Pocket itself draws: a bar chart is read on an axis running to
+ * the highest value, so a value of 100 out of a 0-100 axis fills the bar. Only a pie or a doughnut
+ * splits a whole, and there alone the value is a share of the total.
+ *
+ * @param  string[]             $lines      Lines of the block.
+ * @param  array<string,string> $attributes Attributes of the opening tag, ex. ['type' => 'pie'].
+ * @return string                           HTML, empty string when the lines are not chart data.
  */
-function reedcrm_pocket_render_chart(array $lines): string
+function reedcrm_pocket_render_chart(array $lines, array $attributes = []): string
 {
     $entries = [];
     $total   = 0.0;
+    $highest = 0.0;
 
     foreach ($lines as $line) {
         $cells = array_map('trim', explode('|', $line));
@@ -444,9 +737,17 @@ function reedcrm_pocket_render_chart(array $lines): string
 
         $entries[] = ['label' => $cells[0], 'value' => $value, 'color' => $color];
         $total    += $value;
+        $highest   = max($highest, $value);
     }
 
     if (empty($entries) || $total <= 0) {
+        return '';
+    }
+
+    $isShareChart = in_array(strtolower($attributes['type'] ?? ''), ['pie', 'doughnut', 'donut'], true);
+    $scale        = $isShareChart ? $total : $highest;
+
+    if ($scale <= 0) {
         return '';
     }
 
@@ -456,12 +757,13 @@ function reedcrm_pocket_render_chart(array $lines): string
     $html = '<ul class="reedcrm-pocket-chart">';
     foreach ($entries as $index => $entry) {
         $color = $entry['color'] !== '' ? $entry['color'] : $palette[$index % count($palette)];
-        $share = round(($entry['value'] / $total) * 100);
+        $share = round(($entry['value'] / $scale) * 100);
+        $value = rtrim(rtrim(number_format($entry['value'], 2, '.', ''), '0'), '.');
 
         $html .= '<li style="--pocket-share: ' . $share . '%; --pocket-color: ' . $color . ';">';
         $html .= '<span class="reedcrm-pocket-chart-label">' . dol_escape_htmltag($entry['label']) . '</span>';
         $html .= '<span class="reedcrm-pocket-chart-track"><span class="reedcrm-pocket-chart-bar"></span></span>';
-        $html .= '<span class="reedcrm-pocket-chart-value">' . dol_escape_htmltag((string) $entry['value']) . ' (' . $share . '%)</span>';
+        $html .= '<span class="reedcrm-pocket-chart-value">' . dol_escape_htmltag($value) . ($isShareChart ? ' (' . $share . '%)' : '') . '</span>';
         $html .= '</li>';
     }
     $html .= '</ul>';

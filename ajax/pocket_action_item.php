@@ -86,6 +86,8 @@ if ($subAction === 'set_text') {
 
     $actionItem->label       = dol_trunc($label, 255, 'right', 'UTF-8', 1);
     $actionItem->description = $description;
+    // What the user wrote wins over what Pocket sends on the next synchronisation
+    $actionItem->user_edited = 1;
 
     if ($actionItem->update($user) <= 0) {
         echo json_encode(['success' => false, 'error' => $actionItem->error]);
@@ -110,7 +112,8 @@ if ($subAction === 'set_due_date') {
     $dueDate = GETPOST('due_date', 'alphanohtml');
 
     // An emptied field clears the deadline, it is not an error
-    $actionItem->due_date = $dueDate !== '' ? dol_stringtotime($dueDate) : null;
+    $actionItem->due_date    = $dueDate !== '' ? dol_stringtotime($dueDate) : null;
+    $actionItem->user_edited = 1;
 
     if ($actionItem->update($user) <= 0) {
         echo json_encode(['success' => false, 'error' => $actionItem->error]);

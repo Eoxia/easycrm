@@ -200,8 +200,9 @@ class PocketSync
      * Mirror the action items of a recording into their own rows.
      *
      * Keyed on the identifier Pocket gives each action, so a re-import refreshes the wording of an
-     * action already known instead of duplicating it. The two fields the user owns, the assigned
-     * Dolibarr user and the event created from the action, are never touched here.
+     * action already known instead of duplicating it. The fields the user owns are never touched
+     * here: the assigned Dolibarr user, the event created from the action, and the whole wording of
+     * an action rewritten on the card, since undoing an edit is worse than showing a stale wording.
      *
      * @param  PocketRecording $pocketRecording Recording whose actions are mirrored.
      * @param  User            $user            User the created rows are attributed to.
@@ -230,12 +231,16 @@ class PocketSync
                 $actionItem->status              = PocketActionItem::STATUS_TODO;
             }
 
-            $actionItem->label           = dol_trunc((string) ($action['label'] ?? ''), 255, 'right', 'UTF-8', 1);
-            $actionItem->description     = (string) ($action['context'] ?? '');
+            if (empty($actionItem->user_edited)) {
+                $actionItem->label       = dol_trunc((string) ($action['label'] ?? ''), 255, 'right', 'UTF-8', 1);
+                $actionItem->description = (string) ($action['context'] ?? '');
+                $actionItem->due_date    = !empty($action['dueDate']) ? dol_stringtotime($action['dueDate']) : null;
+            }
+
+            // The priority is not shown nor edited on the card, it stays what Pocket says it is
             $actionItem->priority        = (string) ($action['priority'] ?? '');
             $actionItem->pocket_assignee = dol_trunc((string) ($action['assignee'] ?? ''), 128, 'right', 'UTF-8', 1);
             $actionItem->pocket_status   = (string) ($action['status'] ?? '');
-            $actionItem->due_date        = !empty($action['dueDate']) ? dol_stringtotime($action['dueDate']) : null;
 
             // Pocket marking the action done closes the Dolibarr row too, the other way round is
             // left to the user: closing it here would fight the event they created from it
@@ -274,7 +279,11 @@ class PocketSync
                 continue;
             }
 
-            $pocketRecording->summary = (string) ($summarization['v2']['summary']['markdown'] ?? '');
+            // A summary rewritten on the card belongs to the user: Pocket only fills it back once
+            // the user emptied it, which is how they ask for the generated text again
+            if (empty($pocketRecording->summary_edited)) {
+                $pocketRecording->summary = (string) ($summarization['v2']['summary']['markdown'] ?? '');
+            }
 
             $actions = $summarization['v2']['actionItems']['actions'] ?? [];
             if (!empty($actions)) {

@@ -899,19 +899,31 @@ PocketCreateEvent = Create an event
 PocketActionItemId = Pocket action identifier
 PocketActionItemTodo = To do
 PocketActionItemDone = Done
+PocketActionItemEdited = Rewritten action
+PocketChangeStatus = Change the status
+PocketSummaryEdited = Rewritten summary
+PocketSummaryEditedHint = This summary was rewritten in Dolibarr: Pocket synchronisations no longer overwrite it.
+PocketEditSummary = Click to edit the summary
+PocketSummaryEditHelp = The summary is written in markdown, Pocket blocks included. It is saved when the field loses the focus, and is no longer overwritten by the synchronisations: empty it to get the Pocket one back.
 
 #
 # Pocket - attach from the business objects
 #
 PocketLinkedObjects = Linked objects
 PocketNoLinkedObject = No object linked to this recording
-PocketLinkFromObjectHint = To attach this recording, open the ticket, project, invoice or proposal it belongs to and use its "Pocket recordings" tab.
 PocketLinkRecording = Attach a recording
 PocketUnlinkRecording = Detach this recording
 PocketNoRecordingToLink = Every available recording is already attached
 PocketRecordingLinked = Recording attached
 PocketRecordingUnlinked = Recording detached
 PocketRecordingLinkFailed = The attach operation failed
+PocketLinkObject = Attach an object
+PocketUnlinkObject = Detach this object
+PocketAllObjectTypes = Every type
+PocketSearchObject = Search by reference or label
+PocketNoObjectFound = No object found
+PocketObjectLinked = Object attached
+PocketObjectUnlinked = Object detached
 
 #
 # Menu - Left menu sections

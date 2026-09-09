@@ -81,6 +81,7 @@ class PocketActionItem extends SaturneObject
         'description'         => ['type' => 'text',         'label' => 'Description',        'enabled' => 1, 'position' => 90,  'notnull' => 0, 'visible' => 0],
         'due_date'            => ['type' => 'datetime',     'label' => 'Deadline',           'enabled' => 1, 'position' => 100, 'notnull' => 0, 'visible' => 1],
         'priority'            => ['type' => 'varchar(16)',  'label' => 'Priority',           'enabled' => 1, 'position' => 110, 'notnull' => 0, 'visible' => 1],
+        'user_edited'         => ['type' => 'smallint',     'label' => 'PocketActionItemEdited', 'enabled' => 1, 'position' => 115, 'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'default' => 0],
         'pocket_assignee'     => ['type' => 'varchar(128)', 'label' => 'PocketAssignee',     'enabled' => 1, 'position' => 120, 'notnull' => 0, 'visible' => 1, 'noteditable' => 1],
         'pocket_status'       => ['type' => 'varchar(32)',  'label' => 'PocketState',        'enabled' => 1, 'position' => 130, 'notnull' => 0, 'visible' => 0, 'noteditable' => 1],
         'fk_user_assign'      => ['type' => 'integer:User:user/class/user.class.php', 'label' => 'AssignedUser', 'picto' => 'user', 'enabled' => 1, 'position' => 140, 'notnull' => 0, 'visible' => 1, 'index' => 1],
@@ -128,6 +129,11 @@ class PocketActionItem extends SaturneObject
      * @var string|null Priority (low, medium, high).
      */
     public $priority;
+
+    /**
+     * @var int 1 once the wording was rewritten in Dolibarr, which freezes it against Pocket.
+     */
+    public $user_edited = 0;
 
     /**
      * @var string|null Assignee as named by Pocket, free text.
