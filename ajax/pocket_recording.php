@@ -90,11 +90,11 @@ if ($subAction === 'set_status') {
 if ($subAction === 'set_summary') {
     // Pocket writes the summary, the user owns it afterwards: emptying it hands it back to Pocket,
     // which fills it again on the next synchronisation.
-    // restricthtml encodes the ampersands and the quotes of the markdown, and the block escapes it
-    // again when it prints it: without the decoding, an edit saved twice would store its own source
-    $summary = htmlspecialchars_decode(GETPOST('summary', 'restricthtml'), ENT_QUOTES);
+    // The summary is taken raw and cleaned by the module: restricthtml knows nothing of the Pocket
+    // blocks and would drop the graphs of a summary as soon as the text around them is edited
+    $summary = reedcrm_pocket_sanitize_summary(GETPOST('summary', 'none'));
 
-    $recording->summary        = trim($summary);
+    $recording->summary        = $summary;
     $recording->summary_edited = $recording->summary !== '' ? 1 : 0;
 
     if ($recording->update($user) <= 0) {
