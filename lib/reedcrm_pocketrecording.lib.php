@@ -35,6 +35,10 @@ define('REEDCRM_POCKET_LINK_EXCLUDED_PREFIX', 'reedcrm_');
 // so the rows hold reedcrm_pocketrecording and not the bare element name.
 define('REEDCRM_POCKET_LINK_ELEMENT_TYPE', 'reedcrm_pocketrecording');
 
+// One block of the Pocket syntax inside a summary, ex. <pocket:chart type="pie">...</pocket:chart>.
+// The pattern captures the whole block so preg_split() hands the blocks back with the text.
+define('REEDCRM_POCKET_BLOCK_PATTERN', '#(<pocket:[a-z0-9-]+\b[^>]*>.*?</pocket:[a-z0-9-]+>)#is');
+
 /**
  * Return the tabs of a Pocket recording card.
  *
@@ -607,6 +611,51 @@ function reedcrm_pocket_format_duration(int $duration): string
 }
 
 /**
+ * Clean a summary rewritten by a user, keeping the Pocket blocks it embeds.
+ *
+ * The summary is markdown carrying tags of the Pocket syntax (<pocket:chart>, <pocket:timeline>,
+ * ...). No HTML sanitizer knows them: restricthtml drops the tags and keeps only the lines between
+ * them, so every graph of a summary was lost as soon as the text around it was edited. The blocks
+ * are set aside, the markdown between them goes through the sanitizer restricthtml uses, then the
+ * blocks are stitched back where they were.
+ *
+ * Keeping a block out of the sanitizer costs nothing: none of it ever reaches the page as HTML.
+ * reedcrm_pocket_render_block() escapes every label it prints and only lets through the two values
+ * it validates itself, the type of the block and the colour of a bar.
+ *
+ * @param  string $summary Summary as the editor posted it, raw.
+ * @return string          Summary ready to be stored.
+ */
+function reedcrm_pocket_sanitize_summary(string $summary): string
+{
+    if (trim($summary) === '') {
+        return '';
+    }
+
+    $parts = preg_split(REEDCRM_POCKET_BLOCK_PATTERN, $summary, -1, PREG_SPLIT_DELIM_CAPTURE);
+    if (!is_array($parts)) {
+        // The blocks could not be told apart, so nothing may be spared from the sanitizer
+        return trim(htmlspecialchars_decode(dol_htmlwithnojs($summary, 1, 1), ENT_QUOTES));
+    }
+
+    $cleaned = '';
+    foreach ($parts as $index => $part) {
+        // preg_split() gives the captured blocks at the odd offsets, the text at the even ones
+        if ($index % 2 === 1) {
+            $cleaned .= $part;
+            continue;
+        }
+
+        // dol_htmlwithnojs() is what GETPOST does for restricthtml. It encodes the ampersands and
+        // the quotes of the markdown, and the summary is escaped again when it is printed: without
+        // the decoding, an edit saved twice would store its own source
+        $cleaned .= htmlspecialchars_decode(dol_htmlwithnojs($part, 1, 1), ENT_QUOTES);
+    }
+
+    return trim($cleaned);
+}
+
+/**
  * Render the markdown summary of a recording, Pocket blocks included.
  *
  * Pocket enriches its summary with its own tags (chart, flowchart, timeline, decision tree), which
@@ -625,7 +674,7 @@ function reedcrm_pocket_summary_to_html(string $summary): string
         return '';
     }
 
-    $parts = preg_split('#(<pocket:[a-z0-9-]+\b[^>]*>.*?</pocket:[a-z0-9-]+>)#is', $summary, -1, PREG_SPLIT_DELIM_CAPTURE);
+    $parts = preg_split(REEDCRM_POCKET_BLOCK_PATTERN, $summary, -1, PREG_SPLIT_DELIM_CAPTURE);
     if (!is_array($parts)) {
         return dolMd2Html($summary);
     }
