@@ -138,10 +138,12 @@ Description : Version majeure. Elle ajoute un **tableau Todo** (kanban des évé
 * Statut du projet respectant `PROJECT_CREATE_NO_DRAFT`.
 * Portée du **manifest PWA** restreinte aux pages de l'App.
 * Bouton d'événement rapide retiré des barres d'action des fiches.
+* Suivi FA : un warning PHP par ligne affichée, la ligne brute de la requête live ne portant pas de `rowid`.
 * Artefacts de travail internes retirés du dépôt.
 
 ## Comparaison des versions [23.1.1](https://github.com/Eoxia/reedcrm/compare/23.1.1...23.2.0) et 23.2.0
 
+* [#954] [Facturation] fix: `rowid` alimenté avant `setVarsFromFetchObj` sur le Suivi FA [`fb29248`](https://github.com/Eoxia/reedcrm/commit/fb29248)
 * [#952] [Pocket] fix: réparation des tables des installs existantes et blocs graphiques d'une synthèse éditée [`017a265`](https://github.com/Eoxia/reedcrm/commit/017a265)
 * [#950] [Hook] fix: prise en compte des contextes génériques Saturne [`7025280`](https://github.com/Eoxia/reedcrm/commit/7025280)
 * [#946] [Pocket] feat: édition du tiers, du statut et de la synthèse, rattachement de n'importe quel objet [`80b6f6c`](https://github.com/Eoxia/reedcrm/commit/80b6f6c)
