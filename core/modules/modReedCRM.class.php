@@ -1239,6 +1239,8 @@ class modReedCRM extends DolibarrModules
             'notation_facture_contact'    => ['Label' => 'NotationObjectContact', 'type' => 'text', 'elementtype' => ['facture'],     'position' => $this->numero . 10, 'list' => 5, 'enabled' => 'isModEnabled(\'reedcrm\') && isModEnabled(\'invoice\')',  'help' => 'NotationObjectContactHelp', 'moreparams' => ['csslist' => 'center']],
             'notation_facturerec_contact' => ['Label' => 'NotationObjectContact', 'type' => 'text', 'elementtype' => ['facture_rec'], 'position' => $this->numero . 10, 'list' => 5, 'enabled' => 'isModEnabled(\'reedcrm\') && isModEnabled(\'invoice\')',  'help' => 'NotationObjectContactHelp', 'moreparams' => ['csslist' => 'center']],
 
+            'reedcrm_relaunch_user' => ['Label' => 'ReedCRMRelaunchUser', 'type' => 'link', 'elementtype' => ['facture_rec'], 'position' => $this->numero . 20, 'list' => 1, 'enabled' => 'isModEnabled(\'reedcrm\') && isModEnabled(\'invoice\')', 'alwayseditable' => 1, 'help' => 'ReedCRMRelaunchUserHelp', 'params' => ['User:user/class/user.class.php:0:(t.statut:=:1)' => null], 'moreparams' => ['css' => 'minwidth200 maxwidth300 widthcentpercentminusx', 'csslist' => 'tdoverflowmax125']],
+
             'address_status' => ['Label' => 'AddressStatus', 'type' => 'select', 'elementtype' => ['contact'], 'position' => $this->numero . 10, 'list' => 5, 'enabled' => 'isModEnabled(\'reedcrm\') && isModEnabled(\'societe\')', 'params' => ['NotFound', 'Geolocated']],
 
             'reedcrm_gravityform'            => ['Label' => 'ReedCRMGravityForm', 'type' => 'url',    'length' => 255, 'elementtype' => ['projet'],     'position' => $this->numero . 15, 'list' => 1, 'enabled' => 'isModEnabled(\'reedcrm\') && isModEnabled(\'project\')', 'alwayseditable' => 1],
