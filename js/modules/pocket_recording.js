@@ -112,7 +112,12 @@ window.reedcrm.pocketRecording = {
         }
 
         $.each(data.objects, function(index, object) {
-          $result.append($('<li></li>').attr('data-key', object.key).text(object.label));
+          var $choice = $('<li></li>').attr('data-key', object.key);
+          // The picto is drawn by the server, the label is text and stays escaped
+          if (object.picto) {
+            $choice.append(object.picto);
+          }
+          $result.append($choice.append($('<span></span>').text(object.label)));
         });
       }).fail(function() {
         $result.removeClass('opacitymedium');
@@ -414,12 +419,13 @@ window.reedcrm.pocketRecording = {
     }, null, 'json').done(function(data) {
       $button.removeClass('loading');
       if (data && data.success && data.url) {
-        $button.replaceWith('<a href="' + data.url + '"><i class="fas fa-calendar-check pictofixedwidth"></i>' + $button.data('created-label') + '</a>');
+        // The column holds an icon, the created event takes the same room as the button it replaces
+        $button.replaceWith('<a href="' + data.url + '" title="' + ($button.data('created-label') || '') + '"><i class="fas fa-calendar-check"></i></a>');
       } else {
-        $button.addClass('butActionRefused').attr('title', (data && data.error) ? data.error : 'KO');
+        $button.addClass('error').attr('title', (data && data.error) ? data.error : 'KO');
       }
     }).fail(function() {
-      $button.removeClass('loading').addClass('butActionRefused');
+      $button.removeClass('loading').addClass('error');
     });
   }
 

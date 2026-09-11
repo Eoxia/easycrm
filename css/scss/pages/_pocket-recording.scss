@@ -162,8 +162,93 @@
     }
 }
 
-// Action items: the label and its description are edited in place, so the fields stay flat until
-// the row is hovered, otherwise the table would read as a form instead of a summary
+// Action items: the wording is what the row is about, so it takes the room. The deadline and the
+// event stay narrow, and the assignee selector is bounded by its cell instead of spreading
+.pocket-action-table {
+
+    .pocket-action-col-text {
+        width: 45%;
+    }
+
+    .pocket-action-col-date {
+        width: 150px;
+    }
+
+    .pocket-action-col-assign {
+        width: 25%;
+
+        // select2 sizes itself on the field it replaces, the cell is the boundary here
+        .select2-container {
+            max-width: 100%;
+        }
+    }
+
+    .pocket-action-col-event {
+        width: 60px;
+    }
+}
+
+// The deadline is a native date field: every input of a tab is flattened by the theme, which left
+// it looking like an empty box instead of a date to pick
+.pocket-action-row td.pocket-action-col-date .pocket-action-due-date {
+    padding: 3px 6px;
+    background: #ffffff;
+    border: 1px solid #e3e6ea;
+    border-radius: 4px;
+    font-size: 12px;
+
+    &:hover,
+    &:focus {
+        border-color: #63acc9;
+    }
+
+    &.error {
+        border-color: #c0392b;
+    }
+
+    &::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.7;
+    }
+}
+
+// Creating the event is the only thing the column offers: an icon says it, where the wording of a
+// button took the width the wording of the action item needed
+.pocket-action-create-event {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    color: #63acc9;
+    border: 1px solid #63acc9;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        background: #63acc9;
+        color: #ffffff;
+    }
+
+    &.loading {
+        opacity: 0.5;
+        cursor: progress;
+    }
+
+    &.error {
+        color: #c0392b;
+        border-color: #c0392b;
+    }
+
+    i {
+        font-size: 12px;
+        pointer-events: none;
+    }
+}
+
+// The label and its description are edited in place, so the fields stay flat until the row is
+// hovered, otherwise the table would read as a form instead of a summary
 .pocket-action-row td.pocket-action-text {
 
     .pocket-action-label,
@@ -188,11 +273,13 @@
         }
     }
 
+    // The description carries the context of the action: it is read, not glanced at
     .pocket-action-description {
         margin-top: 2px;
-        font-size: 11px;
-        color: #888888;
-        line-height: 1.4;
+        min-height: 54px;
+        font-size: 12px;
+        color: #666666;
+        line-height: 1.5;
         resize: vertical;
     }
 }
@@ -233,6 +320,8 @@
     }
 
     li {
+        display: flex;
+        align-items: center;
         padding: 5px 12px;
 
         &[data-key] {
