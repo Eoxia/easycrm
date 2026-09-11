@@ -51,10 +51,9 @@ class RecurringInvoiceFollowupCron
     }
 
     /**
-     * Job: project one follow-up per active recurring invoice, placed on the month of its next
-     * generation date (date_when). This spreads the board across the coming months instead of only
-     * the current one, so upcoming renewals are visible ahead of time. Idempotent: one follow-up per
-     * recurring invoice and period.
+     * Job: ensure exactly ONE follow-up annotation per active recurring invoice. The board is now read
+     * live from the invoice templates, so the annotation only carries metadata (prestation, SAV time)
+     * and the Document Unique cycle — it must never be duplicated. Idempotent: one row per template.
      *
      * @return int 0 if OK, < 0 if KO.
      */
@@ -79,14 +78,10 @@ class RecurringInvoiceFollowupCron
         }
 
         while ($fr = $this->db->fetch_object($resql)) {
-            // Place the follow-up on the month of the invoice's next due date (fallback: current month).
-            $when        = !empty($fr->date_when) ? $this->db->jdate($fr->date_when) : dol_now();
-            $periodStart = dol_get_first_day((int) dol_print_date($when, '%Y'), (int) dol_print_date($when, '%m'));
-            $periodEnd   = dol_get_last_day((int) dol_print_date($when, '%Y'), (int) dol_print_date($when, '%m'));
-
+            // One annotation per template, regardless of period: never create a second row for the
+            // same recurring invoice (the list reads the templates live, the annotation is metadata).
             $sqlCheck  = 'SELECT rowid FROM ' . MAIN_DB_PREFIX . 'reedcrm_facturerec_followup';
             $sqlCheck .= ' WHERE fk_facture_rec = ' . ((int) $fr->rowid);
-            $sqlCheck .= " AND period >= '" . $this->db->idate($periodStart) . "' AND period <= '" . $this->db->idate($periodEnd) . "'";
             $sqlCheck .= ' AND entity IN (' . getEntity('reedcrm_facturerec_followup') . ')';
             $resqlCheck = $this->db->query($sqlCheck);
             if ($resqlCheck && $this->db->num_rows($resqlCheck) > 0) {
@@ -94,10 +89,13 @@ class RecurringInvoiceFollowupCron
                 continue;
             }
 
+            // Anchor the annotation on the template's next due date (fallback: now).
+            $when = !empty($fr->date_when) ? $this->db->jdate($fr->date_when) : dol_now();
+
             $followup                 = new RecurringInvoiceFollowup($this->db);
             $followup->fk_soc         = (int) $fr->fk_soc;
             $followup->fk_facture_rec = (int) $fr->rowid;
-            $followup->period         = $periodStart;
+            $followup->period         = $when;
             $followup->prestation     = reedcrmFollowupGuessPrestation((string) $fr->titre);
             $followup->montant_ttc    = (float) $fr->total_ttc;
             $followup->temps_sav      = reedcrmFollowupSavSecondsForPrestation($followup->prestation);
@@ -255,7 +253,8 @@ class RecurringInvoiceFollowupCron
     }
 
     /**
-     * Job: create or refresh DU audits from the invoiced audit services (product ref "DU_AU%").
+     * Job: create or refresh DU audits from the invoiced Document Unique services (product ref
+     * "DU_A%": DU_AU audits + DU_AC/DU_Accompagnement setup, which also start the yearly cycle).
      * One audit per client (the latest audit invoice). A newer audit invoice refreshes the cycle;
      * manual date moves for the current cycle are preserved (only a strictly newer invoice updates them).
      *
@@ -278,7 +277,7 @@ class RecurringInvoiceFollowupCron
         $sql .= ' FROM ' . MAIN_DB_PREFIX . 'facture as f';
         $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'facturedet as fd ON fd.fk_facture = f.rowid';
         $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'product as p ON p.rowid = fd.fk_product';
-        $sql .= " WHERE p.ref LIKE 'DU\_AU%'";
+        $sql .= " WHERE p.ref LIKE 'DU\_A%'"; // DU_AU (audit) + DU_AC/DU_Accompagnement (mise en place)
         $sql .= ' AND f.type <> 2'; // exclude credit notes (avoirs)
         $sql .= ' AND f.datef IS NOT NULL AND f.fk_soc > 0 AND f.entity IN (' . getEntity('facture') . ')';
         $sql .= ' GROUP BY f.fk_soc, f.rowid, f.datef';

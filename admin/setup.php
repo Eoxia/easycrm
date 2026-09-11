@@ -109,6 +109,25 @@ if ($action == 'set_config') {
     }
     dolibarr_set_const($db, 'REEDCRM_EVENT_STATUS_VALUE', $statusEvent, 'integer', 0, '', $conf->entity);
 
+    $projectCommercialInherit = GETPOST('project_commercial_inherit', 'int');
+    dolibarr_set_const($db, 'REEDCRM_PROJECT_COMMERCIAL_INHERIT', $projectCommercialInherit, 'integer', 0, '', $conf->entity);
+
+    setEventMessage('SavedConfig');
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+if ($action == 'set_config_quick_close') {
+    $delayUnit  = GETPOST('quick_close_delay_unit', 'aZ09') === 'd' ? 'd' : 'm';
+    $delayValue = GETPOSTINT('quick_close_delay_value');
+
+    if ($delayValue < 1) {
+        $delayValue = 1;
+    }
+
+    dolibarr_set_const($db, 'REEDCRM_QUICK_CLOSE_DELAY_UNIT', $delayUnit, 'chaine', 0, '', $conf->entity);
+    dolibarr_set_const($db, 'REEDCRM_QUICK_CLOSE_DELAY_VALUE', $delayValue, 'integer', 0, '', $conf->entity);
+
     setEventMessage('SavedConfig');
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
@@ -340,6 +359,17 @@ print '<td class="center">';
 print ajax_constantonoff('REEDCRM_CONTACT_EMAIL_VISIBLE');
 print '</td></td><td></td></tr>';
 
+// ContactCategoriesShort
+print '<tr class="oddeven"><td>';
+print $langs->trans('ContactCategoriesShort');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('ContactCategoriesShort'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('REEDCRM_CONTACT_CATEGORIES_VISIBLE');
+print '</td></td><td></td></tr>';
+
 // PROJECT
 print '<tr class="oddeven"><td colspan="4" class="center"><div class="titre inline-block">' . $langs->trans('Configs', $langs->transnoentities('QuickProjectCreations')) . '</div></td></tr>';
 
@@ -390,6 +420,18 @@ if ($conf->global->REEDCRM_PROJECT_OPPORTUNITY_AMOUNT_VISIBLE > 0) {
 }
 print '</tr>';
 
+// Commercial
+print '<tr class="oddeven"><td>';
+print $langs->trans('AllocateCommercial');
+print '</td><td>';
+print $langs->trans('ObjectVisibleDescription', $langs->trans('AllocateCommercial'));
+print '</td>';
+
+print '<td class="center">';
+print ajax_constantonoff('REEDCRM_PROJECT_COMMERCIAL_VISIBLE');
+print '</td>';
+print '<td><input type="checkbox" name="project_commercial_inherit" value="1" ' . (!empty($conf->global->REEDCRM_PROJECT_COMMERCIAL_INHERIT) ? 'checked="checked"' : '') . '> Hériter l\'assignation des commerciaux du tiers</td></tr>';
+
 // DateStart
 print '<tr class="oddeven"><td>';
 print $langs->trans('DateStart');
@@ -420,7 +462,7 @@ print $langs->trans('ObjectVisibleDescription', $langs->transnoentities('Extrafi
 print '</td>';
 
 print '<td class="center">';
-print ajax_constantonoff('REEDCRM_PROJECT_CATEGORIES_VISIBLE');
+print ajax_constantonoff('REEDCRM_PROJECT_EXTRAFIELDS_VISIBLE');
 print '</td></td><td></td></tr>';
 
 // Categories
@@ -603,6 +645,24 @@ print '</table>';
 print '<div class="tabsAction"><input type="submit" class="butAction" name="save" value="' . $langs->trans('Save') . '"></div>';
 print '</form>';
 
+print '<script>
+$(document).ready(function() {
+    var $checkbox = $("input[name=\'project_commercial_inherit\']");
+    var $toggleContainer = $checkbox.closest("tr").find("td.center");
+
+    function updateToggleState() {
+        if ($checkbox.is(":checked")) {
+            $toggleContainer.css({ "pointer-events": "none", "opacity": "0.5" });
+        } else {
+            $toggleContainer.css({ "pointer-events": "auto", "opacity": "1" });
+        }
+    }
+
+    $checkbox.on("change", updateToggleState);
+    updateToggleState();
+});
+</script>';
+
 // Quick events
 print load_fiche_titre($langs->trans('Configs', $langs->transnoentities('QuickEventCreation')), '', '');
 print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '" name="quickcreation_api">';
@@ -645,6 +705,46 @@ print '<td class="">';
 print $form->selectarray('remind_unit', $offsetUnits, getDolGlobalString('REEDCRM_QUICK_CREATION_REMINDER_UNIT'));
 print '</td></td></tr>';
 
+
+print '</table>';
+print '<div class="tabsAction"><input type="submit" class="butAction" name="save" value="' . $langs->trans('Save') . '"></div>';
+print '</form>';
+
+// Quick close of an event
+print load_fiche_titre($langs->trans('Configs', $langs->transnoentities('QuickCloseEvents')), '', '');
+print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '" name="quick_close">';
+print '<input type="hidden" name="token" value="' . newToken() . '">';
+print '<input type="hidden" name="action" value="set_config_quick_close">';
+print '<table class="noborder centpercent">';
+
+print '<tr class="liste_titre">';
+print '<td>' . $langs->trans('Name') . '</td>';
+print '<td>' . $langs->trans('Description') . '</td>';
+print '<td>' . $langs->trans('Value') . '</td>';
+print '</tr>';
+
+// Delay preselected in the reschedule block of the quick close modal
+$quickCloseUnits = [
+    'm' => $langs->transnoentities('QuickCloseEventInOneMonth'),
+    'd' => $langs->transnoentities('QuickCloseEventInDaysLabel')
+];
+
+print '<tr class="oddeven"><td>';
+print $langs->trans('QuickCloseEventDefaultDelay');
+print '</td><td>';
+print $langs->trans('QuickCloseEventDefaultDelayDescription');
+print '</td><td>';
+print $form->selectarray('quick_close_delay_unit', $quickCloseUnits, getDolGlobalString('REEDCRM_QUICK_CLOSE_DELAY_UNIT', 'm'), 0, 0, 0, '', 0, 0, 0, '', 'maxwidth200 widthcentpercentminusx');
+print '</td></tr>';
+
+// Number of days proposed when the delay is expressed in days
+print '<tr class="oddeven"><td>';
+print $langs->trans('QuickCloseEventDefaultDays');
+print '</td><td>';
+print $langs->trans('QuickCloseEventDefaultDaysDescription');
+print '</td><td>';
+print '<input type="number" name="quick_close_delay_value" class="minwidth200" value="' . getDolGlobalInt('REEDCRM_QUICK_CLOSE_DELAY_VALUE', 7) . '" min="1" max="3650">';
+print '</td></tr>';
 
 print '</table>';
 print '<div class="tabsAction"><input type="submit" class="butAction" name="save" value="' . $langs->trans('Save') . '"></div>';

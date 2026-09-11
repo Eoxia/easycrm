@@ -48,6 +48,9 @@ if (isModEnabled('categorie')) {
     require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 }
 
+// Load ReedCRM librairies
+require_once __DIR__ . '/../class/geolocation.class.php';
+
 // Global variables definitions
 global $conf, $db, $hookmanager, $mysoc, $langs, $user;
 
@@ -73,6 +76,7 @@ if (isModEnabled('societe')) {
     $thirdparty = new Societe($db);
     $contact    = new Contact($db);
 }
+$geolocation = new Geolocation($db);
 
 // Initialize view objects
 $form = new Form($db);
@@ -111,6 +115,12 @@ if (empty($reshook)) {
         header('Location: ' . dol_buildpath('/reedcrm/reedcrmindex.php', 1));
         exit;
     }
+    // Prefill the third party form with the company selected in the SIREN search (module Sirene)
+    if ($action == 'sirene_set_company_infos' && isModEnabled('societe') && isModEnabled('sirene') && dol_include_once('/sirene/class/actions_sirene.class.php')) {
+        $actionsSirene = new ActionsSirene($db);
+        $actionsSirene->doActions(['context' => 'thirdpartycard'], $thirdparty, $action, $hookmanager);
+    }
+
 	require_once __DIR__ . '/../core/tpl/reedcrm_quickcreation_actions.tpl.php';
 }
 

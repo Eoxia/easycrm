@@ -33,6 +33,7 @@ if (file_exists('../reedcrm.main.inc.php')) {
 
 require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT . '/custom/saturne/lib/medias.lib.php';
+require_once __DIR__ . '/../../lib/reedcrm_function.lib.php';
 require_once __DIR__ . '/../../class/calllist.class.php';
 require_once __DIR__ . '/../../class/calllistline.class.php';
 
@@ -198,10 +199,15 @@ $dateStart = $object->date_start ? dol_print_date($object->date_start, 'day') : 
 $dateEnd   = $object->date_end   ? dol_print_date($object->date_end,   'day') : '—';
 print '<div class="pwa-call-list-header">';
 
-$sqlLists = "SELECT rowid, label, fk_user_assign FROM " . MAIN_DB_PREFIX . "reedcrm_call_list";
-$sqlLists .= " WHERE entity IN (" . getEntity('call_list') . ")";
-$sqlLists .= " AND status = " . CallList::STATUS_ACTIVE;
-$sqlLists .= " ORDER BY date_creation DESC";
+// Only employees' lists are offered: a default call list is created for every user, external
+// users (client contacts with a login) included, which floods the selector with lists nobody calls.
+// The current user's own lists and the list being displayed always stay reachable.
+$sqlLists = "SELECT cl.rowid, cl.label, cl.fk_user_assign FROM " . MAIN_DB_PREFIX . "reedcrm_call_list cl";
+$sqlLists .= " LEFT JOIN " . MAIN_DB_PREFIX . "user u ON u.rowid = cl.fk_user_assign";
+$sqlLists .= " WHERE cl.entity IN (" . getEntity('call_list') . ")";
+$sqlLists .= " AND cl.status = " . CallList::STATUS_ACTIVE;
+$sqlLists .= " AND (u.employee = 1 OR cl.fk_user_assign = " . ((int) $user->id) . " OR cl.rowid = " . ((int) $object->id) . ")";
+$sqlLists .= " ORDER BY cl.date_creation DESC";
 $resqlLists = $db->query($sqlLists);
 
 $myLists = [];
@@ -230,19 +236,28 @@ if ($resqlLists) {
     }
 }
 
-print '<select class="pwa-call-list-select" onchange="if(this.value) window.location.href=\'?id=\'+this.value">';
-foreach ($myLists as $lst) {
-    $sel = ($lst->rowid == $object->id) ? ' selected' : '';
-    print '<option value="' . $lst->rowid . '"' . $sel . '>' . dol_escape_htmltag($lst->label) . '</option>';
+print '<select id="pwa-call-list-select" class="pwa-call-list-select">';
+if (!empty($myLists)) {
+    print '<optgroup label="' . dol_escape_htmltag($langs->trans('MyCallLists')) . '">';
+    foreach ($myLists as $lst) {
+        $sel = ($lst->rowid == $object->id) ? ' selected' : '';
+        print '<option value="' . $lst->rowid . '"' . $sel . '>' . dol_escape_htmltag($lst->label) . '</option>';
+    }
+    print '</optgroup>';
 }
 if (!empty($otherLists)) {
-    if (!empty($myLists)) print '<option disabled>---------------</option>';
+    print '<optgroup label="' . dol_escape_htmltag($langs->trans('OtherCallLists')) . '">';
     foreach ($otherLists as $lst) {
         $sel = ($lst->rowid == $object->id) ? ' selected' : '';
         print '<option value="' . $lst->rowid . '"' . $sel . '>' . dol_escape_htmltag($lst->label) . '</option>';
     }
+    print '</optgroup>';
 }
 print '</select>';
+
+// select2 turns the plain select into a searchable dropdown, mandatory once the instance
+// holds dozens of lists. Navigation itself is handled in js/modules/pwa_call_list.js
+print ajax_combobox('pwa-call-list-select');
 
 print '</div>';
 
@@ -268,6 +283,7 @@ if (empty($lines)) {
         $sourceTitleHtml = '';
         $oppPercent = null;
         $oppAmount  = null;
+        $oppProjectId = 0;
         $saturneModule = 'reedcrm';
         $saturneSubdir = 'calllistline/' . (int) $line->id;
 
@@ -284,6 +300,7 @@ if (empty($lines)) {
                     if ($project->fetch($propal->fk_project) > 0) {
                         $sourceTitleHtml = $project->title;
                         $oppPercent = $project->opp_percent;
+                        $oppProjectId = $project->id;
                     }
                 }
                 $oppAmount = $propal->total_ttc;
@@ -298,24 +315,14 @@ if (empty($lines)) {
                 $sourceTitleHtml = $project->title;
                 $oppPercent = $project->opp_percent;
                 $oppAmount  = $project->opp_amount;
-                
+                $oppProjectId = $project->id;
+
                 if (empty($line->fk_contact) || empty($lastname)) {
-                    $project->fetch_optionals();
-                    if (!empty($project->array_options['options_projectaddress'])) {
-                        $contact->fetch($project->array_options['options_projectaddress']);
-                        $lastname  = dol_escape_htmltag($contact->lastname);
-                        $firstname = dol_escape_htmltag($contact->firstname);
-                        $phone     = dol_escape_htmltag($contact->phone_pro ?: $contact->phone_mobile ?: '');
-                    } elseif (!empty($project->array_options['options_reedcrm_lastname']) || !empty($project->array_options['options_projectphone'])) {
-                        $lastname  = dol_escape_htmltag($project->array_options['options_reedcrm_lastname'] ?? '');
-                        $firstname = dol_escape_htmltag($project->array_options['options_reedcrm_firstname'] ?? '');
-                        $phone     = dol_escape_htmltag($project->array_options['options_projectphone'] ?? '');
-                    } elseif ($project->socid > 0) {
-                        require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
-                        $soc = new Societe($db);
-                        $soc->fetch($project->socid);
-                        $lastname = dol_escape_htmltag($soc->name);
-                        $phone    = dol_escape_htmltag($soc->phone);
+                    $projectContact = reedcrm_get_project_contact_details($project);
+                    if ($projectContact['lastname'] !== '' || $projectContact['firstname'] !== '' || $projectContact['phone'] !== '') {
+                        $lastname  = dol_escape_htmltag($projectContact['lastname']);
+                        $firstname = dol_escape_htmltag($projectContact['firstname']);
+                        $phone     = dol_escape_htmltag($projectContact['phone']);
                     }
                 }
             }
@@ -356,7 +363,22 @@ if (empty($lines)) {
             }
             print '</div>';
             
-            if ($sourceTitleHtml) {
+            if ($oppProjectId > 0) {
+                // Drill down to the App opportunity page, keeping the call list in the header.
+                // Rendered as an explicit disclosure row: a plain coloured title reads as decoration
+                // on a card that already holds five buttons, and nobody finds it.
+                $oppUrl = dol_buildpath('/custom/reedcrm/view/frontend/pwa_opportunity.php', 1)
+                    . '?from_id=' . (int) $oppProjectId . '&from_type=project&call_list_id=' . (int) $object->id;
+                print '<a class="pwa-call-opp-link" href="' . dol_escape_htmltag($oppUrl) . '">';
+                print '<span class="pwa-call-opp-link-body">';
+                if ($sourceTitleHtml) {
+                    print '<span class="pwa-call-opp-link-title">' . dol_escape_htmltag($sourceTitleHtml) . '</span>';
+                }
+                print '<span class="pwa-call-opp-link-action">' . $langs->trans('SeeOpportunityTimeline') . '</span>';
+                print '</span>';
+                print '<span class="pwa-call-opp-link-chevron"><i class="fas fa-chevron-right"></i></span>';
+                print '</a>';
+            } elseif ($sourceTitleHtml) {
                 print '<div class="pwa-call-title">' . dol_escape_htmltag($sourceTitleHtml) . '</div>';
             } else {
                 print '<div style="margin-bottom:12px;"></div>';

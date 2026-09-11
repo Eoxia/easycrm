@@ -88,7 +88,7 @@
             <div>
                 <label>
                     <?php //echo img_picto('', 'agenda'); ?>
-                    <div class="select2-container" style="display: flex; align-items: center;"><?php echo $form->selectDate(dol_now('tzuser'), 'event_', 1, 1); ?></div>
+                    <div class="select2-container" style="display: flex; align-items: center;"><?php echo $form->selectDate(dol_now(), 'event_', 1, 1, 0, "addeventform", 1, 0, 0, '', '', '', '', 1, '', '', 'tzuserrel'); ?></div>
                 </label>
             </div>
             <div>
@@ -99,39 +99,6 @@
             </div>
         </div>
 
-        <?php
-            print showEventProTabs($id, $fromType, $currentTab);
-
-            if ($currentTab == 'note') {
-                require_once __DIR__ . '/view_eventpro_actioncomm_note.tpl.php';
-            }
-
-            if ($currentTab == 'email') {
-                $originalProjectAddonPdf = getDolGlobalString('PROJECT_ADDON_PDF');
-                if ($object->element == 'project' && !empty($originalProjectAddonPdf)) {
-                    $conf->global->PROJECT_ADDON_PDF = '';
-                }
-
-                $modelmail    = 'thirdparty';
-                $defaulttopic = 'InformationMessage';
-                if ($object->element == 'project') {
-                    $diroutput = $conf->project->multidir_output[$object->entity] . '/' . dol_sanitizeFileName($object->ref);
-                } else {
-                    $diroutput = '';
-                }
-                $trackid      = $object->element . $object->id;
-                $action       = 'presend';
-
-                require_once DOL_DOCUMENT_ROOT . '/core/tpl/card_presend.tpl.php';
-
-                if ($object->element == 'project' && isset($originalProjectAddonPdf)) {
-                    $conf->global->PROJECT_ADDON_PDF = $originalProjectAddonPdf;
-                }
-            }
-
-            if ($currentTab == 'ticket' && isModEnabled('ticket')) {
-                require_once __DIR__ . '/view_eventpro_ticket.tpl.php';
-            }
-        ?>
+        <?php require __DIR__ . '/eventpro_tab_content.tpl.php'; ?>
     </div>
 </form>

@@ -62,6 +62,90 @@ class ActionsReedcrm
     }
 
     /**
+     * Check the hook context against exact context names
+     *
+     * The context is a colon separated list of names, so a substring test on 'invoicelist'
+     * or 'invoicereccard' also matches 'supplierinvoicelist' or 'supplierinvoicereccard'
+     * and runs the code on a supplier object.
+     *
+     * The generic Saturne views suffix their own context ('projectlist_saturne'), where the
+     * module behaves like on the native page, so the suffix is dropped before matching.
+     *
+     * @param  array $parameters Hook metadatas (context, etc...)
+     * @param  array $names      Context names to look for
+     * @return bool              True when one of the names is one of the current contexts
+     */
+    protected function isContext(array $parameters, array $names): bool
+    {
+        $contexts = preg_replace('/_saturne$/', '', explode(':', $parameters['context'] ?? ''));
+
+        return count(array_intersect($contexts, $names)) > 0;
+    }
+
+    /**
+     * Overload the menuLeftMenuItems hook to inject our custom menu entries
+     *
+     * @param array $parameters
+     * @param CommonObject $object
+     * @param string $action
+     * @param HookManager $hookmanager
+     * @return int
+     */
+    public function menuLeftMenuItems(array $parameters, &$object, string &$action, $hookmanager)
+    {
+        global $langs, $user;
+
+        // Check if we are building the commercial menu (which includes proposals)
+        if (isset($parameters['mainmenu']) && $parameters['mainmenu'] == 'commercial') {
+            if (isModEnabled('category') && getDolGlobalString('CATEGORY_EDIT_IN_MENU_NOT_IN_POPUP')) {
+                require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+                $tmpcat = new Categorie($this->db);
+                $type_id = isset($tmpcat->MAP_ID[Categorie::TYPE_PROPOSAL]) ? $tmpcat->MAP_ID[Categorie::TYPE_PROPOSAL] : 23;
+                
+                $langs->load('categories');
+                
+                // $object contains the $menu_array because it is passed as the 3rd argument in executeHooks
+                if (is_array($object)) {
+                    // Find the position of the last 'propals' menu item to insert after it
+                    $insert_idx = -1;
+                    $i = 0;
+                    foreach ($object as $idx => $m) {
+                        if (isset($m['leftmenu']) && $m['leftmenu'] == 'propals') {
+                            $insert_idx = $i;
+                        }
+                        $i++;
+                    }
+                    
+                    $new_item = array(
+                        'url' => '/categories/categorie_list.php?mainmenu=commercial&leftmenu=propals_tags&type='.$type_id,
+                        'titre' => $langs->trans('Categories'),
+                        'level' => 1,
+                        'enabled' => $user->hasRight('categorie', 'lire'),
+                        'perms' => '1',
+                        'target' => '',
+                        'mainmenu' => 'commercial',
+                        'leftmenu' => 'propals_tags',
+                        'position' => 101,
+                        'prefix' => ''
+                    );
+                    
+                    if ($insert_idx >= 0) {
+                        // Insert after the last propals item
+                        array_splice($object, $insert_idx + 1, 0, array($new_item));
+                    } else {
+                        // Append if not found
+                        $object[] = $new_item;
+                    }
+                    
+                    $this->results = $object;
+                    return 1; // Return 1 to replace the menu array
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
      *  Overloading the addMoreBoxStatsCustomer function : replacing the parent's function with the one below
      *
      * @param  array        $parameters Hook metadatas (context, etc...)
@@ -216,26 +300,6 @@ class ActionsReedcrm
      */
     public function addMoreActionsButtons(array $parameters, CommonObject $object): int
     {
-        global $langs, $user;
-
-        // Do something only for the current context
-        if (preg_match('/thirdpartycomm|projectcard/', $parameters['context'])) {
-            if (empty(GETPOST('action')) || GETPOST('action') == 'update') {
-                if (strpos($parameters['context'], 'thirdpartycomm') !== false) {
-                    $socid = $object->id;
-                    $moreparam = '';
-                } else {
-                    $socid = $object->socid;
-                    $moreparam = '&project_id=' . $object->id;
-                }
-                $url = '?socid=' . $socid . '&fromtype=' . $object->element . $moreparam . '&action=create&token=' . newToken();
-                
-                // Print the standard quick event creation
-                print dolGetButtonAction('', $langs->trans('QuickEventCreation'), 'default', dol_buildpath('/reedcrm/view/quickevent.php', 1) . $url, '', $user->rights->agenda->myactions->create);
-                
-            }
-        }
-
         // ReedCRM: on the validated Reception card, the core line view renders only the empty line
         // description and exposes no per-line hook, so the product description never shows. We inject it
         // client-side from a data-island computed here. (Shipment already shows it natively via the order line.)
@@ -432,7 +496,7 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicecard|invoicereccard|thirdpartycomm|thirdpartycard/', $parameters['context'])) {
+        if ($this->isContext($parameters, ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
             if ($action == 'set_notation_object_contact') {
                 require_once __DIR__ . '/../lib/reedcrm_function.lib.php';
 
@@ -578,9 +642,10 @@ class ActionsReedcrm
                         } else {
                             $cardProUrlFull = DOL_URL_ROOT . '/custom/reedcrm/view/procard.php?from_id=' . $socid . '&from_type=societe&actioncode=' . $actonComByType['actioncode'];
                         }
-                        $out .= '<span class="fa fa-plus reedcrm-plist-relaunch-add modal-open reedcrm-modal-open" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $projectId . '" data-modal-url="' . dol_escape_htmltag($cardProUrlFull) . '">';
+                        $out .= '<div class="reedcrm-plist-relaunch-add modal-open reedcrm-modal-open" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $projectId . '" data-modal-url="' . dol_escape_htmltag($cardProUrlFull) . '">';
+                        $out .= '<i class="fas fa-plus"></i>';
                         $out .= '<input type="hidden" class="modal-options" data-modal-to-open="eventproCardModal">';
-                        $out .= '</span>';
+                        $out .= '</div>';
                     }
 
                     $out .= '</div>';
@@ -704,11 +769,11 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicelist|invoicereclist|thirdpartylist|projectlist|propallist/', $parameters['context'])) {
+        if ($this->isContext($parameters, ['invoicelist', 'invoicereclist', 'thirdpartylist', 'projectlist', 'propallist'])) {
             $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
             print '<link href="' . $cssPath . '" rel="stylesheet">';
             // Load reedcrm modal CSS and JS for projectlist and propallist
-            if (preg_match('/projectlist|propallist/', $parameters['context'])) {
+            if ($this->isContext($parameters, ['projectlist', 'propallist'])) {
                 global $langs;
                 // Load main reedcrm CSS
                 $reedcrmMainCssPath = dol_buildpath('/custom/reedcrm/css/reedcrm.min.css', 1);
@@ -752,9 +817,10 @@ class ActionsReedcrm
                 <?php
             }
 
-            $jQueryElement = 'notation_' . $object->element . '_contact';
-            $pictoPath     = dol_buildpath('/reedcrm/img/reedcrm_color.png', 1);
-            $picto         = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule'); ?>
+            if (!empty($object) && is_object($object)) {
+                $jQueryElement = 'notation_' . $object->element . '_contact';
+                $pictoPath     = dol_buildpath('/reedcrm/img/reedcrm_color.png', 1);
+                $picto         = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule'); ?>
 
             <script>
                 var objectElement = <?php echo "'" . $jQueryElement . "'"; ?>;
@@ -763,9 +829,10 @@ class ActionsReedcrm
                 cell.prepend(outJS);
             </script>
             <?php
+            }
         }
 
-        if (preg_match('/invoicecard|invoicereccard|thirdpartycomm|thirdpartycard/', $parameters['context'])) {
+        if ($this->isContext($parameters, ['invoicecard', 'invoicereccard', 'thirdpartycomm', 'thirdpartycard'])) {
             $cssPath = dol_buildpath('/saturne/css/saturne.min.css', 1);
             print '<link href="' . $cssPath . '" rel="stylesheet">';
 
@@ -774,8 +841,9 @@ class ActionsReedcrm
             $picto         = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule');
 
             $out  = $picto;
-            $out .= '<div class="wpeo-button button-strong ' . (($object->array_options['options_notation_' . $object->element . '_contact'] >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
-            $out .= '<span>' . $object->array_options['options_notation_' . $object->element . '_contact'] . '</span>';
+            $notation_value = isset($object->array_options['options_notation_' . $object->element . '_contact']) ? $object->array_options['options_notation_' . $object->element . '_contact'] : 0;
+            $out .= '<div class="wpeo-button button-strong ' . (($notation_value >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
+            $out .= '<span>' . $notation_value . '</span>';
             $out .= '</div>';
             $out .= '<a class="reposition editfielda" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=set_notation_object_contact&token=' . newToken() . '">';
             $out .= img_picto($langs->trans('SetNotationObjectContact'), 'fontawesome_fa-redo_fas_#444', 'class="paddingleft"') . '</a>'; ?>
@@ -838,7 +906,8 @@ class ActionsReedcrm
             }
         }
         if (strpos($parameters['context'], 'ticketcard') !== false && $object instanceof Ticket) {
-            global $db;
+            global $db, $langs;
+            $langs->load('reedcrm@reedcrm');
             $html = '';
             $defaultMinutes = getDolGlobalInt('REEDCRM_TICKET_TIME_DEFAULT_MINUTES', 15);
             
@@ -973,7 +1042,7 @@ class ActionsReedcrm
 
             if (!empty($object->fk_project)) {
                   $html = '
-                  <div id="reedcrm-ticket-time-block" class="contact-inline-wrapper" style="display:none; flex-direction: column; align-items: flex-start; background: #f8fbff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #4a5568; gap: 4px; max-width: 400px;">
+                  <div id="reedcrm-ticket-time-block" class="contact-inline-wrapper" style="display:none; align-self: center; flex-direction: column; align-items: flex-start; background: #f8fbff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #4a5568; gap: 4px; max-width: 400px;">
                       <div style="display: flex; align-items: center; gap: 5px; width: 100%;">
                           ' . $logoHtml . '
                           <textarea id="reedcrm-ticket-time-note" placeholder="' . dol_escape_htmltag($langs->trans('Note')) . '" rows="1" style="border: 1px solid #cbd5e0; border-radius: 4px; padding: 2px 6px; font-size: 0.95em; width: 150px; background: #fff; height: 24px; resize: horizontal; overflow: hidden; line-height: 1.5; white-space: nowrap;"></textarea>
@@ -1084,7 +1153,7 @@ class ActionsReedcrm
                 ';
             } else {
                 $html = '
-                <div id="reedcrm-ticket-time-block" class="contact-inline-wrapper" style="display:none; align-items: center; background: #fffaf0; border: 1px solid #feebc8; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #c05621; gap: 5px;">
+                <div id="reedcrm-ticket-time-block" class="contact-inline-wrapper" style="display:none; align-self: center; align-items: center; background: #fffaf0; border: 1px solid #feebc8; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #c05621; gap: 5px;">
                     ' . $logoHtml . '
                     <span><i class="fas fa-exclamation-triangle"></i> ' . dol_escape_htmltag($langs->trans('PleaseLinkProjectFirst')) . '</span>
                 </div>
@@ -1182,7 +1251,7 @@ class ActionsReedcrm
             $logoSrcSev = dol_buildpath('/custom/reedcrm/img/object_reedcrm_color.png', 1);
 
             $html .= '
-            <div id="reedcrm-ticket-severity-block" class="contact-inline-wrapper" style="display:none; align-items: center; background: #f8fbff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #4a5568;">
+            <div id="reedcrm-ticket-severity-block" class="contact-inline-wrapper" style="display:none; align-self: center; align-items: center; background: #f8fbff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #4a5568;">
                 <img src="' . dol_escape_htmltag($logoSrcSev) . '" style="height: 18px; width: 18px; object-fit: contain; margin-right: 8px; border-right: 1px solid #cbd5e0; padding-right: 8px;" alt="ReedCRM" />
                 <i class="far fa-exclamation-triangle" style="color: #64748b; margin-right: 6px;"></i>
                 <a href="#" id="reedcrm-ticket-severity-badge" class="classlink" style="cursor: pointer; transition: color 0.3s; color: #0f172a; border-bottom: 1px dashed #cbd5e0; line-height: 1; padding-bottom: 1px;" title="' . dol_escape_htmltag($langs->trans('Edit')) . '">' . $currentSevLabel . '</a>
@@ -1193,7 +1262,7 @@ class ActionsReedcrm
                 </div>
             </div>
             
-            <div id="reedcrm-ticket-assign-block" class="contact-inline-wrapper" style="display:none; align-items: center; background: #f8fbff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #4a5568;">
+            <div id="reedcrm-ticket-assign-block" class="contact-inline-wrapper" style="display:none; align-self: center; align-items: center; background: #f8fbff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #4a5568;">
                 <img src="' . dol_escape_htmltag($logoSrcSev) . '" style="height: 18px; width: 18px; object-fit: contain; margin-right: 8px; border-right: 1px solid #cbd5e0; padding-right: 8px;" alt="ReedCRM" />
                 <i class="fas fa-user-tie" style="color: #64748b; margin-right: 6px;"></i>
                 <a href="#" id="reedcrm-ticket-assign-badge" class="classlink" style="cursor: pointer; transition: color 0.3s; color: #0f172a; border-bottom: 1px dashed #cbd5e0; line-height: 1; padding-bottom: 1px;" title="' . dol_escape_htmltag($langs->trans('Edit')) . '">' . $assignLabel . '</a>
@@ -1425,6 +1494,24 @@ class ActionsReedcrm
 
             $this->resprints .= $html;
         }
+
+        // Quick close of the to-do events listed by show_actions_done(), on every page displaying that list,
+        // of the event shown alone on its own card (actioncard) and of the cards of the to-do board
+        $quickCloseContexts = 'agenda|actioncard|thirdpartycomm|thirdpartysupplier|projectcardinfo|call_list_card|thirdpartycalls|address|reedcrmtodolist';
+        if (isModEnabled('agenda') && preg_match('/' . $quickCloseContexts . '/', $parameters['context'])
+            && ($user->hasRight('agenda', 'myactions', 'create') || $user->hasRight('agenda', 'allactions', 'create'))) {
+            $langs->load('reedcrm@reedcrm');
+            require __DIR__ . '/../core/tpl/reedcrm_event_quick_close_modal.tpl.php';
+        }
+
+        // Intervention dates of the service lines, planned from the proposal card
+        require_once __DIR__ . '/../lib/reedcrm_interventiondate.lib.php';
+        if (strpos($parameters['context'], 'propalcard') !== false && reedcrmInterventionIsEnabled()
+            && $user->hasRight('propal', 'lire') && is_object($object) && $object->id > 0) {
+            $langs->load('reedcrm@reedcrm');
+            require __DIR__ . '/../core/tpl/reedcrm_intervention_date_modal.tpl.php';
+        }
+
         return 0; // or return 1 to replace standard code
     }
 
@@ -1634,20 +1721,23 @@ class ActionsReedcrm
                             $out .= '<div class="reedcrm-plist-relaunch-wrapper">';
                             $out .= '<div class="reedcrm-plist-relaunch-buttons reedcrm-relaunch-buttons">';
 
-                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-call" data-relaunch-type="call" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['call'])) . '">';
+                            $dialogUrl = dol_buildpath('/custom/reedcrm/ajax/get_relaunches_list.php', 1);
+
+                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-call" data-project-id="' . $objId . '" data-dialog-url="' . $dialogUrl . '" data-relaunch-type="call" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['call'])) . '">';
                             $out .= '<div class="reedcrm-plist-relaunch-btn-content' . ($countsByType['call'] == 0 ? ' count-zero' : '') . '">';
                             $out .= '<i class="fas fa-headset"></i>';
                             $out .= '<span class="reedcrm-plist-relaunch-count">' . $countsByType['call'] . '</span>';
                             $out .= '</div>';
                             if ($user->hasRight('agenda', 'myactions', 'create')) {
                                 $cardProUrlFull = DOL_URL_ROOT . $cardProUrl . '&actioncode=AC_TEL';
-                                $out .= '<span class="fa fa-plus reedcrm-plist-relaunch-add modal-open reedcrm-modal-open" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $objId . '" data-modal-url="' . dol_escape_htmltag($cardProUrlFull) . '">';
+                                $out .= '<div class="reedcrm-plist-relaunch-add modal-open reedcrm-modal-open" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $objId . '" data-modal-url="' . dol_escape_htmltag($cardProUrlFull) . '">';
+                                $out .= '<i class="fas fa-plus"></i>';
                                 $out .= '<input type="hidden" class="modal-options" data-modal-to-open="' . $modalId . '">';
-                                $out .= '</span>';
+                                $out .= '</div>';
                             }
                             $out .= '</div>';
 
-                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-email" data-relaunch-type="email" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['email'])) . '">';
+                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-email" data-project-id="' . $objId . '" data-dialog-url="' . $dialogUrl . '" data-relaunch-type="email" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['email'])) . '">';
                             $out .= '<div class="reedcrm-plist-relaunch-btn-content' . ($countsByType['email'] == 0 ? ' count-zero' : '') . '">';
                             $out .= '<i class="fas fa-envelope"></i>';
                             $out .= '<span class="reedcrm-plist-relaunch-count">' . $countsByType['email'] . '</span>';
@@ -1660,7 +1750,7 @@ class ActionsReedcrm
                             }
                             $out .= '</div>';
 
-                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-rdv" data-relaunch-type="rdv" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['rdv'])) . '">';
+                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-rdv" data-project-id="' . $objId . '" data-dialog-url="' . $dialogUrl . '" data-relaunch-type="rdv" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['rdv'])) . '">';
                             $out .= '<div class="reedcrm-plist-relaunch-btn-content' . ($countsByType['rdv'] == 0 ? ' count-zero' : '') . '">';
                             $out .= '<i class="fas fa-calendar"></i>';
                             $out .= '<span class="reedcrm-plist-relaunch-count">' . $countsByType['rdv'] . '</span>';
@@ -1673,7 +1763,7 @@ class ActionsReedcrm
                             }
                             $out .= '</div>';
 
-                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-other" data-relaunch-type="other" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['other'])) . '">';
+                            $out .= '<div class="reedcrm-relaunch-button reedcrm-plist-relaunch-btn-other" data-project-id="' . $objId . '" data-dialog-url="' . $dialogUrl . '" data-relaunch-type="other" data-relaunches="' . dol_escape_htmltag(json_encode($relaunchesByType['other'])) . '">';
                             $out .= '<div class="reedcrm-plist-relaunch-btn-content' . ($countsByType['other'] == 0 ? ' count-zero' : '') . '">';
                             $out .= '<i class="fas fa-comment-dots"></i>';
                             $out .= '<span class="reedcrm-plist-relaunch-count">' . $countsByType['other'] . '</span>';
@@ -1775,8 +1865,8 @@ class ActionsReedcrm
                         $out5 .= '<div class="reedcrm-plist-coordonnees-box">';
                         $out5 .= '<div class="reedcrm-plist-coordonnees-name" style="display: flex; align-items: center; border-left: 1px solid #e2e8f0; padding-left: 8px;">';
                         $out5 .= '<i class="fas fa-address-book" style="color:#64748b; margin-right:4px; flex-shrink: 0;"></i>';
-                        $out5 .= '<span class="inline-edit-contact" data-field="firstname" data-val="' . dol_escape_htmltag($thirdPartyName2) . '" style="cursor:pointer; border-bottom:1px dashed #cbd5e0; padding-bottom:1px; margin-right:4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' . ($thirdPartyName2 ? $thirdPartyName2 : 'Prénom') . '</span>';
-                        $out5 .= '<span class="inline-edit-contact" data-field="lastname" data-val="' . dol_escape_htmltag($thirdPartyName) . '" style="cursor:pointer; border-bottom:1px dashed #cbd5e0; padding-bottom:1px; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' . ($thirdPartyName ? $thirdPartyName : 'Nom') . '</span>';
+                        $out5 .= '<span class="inline-edit-contact" data-field="lastname" data-val="' . dol_escape_htmltag($thirdPartyName) . '" style="cursor:pointer; border-bottom:1px dashed #cbd5e0; padding-bottom:1px; margin-right:4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' . ($thirdPartyName ? $thirdPartyName : 'Nom') . '</span>';
+                        $out5 .= '<span class="inline-edit-contact" data-field="firstname" data-val="' . dol_escape_htmltag($thirdPartyName2) . '" style="cursor:pointer; border-bottom:1px dashed #cbd5e0; padding-bottom:1px; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' . ($thirdPartyName2 ? $thirdPartyName2 : 'Prénom') . '</span>';
                         $out5 .= '</div>';
                         
                         $out5 .= '<div class="reedcrm-plist-coordonnees-email" style="display: flex; align-items: center; padding-left: 8px;">';
@@ -1832,17 +1922,18 @@ class ActionsReedcrm
             }
         }
 
-        if (preg_match('/invoicelist|invoicereclist|thirdpartylist/', $parameters['context'])) {
-            if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
-                $extrafieldName = 'options_notation_' . $object->element . '_contact';
+        if ($this->isContext($parameters, ['invoicelist', 'invoicereclist', 'thirdpartylist'])) {
+            $extrafieldName = 'options_notation_' . $object->element . '_contact';
+            $obj            = $parameters['obj'] ?? null;
+            if (isModEnabled('facture') && $user->hasRight('facture', 'lire') && is_object($obj) && property_exists($obj, $extrafieldName)) {
                 if ($object->element == 'facturerec') {
                     $specialName = 'facture_rec';
                 } else {
                     $specialName = $object->element;
                 }
                 $jQueryElement  = $specialName . '.notation_' . $object->element . '_contact';
-                $out            = '<div class="wpeo-button button-strong ' . (($parameters['obj']->$extrafieldName >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
-                $out           .= '<span>' . $parameters['obj']->$extrafieldName . '</span>';
+                $out            = '<div class="wpeo-button button-strong ' . (($obj->$extrafieldName >= 80) ? 'button-green' : 'button-red') . '" style="padding: 0; line-height: 1;">';
+                $out           .= '<span>' . $obj->$extrafieldName . '</span>';
                 $out           .= '</div>'; ?>
 
                 <script>
@@ -1887,7 +1978,7 @@ class ActionsReedcrm
     {
         global $langs;
 
-        if (preg_match('/invoicereccard|invoicereccontact/', $parameters['context'])) {
+        if ($this->isContext($parameters, ['invoicereccard', 'invoicereccontact']) && ($parameters['mode'] ?? '') === 'add') {
             $nbContact = 0;
             // Enable caching of thirdrparty count Contacts
             require_once DOL_DOCUMENT_ROOT . '/core/lib/memory.lib.php';
@@ -1908,14 +1999,14 @@ class ActionsReedcrm
 
                 dol_setcache($cacheKey, $nbContact, 120); // If setting cache fails, this is not a problem, so we do not test result
             }
-            $parameters['head'][1][0] = DOL_URL_ROOT . '/custom/reedcrm/view/contact.php?id=' . $parameters['object']->id;
-            $parameters['head'][1][1] = $langs->trans('ContactsAddresses');
+            // Append the tab instead of overwriting index 1, which is the native "InvoicesGeneratedFromRec" tab on recurring invoices.
+            $rank = count($parameters['head']);
+            $parameters['head'][$rank][0] = DOL_URL_ROOT . '/custom/reedcrm/view/contact.php?id=' . $parameters['object']->id;
+            $parameters['head'][$rank][1] = $langs->trans('ContactsAddresses');
             if ($nbContact > 0) {
-                $parameters['head'][1][1] .= '<span class="badge marginleftonlyshort">' . $nbContact . '</span>';
+                $parameters['head'][$rank][1] .= '<span class="badge marginleftonlyshort">' . $nbContact . '</span>';
             }
-            $parameters['head'][1][2] = 'contact';
-
-            $this->results = $parameters;
+            $parameters['head'][$rank][2] = 'contact';
         }
 
         if (strpos($parameters['context'], 'main') !== false) {
@@ -1956,7 +2047,16 @@ class ActionsReedcrm
             if (GETPOST('massaction') == 'assignOppStatus') {
                 $selected = ' selected="selected" ';
             }
-            $ret .= '<option value="assignOppStatus"' . $selected . '>' . $langs->trans('AddAssignOppStatus') . '</option>';
+            $ret .= '<option value="assignOppStatus"' . $selected . '>% Statut Opp.</option>';
+
+            $selectedVal = '';
+            if (GETPOST('massaction') == 'validateProject') {
+                $selectedVal = ' selected="selected" ';
+            }
+            $iconValide = '<span class="fas fa-check fa-fw paddingright"></span> ';
+            $labelValide = $langs->trans('Validate');
+            if ($labelValide == 'Validate') $labelValide = 'Validé';
+            $ret .= '<option value="validateProject"' . $selectedVal . ' data-html="' . dol_escape_htmltag($iconValide . $labelValide) . '">' . $labelValide . '</option>';
 
             $this->resprints .= $ret;
         }
@@ -1966,7 +2066,9 @@ class ActionsReedcrm
 
         if ($isTargetContext && $user->hasRight('reedcrm', 'call_list', 'write')) {
             $selected = GETPOST('massaction') == 'addToCallList' ? ' selected="selected"' : '';
-            $this->resprints .= '<option value="addToCallList"' . $selected . '>' . $langs->trans('AddToCallList') . '</option>';
+            $iconCallList = '<span class="fas fa-headset fa-fw paddingright"></span> ';
+            $labelCallList = $langs->trans('AddToCallList');
+            $this->resprints .= '<option value="addToCallList"' . $selected . ' data-html="' . dol_escape_htmltag($iconCallList . $labelCallList) . '">' . $labelCallList . '</option>';
         }
 
         return 0; // or return 1 to replace standard code
@@ -1991,7 +2093,7 @@ class ActionsReedcrm
 
             $out  = '<div style="padding: 10px 0 20px 0;">';
             $out .= '<fieldset>';
-            $out .= '<legend>' . $langs->trans('SelectOppStatus') . '</legend>';
+            $out .= '<legend>% Statut Opp.</legend>';
             $out .= '<table>';
 
             $out .= '<tr>';
@@ -2001,11 +2103,40 @@ class ActionsReedcrm
 
             $out .= '</table>';
 
+            $referer    = $_SERVER['HTTP_REFERER'] ?? '';
+            $parsed     = parse_url($referer);
+            $returnUrl  = ($parsed['path'] ?? $_SERVER['PHP_SELF']) . (isset($parsed['query']) ? '?' . $parsed['query'] : '');
+
             $out .= '<input type="hidden" name="oppStatus" value="projet" />';
             $out .= '<input type="hidden" name="massaction" value="assignOppStatus" />';
+            $out .= '<input type="hidden" name="return_url" value="' . dol_htmlentities($returnUrl) . '" />';
 
             $out .= '<div style="margin-top: 20px;">';
             $out .= '<button class="button" type="submit" name="massaction_confirm" value="assignOppStatus">' . $langs->trans('Apply') . '</button>';
+            $out .= '<button class="button" type="submit" name="massaction" value="">' . $langs->trans('Cancel') . '</button>';
+            $out .= '</div>';
+
+            $out .= '</fieldset>';
+            $out .= '</div>';
+
+            $this->resprints = $out;
+        }
+
+        if (strpos($parameters['context'], 'projectlist') !== false && $user->hasRight('projet', 'creer') && $massAction == 'validateProject') {
+            $out  = '<div style="padding: 10px 0 20px 0;">';
+            $out .= '<fieldset>';
+            $out .= '<legend>' . ($langs->trans('Validate') !== 'Validate' ? $langs->trans('Validate') : 'Validé') . '</legend>';
+            $out .= '<p>' . ($langs->trans('ConfirmMassValidate') !== 'ConfirmMassValidate' ? $langs->trans('ConfirmMassValidate') : 'Êtes-vous sûr de vouloir valider les projets sélectionnés ?') . '</p>';
+
+            $referer    = $_SERVER['HTTP_REFERER'] ?? '';
+            $parsed     = parse_url($referer);
+            $returnUrl  = ($parsed['path'] ?? $_SERVER['PHP_SELF']) . (isset($parsed['query']) ? '?' . $parsed['query'] : '');
+
+            $out .= '<input type="hidden" name="massaction" value="validateProject" />';
+            $out .= '<input type="hidden" name="return_url" value="' . dol_htmlentities($returnUrl) . '" />';
+
+            $out .= '<div style="margin-top: 20px;">';
+            $out .= '<button class="button" type="submit" name="massaction_confirm" value="validateProject">' . $langs->trans('Confirm') . '</button>';
             $out .= '<button class="button" type="submit" name="massaction" value="">' . $langs->trans('Cancel') . '</button>';
             $out .= '</div>';
 
@@ -2106,8 +2237,48 @@ class ActionsReedcrm
 
                 if ($res > 0) {
                     setEventMessages($langs->trans('OppStatusAssignedTo', $count), []);
-                    header('Location:' . $_SERVER['PHP_SELF']);
+                    $returnUrl = GETPOST('return_url', 'alpha');
+                    $redirectUrl = !empty($returnUrl) ? $returnUrl : $_SERVER['PHP_SELF'] . (empty($_SERVER['QUERY_STRING']) ? '' : '?' . $_SERVER['QUERY_STRING']);
+                    header('Location: ' . $redirectUrl);
+                    exit;
                 }
+            }
+        }
+
+        if (strpos($parameters['context'], 'projectlist') !== false && $user->hasRight('projet', 'creer') && $massActionConfirm == 'validateProject') {
+            $toSelect = $parameters['toselect'];
+
+            if (empty($toSelect)) {
+                $this->error = $langs->trans('ErrorSelectAtLeastOne');
+                return 0;
+            }
+
+            if ($toSelect > 0) {
+                $count = 0;
+                $res   = 0;
+
+                foreach ($toSelect as $selectedId) {
+                    $resFetch = $object->fetch($selectedId);
+                    if ($resFetch > 0 && $object->statut == 0) {
+                        $res = $object->setValid($user);
+                        if ($res <= 0) {
+                            $this->errors[] = $object->errorsToString();
+                        } else {
+                            $count++;
+                        }
+                    }
+                }
+
+                if (empty($this->errors)) {
+                    setEventMessage($langs->trans('RecordSaved'), 'mesgs');
+                } else {
+                    setEventMessage($this->errors, 'errors');
+                }
+
+                $returnUrl = GETPOST('return_url', 'alpha');
+                $redirectUrl = !empty($returnUrl) ? $returnUrl : $_SERVER['PHP_SELF'] . (empty($_SERVER['QUERY_STRING']) ? '' : '?' . $_SERVER['QUERY_STRING']);
+                header('Location: ' . $redirectUrl);
+                exit;
             }
         }
 
@@ -2229,6 +2400,29 @@ class ActionsReedcrm
             'lib_path'       => 'custom/reedcrm/lib/reedcrm_call_list.lib.php',
         ];
 
+        $this->results['pocketrecording'] = [
+            'mainmenu'       => 'reedcrm',
+            'leftmenu'       => 'pocketrecording',
+            'langs'          => 'PocketRecording',
+            'langfile'       => 'reedcrm@reedcrm',
+            'picto'          => 'fontawesome_fa-microphone_fas_#63ACC9',
+            'color'          => '#63ACC9',
+            'class_name'     => 'PocketRecording',
+            'name_field'     => 'ref',
+            'post_name'      => 'fk_pocketrecording',
+            'link_name'      => 'pocketrecording',
+            'tab_type'       => 'pocketrecording',
+            'table_element'  => 'reedcrm_pocket_recording',
+            'hook_name_card' => 'pocketrecordingcard',
+            'hook_name_list' => 'pocketrecordinglist',
+            'create_url'     => 'custom/reedcrm/view/pocketrecording/pocketrecording_card.php',
+            'list_url'       => 'custom/reedcrm/view/pocketrecording/pocketrecording_list.php',
+            'defaultsort'    => 't.recording_date',
+            'defaultorder'   => 'DESC',
+            'class_path'     => 'custom/reedcrm/class/pocketrecording.class.php',
+            'lib_path'       => 'custom/reedcrm/lib/reedcrm_pocketrecording.lib.php',
+        ];
+
         return 0; // or return 1 to replace standard code
     }
 
@@ -2246,19 +2440,32 @@ class ActionsReedcrm
             global $extrafields;
 
             // Merge the opportunity fields (status, probability, amount) into one column
-            $object->fields['opportunity_details'] = ['label' => 'OpportunityDetails', 'enabled' => 1, 'position' => 75, 'visible' => 1, 'csslist' => 'minwidth150', 'disablesort' => 1];
+            $object->fields['opportunity_details'] = ['label' => 'Statut Opp.', 'enabled' => 1, 'position' => 75, 'visible' => 1, 'csslist' => 'minwidth150', 'disablesort' => 1];
             foreach (['fk_opp_status', 'opp_percent', 'opp_amount'] as $oppField) {
                 if (isset($object->fields[$oppField])) {
                     $object->fields[$oppField]['visible'] = 0; // hidden as standalone columns, still selected + read by the combined renderer
                 }
             }
+            if (isset($object->fields['fk_opp_status'])) {
+                $object->fields['fk_opp_status']['label'] = 'Statut Opp.';
+            }
+            if (isset($object->fields['opp_percent'])) {
+                $object->fields['opp_percent']['label'] = '% Opp.';
+            }
+            if (isset($object->fields['opp_amount'])) {
+                $object->fields['opp_amount']['label'] = 'Montant opp.';
+            }
 
-            // Merge the start/end dates into one "Dates" column
-            $object->fields['date_details'] = ['label' => 'Dates', 'enabled' => 1, 'position' => 50, 'visible' => 1, 'csslist' => 'nowraponall minwidth150', 'disablesort' => 1];
-            foreach (['dateo', 'datee'] as $dateField) {
-                if (isset($object->fields[$dateField])) {
-                    $object->fields[$dateField]['visible'] = 0; // hidden as standalone columns, still selected + read by the combined renderer
-                }
+            // Merge the start/end dates into one "Dates" column, using dateo as the base to get native date filtering
+            if (isset($object->fields['dateo'])) {
+                $object->fields['dateo']['label'] = 'Dates';
+                $object->fields['dateo']['type'] = 'date';
+                $object->fields['dateo']['csslist'] = 'nowraponall minwidth150';
+                $object->fields['dateo']['disablesort'] = 1;
+                $object->fields['dateo']['visible'] = 1;
+            }
+            if (isset($object->fields['datee'])) {
+                $object->fields['datee']['visible'] = 0; // hidden as standalone column
             }
 
             // Center the status (État) column header + cells
@@ -2297,8 +2504,17 @@ class ActionsReedcrm
             // Commercial relaunch column (call / email / rdv / other counters + quick add)
             $object->fields['relauch_commercial'] = ['label' => 'CommercialsRelaunching', 'enabled' => 1, 'position' => 160, 'visible' => 1, 'csslist' => 'center', 'disablesort' => 1];
 
+            // Tags/categories column, like the ticket list has : a project carries its tags in
+            // llx_categorie_project, and the tag filter of the list header does the filtering,
+            // so the column is neither sortable nor searchable on its own
+            $virtualFields = ['contact_details', 'opportunity_details', 'relauch_commercial'];
+            if (isModEnabled('categorie')) {
+                $object->fields['categories'] = ['label' => 'Categories', 'enabled' => 1, 'position' => 18, 'visible' => 1, 'csslist' => 'minwidth150', 'disablesort' => 1, 'disablesearch' => 1];
+                $virtualFields[]              = 'categories';
+            }
+
             // Virtual columns (not real DB columns)
-            $this->results['excludeFields'] = array_merge($parameters['excludeFields'], ['contact_details', 'opportunity_details', 'relauch_commercial', 'date_details']);
+            $this->results['excludeFields'] = array_merge($parameters['excludeFields'], $virtualFields);
 
             return 1;
         }
@@ -2325,244 +2541,7 @@ class ActionsReedcrm
         return 1;
     }
 
-    /**
-     * Overloading the saturneListTopBanner hook : display opportunity KPI cards + view presets above the project list
-     * (rendered above the title bar, outside the list header)
-     *
-     * @param  array $parameters Hook metadatas (context, ...)
-     * @return int               0 < on error, 0 on success, 1 to replace standard code
-     */
-    public function saturneListTopBanner(array $parameters): int
-    {
-        global $conf, $db, $langs, $user;
 
-        // Only on the saturne project list, when the opportunity feature is enabled
-        if (strpos($parameters['context'], 'projectlist') === false || strpos($parameters['context'], 'saturnelist') === false) {
-            return 0;
-        }
-        if (!getDolGlobalString('PROJECT_USE_OPPORTUNITIES')) {
-            return 0;
-        }
-
-        require_once __DIR__ . '/../../saturne/lib/saturne_functions.lib.php';
-
-        // Predefined view presets (one-click filtered views)
-        $presetsBar = $this->reedcrmRenderProjectPresets();
-
-        // Snapshot of the current filtered query, exposed by the generic list before sort/pagination
-        $baseSql = $GLOBALS['sqlForList'] ?? '';
-        if (empty($baseSql)) {
-            $this->resprints = $presetsBar;
-            return 0;
-        }
-
-        // Aggregates computed over the whole filtered set
-        $aggregates = saturne_get_list_aggregates($db, $baseSql, [
-            'nb'       => 'COUNT(*)',
-            'total'    => 'COALESCE(SUM(opp_amount), 0)',
-            'weighted' => 'COALESCE(SUM(opp_amount * opp_percent / 100), 0)',
-            'avgproba' => 'AVG(NULLIF(opp_percent, 0))',
-        ]);
-        if ($aggregates === null) {
-            $this->resprints = $presetsBar;
-            return 0;
-        }
-
-        $cards = [
-            'nb' => [
-                'id'    => 'nb',
-                'label' => $langs->trans('ReedCRMKpiNbOpportunities'),
-                'value' => (string) ((int) $aggregates->nb),
-                'icon'  => 'fas fa-bullseye',
-                'color' => 'blue',
-            ],
-            'total' => [
-                'id'    => 'total',
-                'label' => $langs->trans('ReedCRMKpiTotalAmount'),
-                'value' => price((float) $aggregates->total, 0, $langs, 1, -1, -1, $conf->currency),
-                'icon'  => 'fas fa-coins',
-                'color' => 'grey',
-            ],
-            'weighted' => [
-                'id'    => 'weighted',
-                'label' => $langs->trans('ReedCRMKpiWeightedAmount'),
-                'value' => price((float) $aggregates->weighted, 0, $langs, 1, -1, -1, $conf->currency),
-                'icon'  => 'fas fa-balance-scale',
-                'color' => 'green',
-            ],
-            'avgproba' => [
-                'id'    => 'avgproba',
-                'label' => $langs->trans('ReedCRMKpiAvgProbability'),
-                'value' => price2num((float) $aggregates->avgproba, 1) . ' %',
-                'icon'  => 'fas fa-percent',
-                'color' => 'yellow',
-            ],
-        ];
-
-        // Per-user params (REEDCRM_*) are not yet loaded into $user->conf when this banner hook
-        // runs (the per-row hooks fire later, once it is), so load them explicitly here — needed
-        // by the KPI layout, the status-display toggle and the density toggle below.
-        $user->loadPersonalConf();
-
-        // Apply the per-user saved layout (order + hidden cards), stored in llx_user_param
-        $cards = $this->reedcrmApplyKpiLayout($cards);
-
-        // Customize controls (edit-mode toggle + reset)
-        $statusDisplay = (isset($user->conf->REEDCRM_STATUS_DISPLAY) && $user->conf->REEDCRM_STATUS_DISPLAY === 'dot') ? 'dot' : 'badge';
-        $statusTarget  = $statusDisplay === 'dot' ? 'badge' : 'dot';
-        $statusLabel   = $statusDisplay === 'dot' ? $langs->trans('ReedCRMStatusAsBadge') : $langs->trans('ReedCRMStatusAsDot');
-
-        // Row density (per-user): 'compact' (default) packs more rows, 'comfortable' is airier
-        $density       = (isset($user->conf->REEDCRM_LIST_DENSITY) && $user->conf->REEDCRM_LIST_DENSITY === 'comfortable') ? 'comfortable' : 'compact';
-        $densityTarget = $density === 'compact' ? 'comfortable' : 'compact';
-        $densityLabel  = $density === 'compact' ? 'Affichage aéré' : 'Affichage compact';
-        $densityIcon   = $density === 'compact' ? 'fa-expand-alt' : 'fa-compress-alt';
-
-        $customizeBar  = '<div class="reedcrm-kpi-customize-bar" data-density="' . $density . '">';
-        $customizeBar .= '<button type="button" class="reedcrm-kpi-customize-toggle" title="' . dol_escape_htmltag($langs->trans('ReedCRMKpiCustomize')) . '"><i class="fas fa-sliders-h"></i> ' . dol_escape_htmltag($langs->trans('ReedCRMKpiCustomize')) . '</button>';
-        $customizeBar .= '<button type="button" class="reedcrm-status-display-toggle' . ($statusDisplay === 'dot' ? ' active' : '') . '" data-mode="' . $statusTarget . '" title="' . dol_escape_htmltag($statusLabel) . '"><i class="fas fa-circle"></i> ' . dol_escape_htmltag($statusLabel) . '</button>';
-        $customizeBar .= '<button type="button" class="reedcrm-list-density-toggle' . ($density === 'compact' ? ' active' : '') . '" data-mode="' . $densityTarget . '" title="' . dol_escape_htmltag($densityLabel) . '"><i class="fas ' . $densityIcon . '"></i> ' . dol_escape_htmltag($densityLabel) . '</button>';
-        $customizeBar .= '<button type="button" class="reedcrm-kpi-customize-reset" title="' . dol_escape_htmltag($langs->trans('ReedCRMKpiReset')) . '"><i class="fas fa-undo"></i> ' . dol_escape_htmltag($langs->trans('ReedCRMKpiReset')) . '</button>';
-        $customizeBar .= '</div>';
-
-        $this->resprints = $presetsBar . $customizeBar . saturne_render_kpi_cards(array_values($cards));
-
-        return 0;
-    }
-
-    /**
-     * Apply the per-user KPI banner layout (order + hidden cards) read from llx_user_param.
-     *
-     * @param  array<string,array> $cards KPI cards keyed by id
-     * @return array<string,array>        Reordered cards with hidden ones flagged
-     */
-    protected function reedcrmApplyKpiLayout(array $cards): array
-    {
-        global $user;
-
-        $raw = isset($user->conf->REEDCRM_KPI_LAYOUT) ? $user->conf->REEDCRM_KPI_LAYOUT : '';
-        if (empty($raw)) {
-            return $cards;
-        }
-        $layout = json_decode($raw, true);
-        if (!is_array($layout)) {
-            return $cards;
-        }
-
-        if (!empty($layout['hidden']) && is_array($layout['hidden'])) {
-            foreach ($layout['hidden'] as $id) {
-                if (isset($cards[$id])) {
-                    $cards[$id]['hidden'] = true;
-                }
-            }
-        }
-
-        if (!empty($layout['order']) && is_array($layout['order'])) {
-            $ordered = [];
-            foreach ($layout['order'] as $id) {
-                if (isset($cards[$id])) {
-                    $ordered[$id] = $cards[$id];
-                }
-            }
-            // Keep any card not present in the saved order (e.g. newly added) at the end
-            foreach ($cards as $id => $card) {
-                if (!isset($ordered[$id])) {
-                    $ordered[$id] = $card;
-                }
-            }
-            $cards = $ordered;
-        }
-
-        return $cards;
-    }
-
-    /**
-     * Build the predefined view presets bar for the opportunity project list.
-     *
-     * @return string HTML presets bar (uses the generic saturne_render_list_presets renderer)
-     */
-    protected function reedcrmRenderProjectPresets(): string
-    {
-        global $langs;
-
-        $activePreset = GETPOST('search_preset', 'aZ09');
-        $activeView   = GETPOST('reedcrm_view', 'alphanohtml');
-        // Keep the opportunity scope on every preset link
-        $baseUrl      = $_SERVER['PHP_SELF'] . '?object_type=project&search_usage_opportunity=1';
-
-        $presetDefs = [
-            'mine'       => ['label' => $langs->trans('ReedCRMPresetMine'),       'icon' => 'fas fa-user'],
-            'hot'        => ['label' => $langs->trans('ReedCRMPresetHot'),        'icon' => 'fas fa-fire'],
-            'open'       => ['label' => $langs->trans('ReedCRMPresetOpen'),       'icon' => 'fas fa-folder-open'],
-            'torelaunch' => ['label' => $langs->trans('ReedCRMPresetToRelaunch'), 'icon' => 'fas fa-bell'],
-        ];
-
-        $presets = [[
-            'label'  => $langs->trans('All'),
-            'icon'   => 'fas fa-list',
-            'url'    => $baseUrl,
-            'active' => empty($activePreset) && empty($activeView),
-        ]];
-        foreach ($presetDefs as $key => $def) {
-            $presets[] = [
-                'label'  => $def['label'],
-                'icon'   => $def['icon'],
-                'url'    => $baseUrl . '&search_preset=' . $key,
-                'active' => ($activePreset === $key),
-            ];
-        }
-
-        // Per-user saved views (stored in llx_user_param)
-        global $user;
-        foreach (get_object_vars($user->conf) as $paramKey => $paramVal) {
-            if (strpos($paramKey, 'REEDCRM_VIEW_PROJECT_') !== 0) {
-                continue;
-            }
-            $decoded = json_decode($paramVal, true);
-            if (empty($decoded['label'])) {
-                continue;
-            }
-            $viewQuery  = !empty($decoded['query']) ? $decoded['query'] : '';
-            $presets[]  = [
-                'label'       => $decoded['label'],
-                'icon'        => 'fas fa-star',
-                'url'         => $baseUrl . ($viewQuery !== '' ? '&' . $viewQuery : '') . '&reedcrm_view=' . urlencode($paramKey),
-                'active'      => ($activeView === $paramKey),
-                'removeKey'   => $paramKey,
-                'removeTitle' => $langs->trans('Delete'),
-            ];
-        }
-
-        // "Save current view" button (raw caller-built chip)
-        $saveLabel = dol_escape_htmltag($langs->trans('ReedCRMSaveView'));
-        $presets[] = ['raw' => '<button type="button" class="saturne-list-preset reedcrm-save-view" title="' . $saveLabel . '"><i class="fas fa-save"></i> ' . $saveLabel . '</button>'];
-
-        return saturne_render_list_presets($presets);
-    }
-
-    /**
-     * Overloading the printFieldListSearchParam hook : keep the active preset across sort/pagination links.
-     *
-     * @param  array $parameters Hook metadatas (context, ...)
-     * @return int               0 < on error, 0 on success, 1 to replace standard code
-     */
-    public function printFieldListSearchParam(array $parameters): int
-    {
-        if (strpos($parameters['context'], 'projectlist') !== false) {
-            $param  = '';
-            $preset = GETPOST('search_preset', 'aZ09');
-            if (!empty($preset)) {
-                $param .= '&search_preset=' . urlencode($preset);
-            }
-            $view = GETPOST('reedcrm_view', 'alphanohtml');
-            if (!empty($view)) {
-                $param .= '&reedcrm_view=' . urlencode($view);
-            }
-            $this->resprints = $param;
-        }
-
-        return 0;
-    }
 
     /**
      * Overloading the printFieldListWhere hook : add WHERE conditions for propal list
@@ -2578,41 +2557,6 @@ class ActionsReedcrm
             $this->resprints = ' AND t.fk_statut >= 0';
         }
 
-        if (strpos($parameters['context'], 'projectlist') !== false && strpos($parameters['context'], 'saturnelist') !== false) {
-            global $db, $user;
-
-            $preset    = GETPOST('search_preset', 'aZ09');
-            $notClosed = ' (t.fk_opp_status IS NULL OR t.fk_opp_status NOT IN (SELECT rowid FROM ' . MAIN_DB_PREFIX . "c_lead_status WHERE code IN ('WON', 'LOST')))";
-            $sql       = '';
-
-            switch ($preset) {
-                case 'mine':
-                    $sql = ' AND EXISTS (SELECT 1 FROM ' . MAIN_DB_PREFIX . 'element_contact ec'
-                         . ' INNER JOIN ' . MAIN_DB_PREFIX . 'c_type_contact tc ON tc.rowid = ec.fk_c_type_contact'
-                         . " AND tc.element = 'project' AND tc.source = 'internal'"
-                         . ' WHERE ec.element_id = t.rowid AND ec.fk_socpeople = ' . (int) $user->id . ')';
-                    break;
-                case 'hot':
-                    $sql = ' AND t.opp_percent >= 60';
-                    break;
-                case 'open':
-                    $sql = ' AND' . $notClosed;
-                    break;
-                case 'torelaunch':
-                    $relaunchTag = getDolGlobalInt('REEDCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG');
-                    $sql  = ' AND' . $notClosed;
-                    $sql .= ' AND NOT EXISTS (SELECT 1 FROM ' . MAIN_DB_PREFIX . 'actioncomm a'
-                          . ' WHERE a.fk_project = t.rowid AND a.datep >= ' . "'" . $db->idate(dol_now() - 30 * 24 * 3600) . "'";
-                    if ($relaunchTag > 0) {
-                        $sql .= ' AND a.id IN (SELECT c.fk_actioncomm FROM ' . MAIN_DB_PREFIX . 'categorie_actioncomm c WHERE c.fk_categorie = ' . $relaunchTag . ')';
-                    }
-                    $sql .= ')';
-                    break;
-            }
-
-            $this->resprints = $sql;
-        }
-
         return 0;
     }
 
@@ -2624,13 +2568,14 @@ class ActionsReedcrm
             $fieldMap = [
                 'ref'                 => 'reedcrm_field_ref_with_actions',
                 'opportunity_details' => 'reedcrm_field_opportunity_details',
-                'date_details'        => 'reedcrm_field_date_details',
+                'dateo'               => 'reedcrm_field_date_details',
                 'relauch_commercial'  => 'reedcrm_field_relaunch_commercial',
                 'contact_details'     => 'reedcrm_field_contact_details',
                 'photo'              => 'reedcrm_field_photo',
                 'fk_opp_status'      => 'reedcrm_field_opp_status',
                 'fk_statut'          => 'reedcrm_field_status_badge',
                 'opp_percent'        => 'reedcrm_field_opp_percent',
+                'categories'         => 'reedcrm_field_categories',
             ];
 
             $key = $parameters['key'];
@@ -2768,6 +2713,16 @@ class ActionsReedcrm
             }
         }
 
+        if (strpos($parameters['context'], 'propalcard') !== false && $object instanceof Propal) {
+            $picto            = img_picto('', 'reedcrm_color@reedcrm', 'class="pictoModule"');
+            $extraFieldsNames = ['reedcrm_propal_label', 'commrefusal'];
+            foreach ($extraFieldsNames as $extraFieldsName) {
+                if (!empty($extrafields->attributes['propal']['label'][$extraFieldsName])) {
+                    $extrafields->attributes['propal']['label'][$extraFieldsName] = $picto . $langs->transnoentities($extrafields->attributes['propal']['label'][$extraFieldsName]);
+                }
+            }
+        }
+
         // Add time-logging checkbox below the message form on ticket card
         if (strpos($parameters['context'], 'ticketcard') !== false && in_array($action, ['presend', 'presend_addmessage', 'add_message'])) {
             $defaultMinutes = getDolGlobalInt('REEDCRM_TICKET_TIME_DEFAULT_MINUTES', 15);
@@ -2900,8 +2855,8 @@ class ActionsReedcrm
                 $contactHtml = '<div class="contact-inline-wrapper reedcrm-header-contact-master" data-project-id="' . (int)$object->id . '" style="display: inline-flex; align-items: center; background: #f8fbff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 6px; vertical-align: middle; font-weight: 500; font-size: 0.9em; margin-bottom: 2px; color: #4a5568;">' .
                     '<img src="' . $logoPath . '" style="height: 18px; width: 18px; object-fit: contain; margin-right: 8px; border-right: 1px solid #cbd5e0; padding-right: 8px;" alt="ReedCRM" />' .
                     '<i class="fas fa-address-book" style="color: #64748b; margin-right: 6px;"></i>' .
-                    '<span class="inline-edit-contact" data-field="firstname" data-val="'.dol_escape_htmltag($opt_firstname).'" style="cursor: pointer; border-bottom: 1px dashed #cbd5e0; line-height: 1; padding-bottom: 1px; transition: color 0.3s; margin-right: 4px;" title="Modifier le prénom">' . $hFirstName . '</span>' .
-                    '<span class="inline-edit-contact" data-field="lastname" data-val="'.dol_escape_htmltag($opt_lastname).'" style="cursor: pointer; border-bottom: 1px dashed #cbd5e0; line-height: 1; padding-bottom: 1px; transition: color 0.3s; margin-right: 8px;" title="Modifier le nom">' . $hLastName . '</span>' .
+                    '<span class="inline-edit-contact" data-field="lastname" data-val="'.dol_escape_htmltag($opt_lastname).'" style="cursor: pointer; border-bottom: 1px dashed #cbd5e0; line-height: 1; padding-bottom: 1px; transition: color 0.3s; margin-right: 4px;" title="Modifier le nom">' . $hLastName . '</span>' .
+                    '<span class="inline-edit-contact" data-field="firstname" data-val="'.dol_escape_htmltag($opt_firstname).'" style="cursor: pointer; border-bottom: 1px dashed #cbd5e0; line-height: 1; padding-bottom: 1px; transition: color 0.3s; margin-right: 8px;" title="Modifier le prénom">' . $hFirstName . '</span>' .
                     '<span style="color: #cbd5e0; margin-right: 8px;">&bull;</span>' .
                     $linkPhone .
                     '<span class="inline-edit-contact" data-field="phone" data-val="'.dol_escape_htmltag($opt_phone).'" style="cursor: pointer; border-bottom: 1px dashed #cbd5e0; line-height: 1; padding-bottom: 1px; transition: color 0.3s; margin-right: 8px;" title="Modifier le téléphone">' . $hPhone . '</span>' .
@@ -3663,7 +3618,7 @@ EOT;
         $html .= ' data-element-id="' . (int) $elementId . '"';
         $html .= ' data-ajax-url="' . dol_escape_htmltag($ajaxUrl) . '"';
         $html .= ' data-default-ajax-url="' . dol_escape_htmltag($defaultAjaxUrl) . '">';
-        $html .= '<img src="' . dol_escape_htmltag($logoPath) . '" class="reedcrm-add-to-call-list-logo" alt="ReedCRM" />';
+        $html .= '<img src="' . dol_escape_htmltag($logoPath) . '" class="reedcrm-add-to-call-list-logo" width="18" height="18" alt="ReedCRM" />';
         $html .= '<i class="fas fa-phone" style="color:#64748b;"></i>';
         $html .= '<i class="fas fa-star reedcrm-call-list-default-btn" title="' . dol_escape_htmltag($langs->trans('AddToMyCallList')) . '"></i>';
         $html .= '<select class="reedcrm-call-list-select">';
@@ -3752,6 +3707,76 @@ EOT;
         ob_start();
         require __DIR__ . '/../core/tpl/index/reedcrm_upcoming_reminders.tpl.php';
         $this->resprints = ob_get_clean();
+
+        return 0;
+    }
+
+    /**
+     * Overloading the objectLineView_ProductSupplier function : hangs the intervention date trigger
+     * under every service line of a proposal. It is the last hook of the description cell, and the
+     * return value stays 0 so the native supplier block is still displayed.
+     *
+     * @param  array  $parameters Hook metadata (context, etc...)
+     * @param  object $object     Object the displayed line belongs to
+     * @param  string $action     Current action
+     * @return int                0 on success
+     */
+    public function objectLineView_ProductSupplier(array $parameters, $object, string $action): int
+    {
+        global $db, $langs, $user;
+
+        require_once __DIR__ . '/../lib/reedcrm_interventiondate.lib.php';
+
+        if (!is_object($object) || $object->element !== 'propal' || !reedcrmInterventionIsEnabled()) {
+            return 0;
+        }
+        if (!$user->hasRight('propal', 'lire') || empty($parameters['line'])) {
+            return 0;
+        }
+
+        // A proposal older than the go-live date of the feature carries no intervention
+        $minPropalDate = reedcrmInterventionMinPropalDate();
+        $propalDate    = !empty($object->date) ? $object->date : ($object->datep ?? 0);
+        if ($minPropalDate > 0 && !empty($propalDate) && $propalDate < $minPropalDate) {
+            return 0;
+        }
+
+        require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+
+        $line = $parameters['line'];
+        if ((int) $line->product_type !== Product::TYPE_SERVICE) {
+            return 0;
+        }
+        if (!reedcrmInterventionProductHasTag((int) $line->fk_product)) {
+            return 0;
+        }
+
+        require_once __DIR__ . '/interventiondate.class.php';
+
+        $expected = InterventionDate::getExpectedCount((float) $line->qty);
+        if ($expected <= 0) {
+            return 0;
+        }
+
+        // Every line of the card asks for the same counters, they are read once for the whole proposal
+        static $plannedByLine = [];
+        if (!isset($plannedByLine[$object->id])) {
+            $interventionDate               = new InterventionDate($db);
+            $plannedByLine[$object->id]     = $interventionDate->countPlannedByElement('propal', (int) $object->id);
+        }
+        $planned = $plannedByLine[$object->id][(int) $line->id] ?? 0;
+
+        $langs->load('reedcrm@reedcrm');
+
+        $html  = '<div class="reedcrm-intervention-line">';
+        $html .= '<div class="reedcrm-intervention-trigger' . ($planned >= $expected ? ' reedcrm-intervention-trigger-complete' : '') . '"';
+        $html .= ' data-line-id="' . (int) $line->id . '" title="' . dol_escape_htmltag($langs->trans('InterventionDatePlanTooltip')) . '">';
+        $html .= '<i class="fas fa-calendar-alt"></i>';
+        $html .= '<span class="reedcrm-intervention-count">' . $planned . '/' . $expected . '</span>';
+        $html .= '<span class="reedcrm-intervention-trigger-label">' . dol_escape_htmltag($langs->trans('InterventionDates')) . '</span>';
+        $html .= '</div></div>';
+
+        $this->resprints = $html;
 
         return 0;
     }

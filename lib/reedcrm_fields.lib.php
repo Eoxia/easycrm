@@ -51,40 +51,16 @@ function reedcrm_field_relaunch_commercial(array $parameters, CommonObject $obje
     $filter      = ' AND a.id IN (SELECT c.fk_actioncomm FROM ' . MAIN_DB_PREFIX . 'categorie_actioncomm as c WHERE c.fk_categorie = ' . $conf->global->REEDCRM_ACTIONCOMM_COMMERCIAL_RELAUNCH_TAG . ')';
     $actionComms = $actionComm->getActions($socid, $projectId, 'project', $filter, 'a.datec');
 
-    $actonComsByType = [
-        'call' => [
-            'picto'      => 'headset',
-            'actioncode' => 'AC_TEL',
-            'nb'         => 0
-        ],
-        'email' => [
-            'picto'      => 'envelope',
-            'actioncode' => 'AC_EMAIL',
-            'nb'         => 0
-        ],
-        'rdv' => [
-            'picto'      => 'calendar',
-            'actioncode' => 'AC_RDV',
-            'nb'         => 0
-        ],
-        'other' => [
-            'picto'      => 'comment-dots',
-            'actioncode' => 'AC_OTH',
-            'nb'         => 0
-        ],
-    ];
+    require_once __DIR__ . '/reedcrm_function.lib.php';
+
+    $actonComsByType = [];
+    foreach (reedcrm_get_relaunch_types() as $typeKey => $type) {
+        $actonComsByType[$typeKey] = $type + ['nb' => 0];
+    }
 
     if (is_array($actionComms) && !empty($actionComms)) {
         foreach ($actionComms as $ac) {
-            if ($ac->type_code == 'AC_TEL') {
-                $actonComsByType['call']['nb']++;
-            } elseif ($ac->type_code == 'AC_EMAIL') {
-                $actonComsByType['email']['nb']++;
-            } elseif ($ac->type_code == 'AC_RDV') {
-                $actonComsByType['rdv']['nb']++;
-            } else {
-                $actonComsByType['other']['nb']++;
-            }
+            $actonComsByType[reedcrm_get_relaunch_type_key((string) $ac->type_code)]['nb']++;
         }
     }
 
@@ -97,7 +73,10 @@ function reedcrm_field_relaunch_commercial(array $parameters, CommonObject $obje
         $dialogUrl = dol_buildpath('custom/reedcrm/ajax/get_relaunches_list.php', 1);
 
         $out .= '<div id="btn-relaunch-' . $actionCommType . '-' . $projectId . '" class="ui-dialog-open reedcrm-relaunch-button reedcrm-plist-relaunch-btn-' . $actionCommType . '"';
-        $out .= ' data-dialog-id="dialog-relaunch-' . $actionCommType . '-' . $projectId . '" data-dialog-title="' . $langs->trans($actionCommType) . '" data-dialog-icon="fas fa-' . $actonComByType['picto'] . '" data-dialog-align="center" data-dialog-url="' . $dialogUrl . '" data-dialog-footer="none" data-project-id="' . $projectId . '" data-action-comm-type="' . $actonComByType['actioncode'] . '">';
+        $out .= ' data-dialog-id="dialog-relaunch-' . $actionCommType . '-' . $projectId . '" data-dialog-title="' . $langs->trans($actionCommType) . '" data-dialog-icon="fas fa-' . $actonComByType['picto'] . '" data-dialog-align="center" data-dialog-url="' . $dialogUrl . '" data-dialog-footer="none" data-project-id="' . $projectId . '"';
+        // Required by the hover tooltip (eventpro.js): without it the tooltip bails out and never opens
+        $out .= ' data-relaunch-type="' . $actionCommType . '"';
+        $out .= ' data-action-comm-type="' . $actonComByType['actioncode'] . '">';
 
         $out .= '<div class="reedcrm-plist-relaunch-btn-content">';
         $out .= '<i class="fas fa-' . $actonComByType['picto'] . '"></i>';
@@ -106,9 +85,10 @@ function reedcrm_field_relaunch_commercial(array $parameters, CommonObject $obje
 
         if ($user->hasRight('agenda', 'myactions', 'create')) {
             $cardProUrlFull = DOL_URL_ROOT . $cardProUrl . '&actioncode=' . $actonComByType['actioncode'];
-            $out .= '<span class="fa fa-plus reedcrm-plist-relaunch-add modal-open reedcrm-modal-open" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $projectId . '" data-modal-url="' . dol_escape_htmltag($cardProUrlFull) . '">';
+            $out .= '<div class="reedcrm-plist-relaunch-add modal-open reedcrm-modal-open" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $projectId . '" data-modal-url="' . dol_escape_htmltag($cardProUrlFull) . '">';
+            $out .= '<i class="fas fa-plus"></i>';
             $out .= '<input type="hidden" class="modal-options" data-modal-to-open="eventproCardModal">';
-            $out .= '</span>';
+            $out .= '</div>';
         }
 
         $out .= '</div>';
@@ -161,8 +141,8 @@ function reedcrm_field_contact_details(array $parameters, CommonObject $object):
     $out .= '<div class="reedcrm-plist-coordonnees-box">';
     $out .= '<div class="reedcrm-plist-coordonnees-name" style="display:flex; align-items:center; padding-left:8px;">';
     $out .= '<i class="fas fa-address-book" style="color:#64748b; margin-right:4px; flex-shrink:0;"></i>';
-    $out .= $span('firstname', $firstname, 'Prénom', 'margin-right:4px;');
-    $out .= $span('lastname', $lastname, 'Nom', 'flex-grow:1;');
+    $out .= $span('lastname', $lastname, 'Nom', 'margin-right:4px;');
+    $out .= $span('firstname', $firstname, 'Prénom', 'flex-grow:1;');
     $out .= '</div>';
 
     $out .= '<div class="reedcrm-plist-coordonnees-email" style="display:flex; align-items:center; padding-left:8px;">';
@@ -356,14 +336,7 @@ function reedcrm_field_ref_with_actions(array $parameters, CommonObject $object)
 
     $refHtml = $object->showOutputField($parameters['val'], $parameters['key'], $object->ref);
 
-    // Quick preview (call/email now live in the merged "Coordonnées" column)
-    $id         = (int) $object->id;
-    $previewUrl = DOL_URL_ROOT . '/custom/reedcrm/view/procard.php?from_id=' . $id . '&from_type=project&project_id=' . $id;
-    $actions    = '<span class="reedcrm-row-actions">';
-    $actions   .= '<button type="button" class="reedcrm-row-action reedcrm-card-modal-open" title="' . dol_escape_htmltag($langs->trans('Preview')) . '" data-project-id="' . $id . '" data-modal-url="' . dol_escape_htmltag($previewUrl) . '"><i class="fas fa-eye"></i></button>';
-    $actions   .= '</span>';
-
-    return '<div class="reedcrm-ref-cell">' . $refHtml . $actions . '</div>';
+    return '<div class="reedcrm-ref-cell">' . $refHtml . '</div>';
 }
 
 /**
@@ -450,4 +423,113 @@ function reedcrm_field_date_details(array $parameters, CommonObject $object): st
     }
 
     return '<div class="reedcrm-dates-cell">' . $startHtml . $endHtml . '</div>';
+}
+
+/**
+ * Load, for a whole page of listed objects, the categories carried by each of them.
+ *
+ * The categories live in llx_categorie_<element>, so rendering them row by row would cost one
+ * query per line. The page ids are read back from the list query ($sqlForList, exposed by the
+ * saturne list TPL) and every tag of the page is loaded in a single query.
+ *
+ * @param  CommonObject $object The listed object (gives the element, hence the link table)
+ * @return array                Categories (id, label, color) indexed by object id
+ */
+function reedcrm_load_list_categories(CommonObject $object): array
+{
+    global $db, $limit, $offset, $sortfield, $sortorder, $sqlForList;
+
+    if (empty($sqlForList)) {
+        return [];
+    }
+
+    $element   = $object->element;
+    $linkTable = MAIN_DB_PREFIX . 'categorie_' . $element;
+    $linkField = 'fk_' . $element;
+
+    $sql   = 'SELECT listpage.rowid FROM (' . $sqlForList;
+    $sql  .= $db->order($sortfield, $sortorder);
+    $sql  .= (!empty($limit) ? $db->plimit($limit + 1, $offset) : '');
+    $sql  .= ') AS listpage';
+    $resql = $db->query($sql);
+    if (!$resql) {
+        return [];
+    }
+
+    $objectIds = [];
+    while ($obj = $db->fetch_object($resql)) {
+        $objectIds[] = (int) $obj->rowid;
+    }
+    $db->free($resql);
+
+    if (empty($objectIds)) {
+        return [];
+    }
+
+    $sql   = 'SELECT link.' . $linkField . ' AS fk_object, categorie.rowid, categorie.label, categorie.color';
+    $sql  .= ' FROM ' . $linkTable . ' AS link';
+    $sql  .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'categorie AS categorie ON categorie.rowid = link.fk_categorie';
+    $sql  .= ' WHERE link.' . $linkField . ' IN (' . implode(',', $objectIds) . ')';
+    $sql  .= ' AND categorie.entity IN (' . getEntity('category') . ')';
+    $sql  .= ' ORDER BY categorie.label ASC';
+    $resql = $db->query($sql);
+    if (!$resql) {
+        return [];
+    }
+
+    $categories = [];
+    while ($obj = $db->fetch_object($resql)) {
+        $categories[(int) $obj->fk_object][] = ['id' => (int) $obj->rowid, 'label' => $obj->label, 'color' => $obj->color];
+    }
+    $db->free($resql);
+
+    return $categories;
+}
+
+/**
+ * Render the tags/categories cell, like the ticket list does.
+ *
+ * The column is virtual : a project carries its tags in llx_categorie_project, not in its own
+ * table, so it is declared in $excludeFields and filled here. Each tag links back to the list
+ * with the category added to the tag filter of the list header.
+ *
+ * @param  array        $parameters Hook parameters (key, context, obj, ...)
+ * @param  CommonObject $object     The object
+ * @return string                   HTML output
+ */
+function reedcrm_field_categories(array $parameters, CommonObject $object): string
+{
+    global $conf, $langs, $param;
+
+    $objectId = (int) (!empty($object->id) ? $object->id : ($parameters['obj']->rowid ?? 0));
+    if ($objectId <= 0) {
+        return '';
+    }
+
+    $element = $object->element;
+    if (!isset($conf->cache['reedcrmListCategories'][$element])) {
+        $conf->cache['reedcrmListCategories'][$element] = reedcrm_load_list_categories($object);
+    }
+
+    $categories = $conf->cache['reedcrmListCategories'][$element][$objectId] ?? [];
+    if (empty($categories)) {
+        return '';
+    }
+
+    $listUrl = $_SERVER['PHP_SELF'] . '?' . ltrim($param ?? '', '&');
+
+    $out = '';
+    foreach ($categories as $category) {
+        // Same tag rendering as the native lists : colored pill, text forced to keep a readable contrast
+        $color     = preg_match('/^[0-9a-f]{6}$/i', ltrim((string) $category['color'], '#')) ? ltrim($category['color'], '#') : 'bbbbbb';
+        $textColor = colorIsLight($color) == 1 ? 'categtextblack' : 'categtextwhite';
+        $tagUrl    = $listUrl . '&search_categories_filter[]=' . $category['id'];
+
+        $out .= '<span class="noborderoncategories" style="background: #' . $color . ';">';
+        $out .= '<a class="' . $textColor . '" href="' . dol_escape_htmltag($tagUrl) . '" title="' . dol_escape_htmltag($langs->trans('Categories')) . '">';
+        $out .= '<span class="fas fa-tag paddingright"></span>' . dol_escape_htmltag($category['label']);
+        $out .= '</a></span>';
+    }
+
+    return $out;
 }
